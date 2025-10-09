@@ -1,10 +1,15 @@
-{ pkgs ? import <nixpkgs> {} }:
-
+let
+  pkgs = import <nixpkgs> { config.allowUnfree = true; };
+  oracleLib = pkgs.oracle-instantclient.lib;
+in
 pkgs.mkShell {
   buildInputs = with pkgs; [
+    oracle-instantclient
     postgresql_15
     go
     sqlite
+
+    vhs
   ];
 
   hardeningDisable = [ "fortify" ];
@@ -18,6 +23,9 @@ pkgs.mkShell {
 
     export SQLITE_DB_PATH="$PWD/sample_sqlite.db"
     export SQLITE_CONNECTION_STRING="file:$SQLITE_DB_PATH"
+
+    export LD_LIBRARY_PATH=${oracleLib}/lib:$LD_LIBRARY_PATH
+    export ORACLE_HOME=${oracleLib}
 
     # PostgreSQL setup
     if [ ! -d $PGHOST ]; then

@@ -118,9 +118,11 @@ func (m TableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "g":
 			m.selectedRow = 0
+			m.offsetY = 0
 
 		case "G":
 			m.selectedRow = numRows - 1
+			m.offsetY = numRows - m.visibleRows
 
 		case "pgup", "ctrl+u":
 			m.selectedRow -= m.visibleRows

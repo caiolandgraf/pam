@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/godror/godror"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 
@@ -63,6 +64,7 @@ func main() {
 		cfg.Current.DBType = cfg.Connections[cfg.Current.Name].DBType
 		cfg.Current.DBConnectionString = cfg.Connections[cfg.Current.Name].DBConnectionString
 		SaveConfig(cfgPath, cfg)
+		fmt.Printf("connected to: %s/%s\n", cfg.Current.DBType, cfg.Current.Name)
 
 	case "add":
 		if len(os.Args) < 3 {
@@ -76,7 +78,7 @@ func main() {
 		cfg.Connections[cfg.Current.Name].Queries[os.Args[2]] = os.Args[3]
 		SaveConfig(cfgPath, cfg)
 
-	case "query":
+	case "query", "run":
 		if len(os.Args) < 3 {
 			log.Fatal("Usage:pam query <query-name>")
 		}
@@ -125,8 +127,6 @@ func main() {
 	default:
 		log.Fatalf("Unknown command: %s", command)
 	}
-
-	fmt.Printf("\nconnected to: %s/%s\n", cfg.Current.DBType, cfg.Current.Name)
 }
 
 func queryDB(dbType, connStr, query string) {
@@ -210,8 +210,8 @@ type Config struct {
 		DBConnectionString string `yaml:"db_connection_string"`
 	} `yaml:"current"`
 	Connections map[string]Connection `yaml:"connections"`
-	Style Style `yaml:"style"`
-	History History `yaml:"history"`
+	Style       Style                 `yaml:"style"`
+	History     History               `yaml:"history"`
 }
 
 func loadConfig(path string) (*Config, error) {
