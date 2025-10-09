@@ -4,9 +4,9 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     postgresql_15
     go
+    sqlite
   ];
 
-  # Disable _FORTIFY_SOURCE for debugging
   hardeningDisable = [ "fortify" ];
 
   shellHook = ''
@@ -16,6 +16,10 @@ pkgs.mkShell {
     export PGDATABASE=postgres
     export DATABASE_URL="postgresql:///sampledb?host=$PGHOST"
 
+    export SQLITE_DB_PATH="$PWD/sample_sqlite.db"
+    export SQLITE_CONNECTION_STRING="file:$SQLITE_DB_PATH"
+
+    # PostgreSQL setup
     if [ ! -d $PGHOST ]; then
       mkdir -p $PGHOST
     fi
@@ -26,10 +30,9 @@ pkgs.mkShell {
     fi
 
     pg_ctl start -l $LOG_PATH -o "-c unix_socket_directories=$PGHOST -c listen_addresses= -c port=5432"
-    
     echo "PostgreSQL started successfully!"
-    
-    # Check if sampledb exists, if not run init.sql
+
+    # PostgreSQL sampledb setup
     if ! psql -lqt | cut -d \| -f 1 | grep -qw sampledb; then
       echo ""
       echo "Setting up sample database with initial data..."
@@ -37,21 +40,35 @@ pkgs.mkShell {
     else
       echo "Sample database already exists."
     fi
-    
+
     echo ""
     echo "========================================="
     echo "PostgreSQL is ready!"
     echo "========================================="
     echo "Database URL: $DATABASE_URL"
     echo ""
-    echo "Useful commands:"
-    echo "  psql sampledb        - Connect to sample database"
-    echo "  psql                 - Connect to default postgres database"
-    echo "  pg_ctl stop          - Stop PostgreSQL server"
+
+    # SQLite setup
+    if [ ! -f "$SQLITE_DB_PATH" ]; then
+      echo "Creating SQLite sample database..."
+      if [ -f init.sql ]; then
+        sqlite3 "$SQLITE_DB_PATH" < init.sql
+      else
+        # If no SQL, create a sample table
+        sqlite3 "$SQLITE_DB_PATH" "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT);"
+        sqlite3 "$SQLITE_DB_PATH" "INSERT INTO users (username) VALUES ('alice'), ('bob');"
+      fi
+    fi
+
+    echo "========================================="
+    echo "SQLite sample database ready!"
+    echo "========================================="
+    echo "SQLite connection string:"
+    echo "  $SQLITE_CONNECTION_STRING"
     echo ""
-    echo "Sample queries to try:"
+    echo "Useful SQLite commands:"
+    echo "  sqlite3 $SQLITE_DB_PATH"
     echo "  SELECT * FROM users;"
-    echo "  SELECT u.username, p.title FROM users u JOIN posts p ON u.id = p.user_id;"
     echo ""
   '';
 

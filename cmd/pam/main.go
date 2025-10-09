@@ -5,11 +5,16 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
+
 	"gopkg.in/yaml.v2"
+
+	"github.com/eduardofuncao/pam/internal/table"
 )
 
 var cfgPath = os.ExpandEnv("$HOME/.config/pam/config.yaml")
@@ -17,50 +22,58 @@ var cfgPath = os.ExpandEnv("$HOME/.config/pam/config.yaml")
 func main() {
 	cfg, err := loadConfig(cfgPath)
 	if err != nil {
-		log.Fatal("Could not load context from config file", err)
+		log.Fatal("Could not load config file", err)
 	}
 
 	if len(os.Args) < 2 {
 		fmt.Println("Usage:")
-		fmt.Println("pam connect <db-type> <connection-string>")
+		fmt.Println("pam create <name> <db-type> <connection-string>")
+		fmt.Println("pam switch <db-name>")
+		fmt.Println("pam add <query-name> <query>")
+		fmt.Println("pam query <query-name>")
 		fmt.Println("pam get <db-type> <connection-string> <sql-query>")
-		fmt.Println("\ndb-type: postgres or mysql")
 		os.Exit(1)
 	}
 
 	command := os.Args[1]
 
 	switch command {
-	case "connect":
-		if len(os.Args) < 4 {
-			log.Fatal("Usage: connect <db-type> <connection-string>")
-		}
-		dbType := os.Args[2]
-		connStr := os.Args[3]
-		connectDB(dbType, connStr)
 
-	case "context":
+	case "create":
 		if len(os.Args) < 4 {
-			log.Fatal("Usage: pam context <name> <db-type> <connection-string>")
+			log.Fatal("Usage: pam create <name> <db-type> <connection-string>")
 		}
 		cfg.Current.Name = os.Args[2]
 		cfg.Current.DBType = os.Args[3]
 		cfg.Current.DBConnectionString = os.Args[4]
+
+		cfg.Connections[cfg.Current.Name] = Connection{
+			DBType:             os.Args[3],
+			DBConnectionString: os.Args[4],
+			Queries:            make(map[string]string),
+		}
+
+		SaveConfig(cfgPath, cfg)
+
+	case "switch":
+		if len(os.Args) < 3 {
+			log.Fatal("Usage: pam switch <db-name>")
+		}
+		cfg.Current.Name = os.Args[2]
+		cfg.Current.DBType = cfg.Connections[cfg.Current.Name].DBType
+		cfg.Current.DBConnectionString = cfg.Connections[cfg.Current.Name].DBConnectionString
 		SaveConfig(cfgPath, cfg)
 
 	case "add":
 		if len(os.Args) < 3 {
 			log.Fatal("Usage: pam add <query-name> <query>")
 		}
-		queryToSave := SavedQuery{
-			Query: os.Args[3],
-		}
 		//add connection to cfg if it does not exist
-		_, ok := cfg.Connections[cfg.Current.Name] 
+		_, ok := cfg.Connections[cfg.Current.Name]
 		if !ok {
-			cfg.Connections[cfg.Current.Name] = make(map[string]SavedQuery)
+			cfg.Connections[cfg.Current.Name] = Connection{}
 		}
-		cfg.Connections[cfg.Current.Name][os.Args[2]] = queryToSave
+		cfg.Connections[cfg.Current.Name].Queries[os.Args[2]] = os.Args[3]
 		SaveConfig(cfgPath, cfg)
 
 	case "query":
@@ -69,29 +82,51 @@ func main() {
 		}
 		dbType := cfg.Current.DBType
 		connStr := cfg.Current.DBConnectionString
-		connections := cfg.Connections[cfg.Current.Name]
-		query := connections[os.Args[2]]
-		log.Println(dbType, connStr, os.Args[2], query)
-		queryDB(dbType, connStr, query.Query)
+		query := cfg.Connections[cfg.Current.Name].Queries[os.Args[2]]
+		queryDB(dbType, connStr, query)
+
+	case "list":
+		var objectType string
+		if len(os.Args) < 3 {
+			objectType = ""
+		} else {
+			objectType = os.Args[2]
+		}
+
+		switch objectType {
+		case "connections":
+			for name, connection := range cfg.Connections {
+				fmt.Printf("- %s (%s)\n", name, connection.DBConnectionString)
+			}
+
+		case "", "queries":
+			for name, query := range cfg.Connections[cfg.Current.Name].Queries {
+				fmt.Printf("- %s (%s)\n", name, query)
+			}
+		}
+
+	case "edit":
+		editor := os.Getenv("EDITOR")
+		if editor == "" {
+			editor = "vim"
+		}
+
+		cmd := exec.Command(editor, cfgPath)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			log.Fatalf("Failed to open editor: %v", err)
+		}
+
+	case "history":
+		return
 
 	default:
 		log.Fatalf("Unknown command: %s", command)
 	}
-}
 
-func connectDB(dbType, connStr string) {
-	db, err := sql.Open(dbType, connStr)
-	if err != nil {
-		log.Fatalf("Error opening database: %v", err)
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		log.Fatalf("Cannot connect to database: %v", err)
-	}
-
-	fmt.Println("✓ Successfully connected to database!")
+	fmt.Printf("\nconnected to: %s/%s\n", cfg.Current.DBType, cfg.Current.Name)
 }
 
 func queryDB(dbType, connStr, query string) {
@@ -118,21 +153,6 @@ func queryDB(dbType, connStr, query string) {
 		log.Fatalf("Error getting columns: %v", err)
 	}
 
-	// Print header
-	for i, col := range columns {
-		if i > 0 {
-			fmt.Print("\t")
-		}
-		fmt.Print(col)
-	}
-	fmt.Println()
-
-	// Print separator
-	for range columns {
-		fmt.Print("--------\t")
-	}
-	fmt.Println()
-
 	// Prepare scan arguments
 	values := make([]interface{}, len(columns))
 	valuePtrs := make([]interface{}, len(columns))
@@ -140,33 +160,39 @@ func queryDB(dbType, connStr, query string) {
 		valuePtrs[i] = &values[i]
 	}
 
-	// Print rows
+	// Collect all rows data
+	var data [][]string
+
 	for rows.Next() {
 		err = rows.Scan(valuePtrs...)
 		if err != nil {
 			log.Fatalf("Error scanning row: %v", err)
 		}
 
+		rowData := make([]string, len(columns))
 		for i, val := range values {
-			if i > 0 {
-				fmt.Print("\t")
-			}
 			if val == nil {
-				fmt.Print("NULL")
+				rowData[i] = "NULL"
 			} else {
-				fmt.Print(val)
+				rowData[i] = fmt.Sprintf("%v", val)
 			}
 		}
-		fmt.Println()
+		data = append(data, rowData)
 	}
 
 	if err = rows.Err(); err != nil {
 		log.Fatalf("Error during iteration: %v", err)
 	}
+
+	if err := table.RenderTable(columns, data); err != nil {
+		log.Fatalf("Error rendering table: %v", err)
+	}
 }
 
-type SavedQuery struct {
-	Query string `yaml:"query"`
+type Connection struct {
+	DBType             string            `yaml:"db_type"`
+	DBConnectionString string            `yaml:"db_connection_string"`
+	Queries            map[string]string `yaml:"queries"`
 }
 
 type Config struct {
@@ -175,15 +201,16 @@ type Config struct {
 		DBType             string `yaml:"db_type"`
 		DBConnectionString string `yaml:"db_connection_string"`
 	} `yaml:"current"`
-	Connections map[string]map[string]SavedQuery `yaml:"connections"`
+	Connections map[string]Connection `yaml:"connections"`
 }
 
 func loadConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
+			fmt.Println("Creating blank config file at", cfgPath)
 			cfg := &Config{
-				Connections: make(map[string]map[string]SavedQuery),
+				Connections: make(map[string]Connection),
 			}
 			err := SaveConfig(cfgPath, cfg)
 			if err != nil {
