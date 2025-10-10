@@ -70,7 +70,7 @@ func main() {
 		if len(os.Args) < 3 {
 			log.Fatal("Usage: pam add <query-name> <query>")
 		}
-		//add connection to cfg if it does not exist
+
 		_, ok := cfg.Connections[cfg.Current.Name]
 		if !ok {
 			cfg.Connections[cfg.Current.Name] = Connection{}
@@ -147,28 +147,22 @@ func queryDB(dbType, connStr, query string) {
 	}
 	defer rows.Close()
 
-	// Get column names
 	columns, err := rows.Columns()
 	if err != nil {
 		log.Fatalf("Error getting columns: %v", err)
 	}
 
-	// Prepare scan arguments
 	values := make([]interface{}, len(columns))
 	valuePtrs := make([]interface{}, len(columns))
 	for i := range columns {
 		valuePtrs[i] = &values[i]
 	}
-
-	// Collect all rows data
 	var data [][]string
-
 	for rows.Next() {
 		err = rows.Scan(valuePtrs...)
 		if err != nil {
 			log.Fatalf("Error scanning row: %v", err)
 		}
-
 		rowData := make([]string, len(columns))
 		for i, val := range values {
 			if val == nil {

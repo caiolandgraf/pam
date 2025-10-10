@@ -40,7 +40,6 @@ pkgs.mkShell {
     pg_ctl start -l $LOG_PATH -o "-c unix_socket_directories=$PGHOST -c listen_addresses= -c port=5432"
     echo "PostgreSQL started successfully!"
 
-    # PostgreSQL sampledb setup
     if ! psql -lqt | cut -d \| -f 1 | grep -qw sampledb; then
       echo ""
       echo "Setting up sample database with initial data..."
@@ -62,7 +61,6 @@ pkgs.mkShell {
       if [ -f init.sql ]; then
         sqlite3 "$SQLITE_DB_PATH" < init.sql
       else
-        # If no SQL, create a sample table
         sqlite3 "$SQLITE_DB_PATH" "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT);"
         sqlite3 "$SQLITE_DB_PATH" "INSERT INTO users (username) VALUES ('alice'), ('bob');"
       fi

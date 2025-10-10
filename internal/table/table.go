@@ -159,7 +159,9 @@ func (m TableModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.visibleCols > numColumns {
 			m.visibleCols = numColumns
 		}
-		m.visibleRows = m.height - 7
+    // TODO: remove magic variable: this is an offset so that the table does not take
+		//       the full terminal height
+		m.visibleRows = m.height - 7 
 		if m.visibleRows > numRows {
 			m.visibleRows = numRows
 		}
@@ -177,19 +179,15 @@ func (m TableModel) View() string {
 
 	var b strings.Builder
 
-	// Render header
 	b.WriteString(m.renderHeader())
 	b.WriteString("\n")
 
-	// Render data rows
 	endRow := min(m.offsetY+m.visibleRows, len(m.data))
-
 	for i := m.offsetY; i < endRow; i++ {
 		b.WriteString(m.renderDataRow(i))
 		b.WriteString("\n")
 	}
 
-	// Render footer
 	b.WriteString(m.renderFooter())
 
 	return b.String()
@@ -250,4 +248,4 @@ func RenderTable(columns []string, data [][]string) error {
 	p := tea.NewProgram(model)
 	_, err := p.Run()
 	return err
-}
+	}
