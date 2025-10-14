@@ -1,12 +1,10 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/godror/godror"
@@ -14,15 +12,15 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/charmbracelet/lipgloss"
-	"gopkg.in/yaml.v2"
 
+	"github.com/eduardofuncao/pam/internal/config"
+	"github.com/eduardofuncao/pam/internal/db"
+	"github.com/eduardofuncao/pam/internal/display"
 	"github.com/eduardofuncao/pam/internal/table"
 )
 
-var cfgPath = os.ExpandEnv("$HOME/.config/pam/config.yaml")
-
 func main() {
-	cfg, err := loadConfig(cfgPath)
+	cfg, err := config.LoadConfig(config.CfgFile)
 	if err != nil {
 		log.Fatal("Could not load config file", err)
 	}
@@ -42,51 +40,79 @@ func main() {
 	switch command {
 
 	case "init":
-		if len(os.Args) < 4 {
-			log.Fatal("Usage: pam create <name> <db-type> <connection-string>")
-		}
-		cfg.Current.Name = os.Args[2]
-		cfg.Current.DBType = os.Args[3]
-		cfg.Current.DBConnectionString = os.Args[4]
-
-		cfg.Connections[cfg.Current.Name] = Connection{
-			DBType:             os.Args[3],
-			DBConnectionString: os.Args[4],
-			Queries:            make(map[string]string),
+		if len(os.Args) < 5 {
+			log.Fatal("Usage: pam create <name> <db-type> <connection-string> <user> <password>")
 		}
 
-		SaveConfig(cfgPath, cfg)
+		var conn *db.Connection
+		if len(os.Args) < 7 { //no user/pass
+			conn = db.NewConnection(os.Args[2], os.Args[3], os.Args[4], "", "")
+		} else {
+			conn = db.NewConnection(os.Args[2], os.Args[3], os.Args[4], os.Args[5], os.Args[6])
+		}
+
+		err := conn.Open()
+		if err != nil {
+			log.Fatal("Could not establish connection to: ", conn.DBType, conn.Name)
+		}
+		defer conn.Close()
+
+		cfg.CurrentConnection = conn.Name
+		cfg.Connections[cfg.CurrentConnection] = conn
+		cfg.Save()
 
 	case "switch", "use":
 		if len(os.Args) < 3 {
-			log.Fatal("Usage: pam switch <db-name>")
+			log.Fatal("Usage: pam switch/use <db-name>")
 		}
-		cfg.Current.Name = os.Args[2]
-		cfg.Current.DBType = cfg.Connections[cfg.Current.Name].DBType
-		cfg.Current.DBConnectionString = cfg.Connections[cfg.Current.Name].DBConnectionString
-		SaveConfig(cfgPath, cfg)
-		fmt.Printf("connected to: %s/%s\n", cfg.Current.DBType, cfg.Current.Name)
+
+		_, ok := cfg.Connections[os.Args[2]]
+		if !ok {
+			log.Fatalf("Connection %s does not exist", os.Args[2])
+		}
+		cfg.CurrentConnection = os.Args[2]
+
+		err := cfg.Save()
+		if err != nil {
+			log.Fatal("Could not save configuration file")
+		}
+		fmt.Printf("connected to: %s/%s\n", cfg.Connections[cfg.CurrentConnection].DBType, cfg.CurrentConnection)
 
 	case "add":
-		if len(os.Args) < 3 {
+		if len(os.Args) < 4 {
 			log.Fatal("Usage: pam add <query-name> <query>")
 		}
 
-		_, ok := cfg.Connections[cfg.Current.Name]
+		_, ok := cfg.Connections[cfg.CurrentConnection]
 		if !ok {
-			cfg.Connections[cfg.Current.Name] = Connection{}
+			cfg.Connections[cfg.CurrentConnection] = &db.Connection{}
 		}
-		cfg.Connections[cfg.Current.Name].Queries[os.Args[2]] = os.Args[3]
-		SaveConfig(cfgPath, cfg)
+		cfg.Connections[cfg.CurrentConnection].Queries[os.Args[2]] = db.Query{
+			Name: os.Args[2],
+			SQL:  os.Args[3],
+		}
+		err := cfg.Save()
+		if err != nil {
+			log.Fatal("Could not save configuration file")
+		}
 
 	case "query", "run":
 		if len(os.Args) < 3 {
-			log.Fatal("Usage:pam query <query-name>")
+			log.Fatal("Usage:pam query/run <query-name>")
 		}
-		dbType := cfg.Current.DBType
-		connStr := cfg.Current.DBConnectionString
-		query := cfg.Connections[cfg.Current.Name].Queries[os.Args[2]]
-		columns, data := queryDB(dbType, connStr, query)
+		currConn := cfg.Connections[cfg.CurrentConnection]
+		query := currConn.Queries[os.Args[2]]
+
+		err = currConn.Open()
+		if err != nil {
+			log.Fatalf("Could not open the connection to %s/%s", currConn.DBType, currConn.Name)
+		}
+
+		columns, data, err := currConn.Query(query.Name)
+		if err != nil {
+			log.Fatal("Could not execute Query")
+		}
+
 		if err := table.RenderTable(columns, data); err != nil {
 			log.Fatalf("Error rendering table: %v", err)
 		}
@@ -102,12 +128,12 @@ func main() {
 		switch objectType {
 		case "connections":
 			for name, connection := range cfg.Connections {
-				fmt.Printf("- %s (%s)\n", name, connection.DBConnectionString)
+				fmt.Printf("◆ %s (%s)\n", name, connection.ConnString)
 			}
 
 		case "", "queries":
-			for name, query := range cfg.Connections[cfg.Current.Name].Queries {
-				fmt.Printf("- %s (%s)\n", name, query)
+			for name, query := range cfg.Connections[cfg.CurrentConnection].Queries {
+				fmt.Println(display.RenderQuery(name, query.SQL))
 			}
 		}
 
@@ -117,7 +143,7 @@ func main() {
 			editor = "vim"
 		}
 
-		cmd := exec.Command(editor, cfgPath)
+		cmd := exec.Command(editor, config.CfgFile)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -129,127 +155,13 @@ func main() {
 		style := lipgloss.NewStyle().
 			Foreground(lipgloss.Color("171")).
 			Bold(true)
-		fmt.Println(style.Render("✓ Now using:"), fmt.Sprintf("%s/%s", cfg.Current.DBType, cfg.Current.Name))
+		currConn := cfg.Connections[cfg.CurrentConnection]
+		fmt.Println(style.Render("✓ Now using:"), fmt.Sprintf("%s/%s", currConn.DBType, currConn.Name))
 
 	case "history":
-		return
+		fmt.Println("Not implemented")
 
 	default:
 		log.Fatalf("Unknown command: %s", command)
 	}
-}
-
-func queryDB(dbType, connStr, query string) ([]string, [][]string) {
-	db, err := sql.Open(dbType, connStr)
-	if err != nil {
-		log.Fatalf("Error opening database: %v", err)
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		log.Fatalf("Cannot connect to database: %v", err)
-	}
-
-	rows, err := db.Query(query)
-	if err != nil {
-		log.Fatalf("Error executing query: %v", err)
-	}
-	defer rows.Close()
-
-	columns, err := rows.Columns()
-	if err != nil {
-		log.Fatalf("Error getting columns: %v", err)
-	}
-
-	values := make([]interface{}, len(columns))
-	valuePtrs := make([]interface{}, len(columns))
-	for i := range columns {
-		valuePtrs[i] = &values[i]
-	}
-	var data [][]string
-	for rows.Next() {
-		err = rows.Scan(valuePtrs...)
-		if err != nil {
-			log.Fatalf("Error scanning row: %v", err)
-		}
-		rowData := make([]string, len(columns))
-		for i, val := range values {
-			if val == nil {
-				rowData[i] = "NULL"
-			} else {
-				rowData[i] = fmt.Sprintf("%v", val)
-			}
-		}
-		data = append(data, rowData)
-	}
-
-	if err = rows.Err(); err != nil {
-		log.Fatalf("Error during iteration: %v", err)
-	}
-	return columns, data
-}
-
-type Connection struct {
-	DBType             string            `yaml:"db_type"`
-	DBConnectionString string            `yaml:"db_connection_string"`
-	Queries            map[string]string `yaml:"queries"`
-}
-
-type Style struct {
-	Accent string `yaml:"accent_color"`
-}
-
-type History struct {
-	Size int `yaml:"size"`
-}
-
-type Config struct {
-	Current struct {
-		Name               string `yaml:"name"`
-		DBType             string `yaml:"db_type"`
-		DBConnectionString string `yaml:"db_connection_string"`
-	} `yaml:"current"`
-	Connections map[string]Connection `yaml:"connections"`
-	Style       Style                 `yaml:"style"`
-	History     History               `yaml:"history"`
-}
-
-func loadConfig(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			fmt.Println("Creating blank config file at", cfgPath)
-			cfg := &Config{
-				Connections: make(map[string]Connection),
-			}
-			err := SaveConfig(cfgPath, cfg)
-			if err != nil {
-				return nil, err
-			}
-			return cfg, nil
-		}
-		return nil, err
-	}
-	var cfg Config
-	err = yaml.Unmarshal(data, &cfg)
-	if err != nil {
-		return nil, err
-	}
-	return &cfg, nil
-}
-
-func SaveConfig(path string, cfg *Config) error {
-	//TODO: change variable declaration removing the need for filepath package
-	dir := filepath.Dir(path)
-	err := os.MkdirAll(dir, 0755)
-	if err != nil {
-		return fmt.Errorf("failed to create config directory: %w", err)
-	}
-
-	data, err := yaml.Marshal(cfg)
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(path, data, 0644)
 }
