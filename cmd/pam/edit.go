@@ -159,3 +159,18 @@ func parseSQLQueriesFile(content string) (map[string]db.Query, error) {
 
 	return queries, nil
 }
+
+func removeCommentLines(content string) string {
+	lines := strings.Split(content, "\n")
+	var result strings.Builder
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, "--") {
+			result.WriteString(line)
+			result.WriteString("\n")
+		}
+	}
+
+	return result.String()
+}
