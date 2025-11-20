@@ -141,7 +141,6 @@ func (m Model) copySelection() (Model, tea.Cmd) {
 	
 	var result strings.Builder
 	
-	// If multiple cells are selected, include headers
 	if m.visualMode {
 		for col := minCol; col <= maxCol; col++ {
 			if col > minCol {
