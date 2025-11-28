@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 func (m Model) View() string {
@@ -37,10 +38,10 @@ func (m Model) renderHeader() string {
 
 	for j := m.offsetX; j < endCol; j++ {
 		content := formatCell(m.columns[j])
-		cells = append(cells, headerStyle.Render(content))
+		cells = append(cells, styles.TableHeader.Render(content))
 	}
 
-	return strings.Join(cells, borderStyle.Render("│"))
+	return strings.Join(cells, styles.TableBorder.Render("│"))
 }
 
 func (m Model) renderDataRow(rowIndex int) string {
@@ -53,7 +54,7 @@ func (m Model) renderDataRow(rowIndex int) string {
 		cells = append(cells, style.Render(content))
 	}
 
-	return strings.Join(cells, borderStyle.Render("│"))
+	return strings.Join(cells, styles.TableBorder.Render("│"))
 }
 
 func (m Model) renderFooter() string {
@@ -64,19 +65,19 @@ func (m Model) renderFooter() string {
 		updateInfo = " | Update: u (no PK)"
 	}
 
-footer := fmt.Sprintf("\nIn %.2fs | Position: Row %d/%d, Col %d/%d | Scroll: H/L (left/right), K/J (up/down) | Copy: y/enter%s",
+	footer := fmt.Sprintf("\nIn %.2fs | Position: Row %d/%d, Col %d/%d | Scroll: H/L (left/right), K/J (up/down) | Copy: y/enter%s",
 		m.elapsed.Seconds(), m.selectedRow+1, m.numRows(), m.selectedCol+1, m.numCols(), updateInfo)
-	return lipgloss.NewStyle().Faint(true).Render(footer)
+	return styles.Faint.Render(footer)
 }
 
-func (m Model) getCellStyle(row, col int) lipgloss.Style {
+func (m Model) getCellStyle(row, col int) lipgloss. Style {
 	if m.isCellInSelection(row, col) {
 		if m.blinkCopiedCell {
-			return copiedBlinkStyle
+			return styles.TableCopiedBlink
 		}
-		return selectedStyle
+		return styles.TableSelected
 	}
-	return cellStyle
+	return styles.TableCell
 }
 
 func formatCell(content string) string {

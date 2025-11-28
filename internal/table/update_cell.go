@@ -4,18 +4,22 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func (m Model) updateCell() (tea.Model, tea.Cmd) {
-	if m.selectedRow < 0 || m.selectedRow >= m.numRows() {
+	if m.selectedRow < 0 || m. selectedRow >= m.numRows() {
 		return m, nil
 	}
-	if m.selectedCol < 0 || m.selectedCol >= m.numCols() {
+	if m.selectedCol < 0 || m. selectedCol >= m.numCols() {
 		return m, nil
 	}
+
+	// Capture the old value
+	oldValue := m.data[m.selectedRow][m.selectedCol]
 
 	updateStmt := m.buildUpdateStatement()
 
@@ -26,6 +30,7 @@ func (m Model) updateCell() (tea.Model, tea.Cmd) {
 
 	tmpFile, err := os.CreateTemp("", "pam-update-*.sql")
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating temp file: %v\n", err)
 		return m, tea.Quit
 	}
 	tmpPath := tmpFile.Name()
@@ -33,28 +38,37 @@ func (m Model) updateCell() (tea.Model, tea.Cmd) {
 
 	if _, err := tmpFile.Write([]byte(updateStmt)); err != nil {
 		tmpFile.Close()
-		return m, tea.Quit
+		fmt. Fprintf(os.Stderr, "Error writing temp file: %v\n", err)
+		return m, tea. Quit
 	}
 	tmpFile.Close()
 
+	// Restore terminal to normal mode before opening editor
+	tea.ExitAltScreen()
+
 	cmd := exec.Command(editorCmd, tmpPath)
-	cmd. Stdin = os.Stdin
-	cmd. Stdout = os.Stdout
-	cmd.Stderr = os. Stderr
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd. Stderr = os.Stderr
 	
 	if err := cmd.Run(); err != nil {
-		return m, tea.Quit
+		fmt.Fprintf(os.Stderr, "Error running editor: %v\n", err)
+		return m, tea. Quit
 	}
 
 	editedSQL, err := os.ReadFile(tmpPath)
 	if err != nil {
-		return m, tea.Quit
+		fmt. Fprintf(os.Stderr, "Error reading edited file: %v\n", err)
+		return m, tea. Quit
 	}
+
+	// Extract the new value from the edited SQL
+	newValue := extractNewValue(string(editedSQL), m. columns[m.selectedCol])
 
 	if err := m.executeUpdate(string(editedSQL)); err != nil {
 		fmt. Fprintf(os.Stderr, "Error executing update: %v\n", err)
 	} else {
-		fmt.Println("\nUpdate executed successfully")
+		fmt.Printf("\nUpdate executed successfully: %s --> %s\n", oldValue, newValue)
 	}
 
 	return m, tea.Quit
@@ -62,7 +76,7 @@ func (m Model) updateCell() (tea.Model, tea.Cmd) {
 
 func (m Model) buildUpdateStatement() string {
 	columnName := m.columns[m.selectedCol]
-	currentValue := m.data[m. selectedRow][m.selectedCol]
+	currentValue := m. data[m.selectedRow][m.selectedCol]
 	
 	pkValue := ""
 	if m.primaryKeyCol != "" {
@@ -84,19 +98,56 @@ func (m Model) buildUpdateStatement() string {
 }
 
 func (m Model) executeUpdate(sql string) error {
-	lines := strings.Split(sql, "\n")
-	var cleanLines []string
-	for _, line := range lines {
+	var result strings.Builder
+	for line := range strings. SplitSeq(sql, "\n") {
 		trimmed := strings.TrimSpace(line)
-		if ! strings.HasPrefix(trimmed, "--") && trimmed != "" {
-			cleanLines = append(cleanLines, line)
+		if !strings.HasPrefix(trimmed, "--") && trimmed != "" {
+			result.WriteString(trimmed)
+			result.WriteString(" ")
 		}
 	}
-	cleanSQL := strings.TrimSpace(strings.Join(cleanLines, "\n"))
+	
+	cleanSQL := strings.TrimSpace(result.String())
+	cleanSQL = strings.TrimSuffix(cleanSQL, ";")
 	
 	if cleanSQL == "" {
-		return fmt.Errorf("no SQL to execute")
+		return fmt. Errorf("no SQL to execute")
 	}
 	
 	return m.dbConnection.Exec(cleanSQL)
+}
+
+// extractNewValue parses the SQL UPDATE statement to extract the new value
+func extractNewValue(sql string, columnName string) string {
+	// Remove comments and consolidate to single line
+	var result strings.Builder
+	for line := range strings.SplitSeq(sql, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, "--") && trimmed != "" {
+			result.WriteString(trimmed)
+			result.WriteString(" ")
+		}
+	}
+	cleanSQL := strings.TrimSpace(result. String())
+	
+	// Try to match: SET column_name = 'value' or SET column_name = value
+	// This regex handles both quoted and unquoted values
+	pattern := fmt.Sprintf(`SET\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`, regexp.QuoteMeta(columnName))
+	re := regexp.MustCompile(`(?i)` + pattern)
+	
+	matches := re. FindStringSubmatch(cleanSQL)
+	if len(matches) > 0 {
+		// matches[2] = single quoted value
+		// matches[3] = double quoted value
+		// matches[4] = unquoted value
+		if matches[2] != "" {
+			return matches[2]
+		} else if matches[3] != "" {
+			return matches[3]
+		} else if matches[4] != "" {
+			return matches[4]
+		}
+	}
+	
+	return "<unknown>"
 }

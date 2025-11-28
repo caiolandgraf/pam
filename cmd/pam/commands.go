@@ -3,75 +3,78 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/lipgloss"
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/mattn/go-sqlite3"
-
 	"github.com/eduardofuncao/pam/internal/config"
 	"github.com/eduardofuncao/pam/internal/db"
 	"github.com/eduardofuncao/pam/internal/editor"
 	"github.com/eduardofuncao/pam/internal/spinner"
+	"github.com/eduardofuncao/pam/internal/styles"
 	"github.com/eduardofuncao/pam/internal/table"
 )
 
 func (a *App) handleInit() {
 	if len(os.Args) < 5 {
-		log.Fatal("Usage: pam create <name> <db-type> <connection-string> <user> <password>")
+		printError("Usage: pam create <name> <db-type> <connection-string> <user> <password>")
 	}
 
 	conn, err := db.CreateConnection(os.Args[2], os.Args[3], os.Args[4])
 	if err != nil {
-		log.Fatalf("Could not create connection interface: %s/%s, %s", os.Args[3], os.Args[2], err)
+		printError("Could not create connection interface: %s/%s, %s", os.Args[3], os.Args[2], err)
 	}
 
 	err = conn.Open()
 	if err != nil {
-		log.Fatalf("Could not establish connection to: %s/%s: %s",
+		printError("Could not establish connection to: %s/%s: %s",
 			conn.GetDbType(), conn.GetName(), err)
 	}
 	defer conn.Close()
 
 	err = conn.Ping()
 	if err != nil {
-		log.Fatalf("Could not communicate with the database: %s/%s, %s", os.Args[3], os.Args[2], err)
+		printError("Could not communicate with the database: %s/%s, %s", os.Args[3], os.Args[2], err)
 	}
 
 	a.config.CurrentConnection = conn.GetName()
 	a.config.Connections[a.config.CurrentConnection] = config.ToConnectionYAML(conn)
-	a.config.Save()
+	err = a.config.Save()
+	if err != nil {
+		printError("Could not save configuration file: %v", err)
+	}
+
+	fmt.Println(styles.Success.Render("✓ Connection created:"), styles.Title.Render(fmt.Sprintf("%s/%s", conn.GetDbType(), conn.GetName())))
 }
 
 func (a *App) handleSwitch() {
 	if len(os.Args) < 3 {
-		log.Fatal("Usage: pam switch/use <db-name>")
+		printError("Usage: pam switch/use <db-name>")
 	}
 
-	_, ok := a.config.Connections[os.Args[2]]
+	connName := os.Args[2]
+	conn, ok := a.config.Connections[connName]
 	if !ok {
-		log.Fatalf("Connection %s does not exist", os.Args[2])
+		printError("Connection '%s' does not exist", connName)
 	}
-	a.config.CurrentConnection = os.Args[2]
+	a.config.CurrentConnection = connName
 
 	err := a.config.Save()
 	if err != nil {
-		log.Fatal("Could not save configuration file")
+		printError("Could not save configuration file: %v", err)
 	}
-	fmt.Printf("connected to: %s/%s\n", a.config.Connections[a.config.CurrentConnection].DBType, a.config.CurrentConnection)
+
+	fmt.Println(styles.Success.Render("⇄ Switched to:"), styles.Title.Render(fmt.Sprintf("%s/%s", conn.DBType, connName)))
 }
 
 func (a *App) handleAdd() {
 	if len(os.Args) < 3 {
-		log.Fatal("Usage: pam add <query-name> [query]")
+		printError("Usage: pam add <query-name> [query]")
 	}
 
 	if a.config.CurrentConnection == "" {
-		log.Fatal("No active connection. Use 'pam switch <connection>' first")
+		printError("No active connection.  Use 'pam switch <connection>' first")
 	}
 
 	_, ok := a.config.Connections[a.config.CurrentConnection]
@@ -91,9 +94,9 @@ func (a *App) handleAdd() {
 			editorCmd = "vim"
 		}
 
-		tmpFile, err := os.CreateTemp("", "pam-new-query-*.sql")
+		tmpFile, err := os.CreateTemp("", "pam-new-query-*. sql")
 		if err != nil {
-			log.Fatalf("Failed to create temp file: %v", err)
+			printError("Failed to create temp file: %v", err)
 		}
 		tmpPath := tmpFile.Name()
 		defer os.Remove(tmpPath)
@@ -105,7 +108,7 @@ func (a *App) handleAdd() {
 		header += "-- Write your SQL query below and save\n\n"
 
 		if _, err := tmpFile.Write([]byte(header)); err != nil {
-			log.Fatalf("Failed to write to temp file: %v", err)
+			printError("Failed to write to temp file: %v", err)
 		}
 		tmpFile.Close()
 
@@ -114,19 +117,19 @@ func (a *App) handleAdd() {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
-			log.Fatalf("Failed to open editor: %v", err)
+			printError("Failed to open editor: %v", err)
 		}
 
 		editedData, err := os.ReadFile(tmpPath)
 		if err != nil {
-			log.Fatalf("Failed to read edited file: %v", err)
+			printError("Failed to read edited file: %v", err)
 		}
 
 		querySQL = removeCommentLines(string(editedData))
 		querySQL = strings.TrimSpace(querySQL)
 
 		if querySQL == "" {
-			log.Fatal("No SQL query provided. Query not saved.")
+			printError("No SQL query provided.  Query not saved")
 		}
 	}
 
@@ -138,30 +141,33 @@ func (a *App) handleAdd() {
 
 	err := a.config.Save()
 	if err != nil {
-		log.Fatal("Could not save configuration file")
+		printError("Could not save configuration file: %v", err)
 	}
 
-	fmt.Printf("✓ Added query '%s' with ID %d\n", queryName, queries[queryName].Id)
+	fmt.Println(styles.Success.Render(fmt.Sprintf("✓ Added query '%s' with ID %d", queryName, queries[queryName].Id)))
 }
 
 func (a *App) handleRemove() {
 	if len(os.Args) < 3 {
-		log.Fatal("Usage: pam remove <query-name>")
+		printError("Usage: pam remove <query-name>")
 	}
 
 	conn := a.config.Connections[a.config.CurrentConnection]
 	queries := conn.Queries
 
 	query, exists := db.FindQueryWithSelector(queries, os.Args[2])
-	if exists {
-		delete(conn.Queries, query.Name)
-	} else {
-		log.Fatalf("Query %s could not be found", os.Args[2])
+	if !exists {
+		printError("Query '%s' could not be found", os.Args[2])
 	}
+
+	delete(conn.Queries, query.Name)
+
 	err := a.config.Save()
 	if err != nil {
-		log.Fatal("Could not save configuration file")
+		printError("Could not save configuration file: %v", err)
 	}
+
+	fmt.Println(styles.Success.Render(fmt.Sprintf("✓ Removed query '%s'", query.Name)))
 }
 
 func (a *App) handleQuery() {
@@ -183,25 +189,25 @@ func (a *App) handleQuery() {
 		queries := currConn.GetQueries()
 		q, found := db.FindQueryWithSelector(queries, selector)
 		if !found {
-			log. Fatalf("Could not find query with name/id: %v", selector)
+			printError("Could not find query with name/id: %v", selector)
 		}
 		query = q
 	} else {
-		query = a.config.Connections[a. config.CurrentConnection].LastQuery
+		query = a.config.Connections[a.config.CurrentConnection].LastQuery
 		if query.Name == "" {
-			log.Fatal("No last query found.  Usage: pam query/run <query-name>")
+			printError("No last query found.  Usage: pam query/run <query-name>")
 		}
 	}
 
 	editedQuery, submitted, err := editor.EditQuery(query, editMode)
 	if submitted {
-		a. config.Connections[a.config.CurrentConnection].Queries[query.Name] = editedQuery
+		a.config.Connections[a.config.CurrentConnection].Queries[query.Name] = editedQuery
 	}
-	a.config. Connections[a.config.CurrentConnection].LastQuery = editedQuery
+	a.config.Connections[a.config.CurrentConnection].LastQuery = editedQuery
 	a.config.Save()
 
 	if err = currConn.Open(); err != nil {
-		log.Fatalf("Could not open the connection to %s/%s: %s", currConn.GetDbType(), currConn.GetName(), err)
+		printError("Could not open the connection to %s/%s: %s", currConn.GetDbType(), currConn.GetName(), err)
 	}
 
 	start := time.Now()
@@ -210,9 +216,14 @@ func (a *App) handleQuery() {
 
 	rows, err := currConn.Query(query.Name)
 	if err != nil {
-		log.Fatal("Could not complete query: ", err)
+		done <- struct{}{}
+		printError("Could not complete query: %v", err)
 	}
-	columns, data, err := db.FormatTableData(rows. (*sql.Rows))
+	columns, data, err := db.FormatTableData(rows.(*sql.Rows))
+	if err != nil {
+		done <- struct{}{}
+		printError("Could not format table data: %v", err)
+	}
 
 	done <- struct{}{}
 	elapsed := time.Since(start)
@@ -220,48 +231,62 @@ func (a *App) handleQuery() {
 	metadata, err := db.InferTableMetadata(currConn, query)
 	tableName := ""
 	primaryKeyCol := ""
-	
+
 	if err == nil && metadata != nil {
 		tableName = metadata.TableName
 		primaryKeyCol = metadata.PrimaryKey
 	} else {
-		fmt. Fprintf(os.Stderr, "Warning: Could not extract table metadata: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Update functionality will be limited.\n")
+		fmt.Fprintf(os.Stderr, styles.Faint.Render("Warning: Could not extract table metadata: %v\n"), err)
+		fmt.Fprintf(os.Stderr, styles.Faint.Render("Update functionality will be limited.\n"))
 	}
 
 	if err := table.Render(columns, data, elapsed, currConn, tableName, primaryKeyCol); err != nil {
-		log.Fatalf("Error rendering table: %v", err)
+		printError("Error rendering table: %v", err)
 	}
 }
 
 func (a *App) handleList() {
-	if len(os.Args) < 3 {
-		log.Fatal("Usage:pam list [queries/connections]")
-	}
-
 	var objectType string
 	if len(os.Args) < 3 {
-		objectType = ""
+		objectType = "queries" // Default to queries
 	} else {
 		objectType = os.Args[2]
 	}
 
 	switch objectType {
 	case "connections":
+		if len(a.config.Connections) == 0 {
+			fmt.Println(styles.Faint.Render("No connections configured"))
+			return
+		}
 		for name, connection := range a.config.Connections {
-			fmt.Printf("◆ %s (%s)\n", name, connection.ConnString)
+			marker := "◆"
+			if name == a.config.CurrentConnection {
+				marker = styles.Success.Render("●") // Active connection
+			} else {
+				marker = styles.Faint.Render("◆")
+			}
+			fmt.Printf("%s %s %s\n", marker, styles.Title.Render(name), styles.Faint.Render(fmt.Sprintf("(%s)", connection.DBType)))
 		}
 
-	case "", "queries":
-		titleStyle := lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("205"))
-
-		for _, query := range a.config.Connections[a.config.CurrentConnection].Queries {
-			formatedItem := fmt.Sprintf("\n◆ %d/%s", query.Id, query.Name)
-			fmt.Println(titleStyle.Render(formatedItem))
+	case "queries":
+		if a.config.CurrentConnection == "" {
+			printError("No active connection. Use 'pam switch <connection>' first")
+		}
+		conn := a.config.Connections[a.config.CurrentConnection]
+		if len(conn.Queries) == 0 {
+			fmt.Println(styles.Faint.Render("No queries saved"))
+			return
+		}
+		for _, query := range conn.Queries {
+			formatedItem := fmt.Sprintf("◆ %d/%s", query.Id, query.Name)
+			fmt.Println(styles.Title.Render(formatedItem))
 			fmt.Println(editor.HighlightSQL(editor.FormatSQLWithLineBreaks(query.SQL)))
+			fmt.Println()
 		}
+
+	default:
+		printError("Unknown list type: %s. Use 'queries' or 'connections'", objectType)
 	}
 }
 
@@ -279,21 +304,30 @@ func (a *App) handleEdit() {
 	switch editType {
 	case "config":
 		a.editConfig(editorCmd)
+		fmt.Println(styles.Success.Render("✓ Config file edited"))
 	case "queries":
 		a.editQueries(editorCmd)
+		fmt.Println(styles.Success.Render("✓ Queries edited"))
 	default:
-		log.Fatalf("Unknown edit type: %s. Use 'config', 'queries'", editType)
+		printError("Unknown edit type: %s.  Use 'config' or 'queries'", editType)
 	}
 }
 
 func (a *App) handleStatus() {
-	style := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("171")).
-		Bold(true)
+	if a.config.CurrentConnection == "" {
+		fmt.Println(styles.Faint.Render("No active connection"))
+		return
+	}
 	currConn := a.config.Connections[a.config.CurrentConnection]
-	fmt.Println(style.Render("✓ Now using:"), fmt.Sprintf("%s/%s", currConn.DBType, currConn.Name))
+	fmt.Println(styles.Success.Render("● Currently using:"), styles.Title.Render(fmt.Sprintf("%s/%s", currConn.DBType, a.config.CurrentConnection)))
 }
 
 func (a *App) handleHistory() {
-	fmt.Println("To be implemented in future releases...")
+	fmt.Println(styles.Faint.Render("To be implemented in future releases... "))
+}
+
+func printError(format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	fmt.Fprintln(os.Stderr, styles.Error.Render("✗ Error:"), msg)
+	os.Exit(1)
 }

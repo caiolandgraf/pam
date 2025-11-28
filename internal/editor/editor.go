@@ -6,8 +6,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/eduardofuncao/pam/internal/db"
+	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 type EditorModel struct {
@@ -75,32 +75,22 @@ func (m EditorModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m EditorModel) View() string {
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("205"))
-
-	helpStyle := lipgloss.NewStyle().
-		Faint(true)
-
-	separatorStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("238"))
-
 	var content string
 	if m.submitted {
 		highlightedSQL := HighlightSQL(m.textArea.Value())
 		content = fmt.Sprintf(
 			"%s\n%s\n%s",
-			titleStyle.Render("\n◆ "+m.query.Name),
+			styles.Title.Render("\n◆ "+m.query.Name),
 			highlightedSQL,
-			separatorStyle.Render("──────────────────────────────────────────────────────────"),
+			styles.Separator.Render("──────────────────────────────────────────────────────────"),
 		)
 	} else {
 		content = fmt.Sprintf(
 			"%s\n%s\n%s\n%s",
-			titleStyle.Render("\n◆ "+m.query.Name),
+			styles.Title.Render("\n◆ "+m.query.Name),
 			m.textArea.View(),
-			helpStyle.Render("Ctrl+D: Execute Query | Esc/Ctrl+C: Cancel"),
-			separatorStyle.Render("──────────────────────────────────────────────────────────"),
+			styles.Faint.Render("Ctrl+D: Execute Query | Esc/Ctrl+C: Cancel"),
+			styles.Separator.Render("──────────────────────────────────────────────────────────"),
 		)
 	}
 

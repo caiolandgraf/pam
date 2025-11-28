@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 var sqlKeywords = []string{
@@ -52,12 +52,8 @@ func FormatSQLWithLineBreaks(sql string) string {
 }
 
 func HighlightSQL(sql string) string {
-	keywordStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("86")).
-		Bold(true)
-
-	stringStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("220"))
+	keywordStyle := styles.SQLKeyword
+	stringStyle := styles.SQLString
 
 	highlighted := sql
 

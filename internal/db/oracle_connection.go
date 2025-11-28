@@ -120,7 +120,7 @@ func (oc *OracleConnection) BuildUpdateStatement(tableName, columnName, currentV
 	if pkColumn != "" && pkValue != "" {
 		escapedPkValue := strings.ReplaceAll(pkValue, "'", "''")
 		return fmt.Sprintf(
-			"-- Oracle UPDATE statement\nUPDATE %s\nSET %s = '%s'\nWHERE %s = '%s';\n-- COMMIT;",
+			"-- Oracle UPDATE statement\nUPDATE %s\nSET %s = '%s'\nWHERE %s = '%s';",
 			tableName,
 			columnName,
 			escapedValue,
