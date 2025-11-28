@@ -118,7 +118,7 @@ func (m *MySQLConnection) BuildUpdateStatement(tableName, columnName, currentVal
 	if pkColumn != "" && pkValue != "" {
 		escapedPkValue := strings.ReplaceAll(pkValue, "'", "''")
 		return fmt. Sprintf(
-			"-- MySQL UPDATE statement\nUPDATE `%s`\nSET `%s` = '%s'\nWHERE `%s` = '%s';",
+			"-- MySQL UPDATE statement\nUPDATE %s\nSET %s = '%s'\nWHERE %s = '%s';",
 			tableName,
 			columnName,
 			escapedValue,

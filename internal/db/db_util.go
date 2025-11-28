@@ -27,7 +27,12 @@ func FormatTableData(rows *sql.Rows) (columns []string, data [][]string, err err
 			if val == nil {
 				rowData[i] = "NULL"
 			} else {
-				rowData[i] = fmt.Sprintf("%v", val)
+				// Handle byte slices (common with MySQL text/varchar columns)
+				if b, ok := val.([]byte); ok {
+					rowData[i] = string(b)
+				} else {
+					rowData[i] = fmt.Sprintf("%v", val)
+				}
 			}
 		}
 		data = append(data, rowData)
@@ -41,11 +46,11 @@ func FormatTableData(rows *sql.Rows) (columns []string, data [][]string, err err
 
 func GetNextQueryId(queries map[string]Query) (id int) {
 	used := make(map[int]bool)
-	for _, query := range queries{
+	for _, query := range queries {
 		used[query.Id] = true
 	}
-	for i := 1; ;i++ {
-		if !used[i]{
+	for i := 1; ; i++ {
+		if !used[i] {
 			return i
 		}
 	}
