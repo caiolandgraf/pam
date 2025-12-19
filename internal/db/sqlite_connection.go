@@ -117,3 +117,14 @@ func (s *SQLiteConnection) BuildUpdateStatement(tableName, columnName, currentVa
 		escapedValue,
 	)
 }
+
+func (s *SQLiteConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string {
+	escapedPkValue := strings.ReplaceAll(pkValue, "'", "''")
+	
+	return fmt.Sprintf(
+		"-- SQLite DELETE statement\n-- WARNING: This will permanently delete data!\n-- Ensure the WHERE clause is correct.\n\nDELETE FROM %s\nWHERE %s = '%s';",
+		tableName,
+		primaryKeyCol,
+		escapedPkValue,
+	)
+}

@@ -31,6 +31,8 @@ type Model struct {
 	blinkUpdatedCell bool
 	updatedRow       int
 	updatedCol       int
+	blinkDeletedRow  bool
+	deletedRow       int
 }
 
 type blinkMsg struct{}

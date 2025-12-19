@@ -134,3 +134,13 @@ func (m *MySQLConnection) BuildUpdateStatement(tableName, columnName, currentVal
 		escapedValue,
 	)
 }
+func (m *MySQLConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string {
+	escapedPkValue := strings.ReplaceAll(pkValue, "'", "''")
+	
+	return fmt.Sprintf(
+		"-- MySQL DELETE statement\n-- WARNING:  This will permanently delete data!\n-- Ensure the WHERE clause is correct.\n\nDELETE FROM %s\nWHERE %s = '%s';",
+		tableName,
+		primaryKeyCol,
+		escapedPkValue,
+	)
+}

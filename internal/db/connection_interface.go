@@ -8,6 +8,7 @@ type DatabaseConnection interface {
 	Exec(sql string, args ...any) error
 	GetTableMetadata(tableName string) (*TableMetadata, error)
 	BuildUpdateStatement(tableName, columnName, currentValue, pkColumn, pkValue string) string
+	BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string
 
 	GetName() string
 	GetDbType() string

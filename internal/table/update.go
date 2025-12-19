@@ -11,6 +11,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case blinkMsg:
 		m.blinkCopiedCell = false
 		m.blinkUpdatedCell = false
+		m.blinkDeletedRow = false
 	case tea.WindowSizeMsg:
 		return m.handleWindowResize(msg), nil
 	}
@@ -54,7 +55,10 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "u":
 		return m.updateCell()
+	case "d":
+		return m.deleteRow()
 	}
+
 
 	return m, nil
 }

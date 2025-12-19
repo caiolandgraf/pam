@@ -133,3 +133,12 @@ func (p *PostgresConnection) BuildUpdateStatement(tableName, columnName, current
 		escapedValue,
 	)
 }
+
+func (c *PostgresConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string {
+	return fmt.Sprintf(
+		"DELETE FROM %s\nWHERE %s = '%s';",
+		tableName,
+		primaryKeyCol,
+		pkValue,
+	)
+}

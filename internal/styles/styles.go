@@ -76,4 +76,9 @@ var (
 				Background(lipgloss. Color(ColorHighlight)).
 				Foreground(lipgloss. Color(ColorAccent)).
 				Bold(true)
+
+	TableDeleted = lipgloss.NewStyle().
+				Background(lipgloss. Color(ColorHighlight)).
+				Foreground(lipgloss. Color(ColorAccent)).
+				Bold(true)
 )

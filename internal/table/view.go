@@ -81,6 +81,10 @@ func (m Model) renderFooter() string {
 }
 
 func (m Model) getCellStyle(row, col int) lipgloss.Style {
+	if m.blinkDeletedRow && m.deletedRow == row {
+		return styles.TableDeleted
+	}
+	
 	if m.blinkUpdatedCell && m.updatedRow == row && m.updatedCol == col {
 		return styles.TableUpdated
 	}
@@ -92,7 +96,7 @@ func (m Model) getCellStyle(row, col int) lipgloss.Style {
 		return styles.TableSelected
 	}
 	
-	return styles.TableCell
+	return styles. TableCell
 }
 
 func formatCell(content string) string {

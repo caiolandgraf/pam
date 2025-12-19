@@ -150,6 +150,7 @@ func (a *App) PrintCommandHelp() {
 		fmt.Println("  y / Enter             " + styles.Faint.Render("Copy current cell value to clipboard (if supported)"))
 		fmt.Println("  v                     " + styles.Faint.Render("Start multi-selection mode"))
 		fmt.Println("  u                     " + styles.Faint.Render("Update selected cell"))
+		fmt.Println("  d                     " + styles. Faint.Render("Delete current row (requires WHERE clause)"))
 		fmt.Println("  Esc /Ctrl+c           " + styles.Faint.Render("Quit the table view"))
 		fmt.Println()
 		fmt.Println(styles.Faint.Render("Exact keys may vary depending on how the table component is wired,"))

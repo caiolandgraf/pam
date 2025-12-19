@@ -136,3 +136,14 @@ func (oc *OracleConnection) BuildUpdateStatement(tableName, columnName, currentV
 		escapedValue,
 	)
 }
+
+func (oc *OracleConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string {
+	escapedPkValue := strings. ReplaceAll(pkValue, "'", "''")
+	
+	return fmt.Sprintf(
+		"-- Oracle DELETE statement\n-- WARNING: This will permanently delete data!\n-- Ensure the WHERE clause is correct.\n\nDELETE FROM %s\nWHERE %s = '%s';\n-- COMMIT;",
+		tableName,
+		primaryKeyCol,
+		escapedPkValue,
+	)
+}
