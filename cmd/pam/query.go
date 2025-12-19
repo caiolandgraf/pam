@@ -18,6 +18,7 @@ import (
 
 type queryFlags struct {
 	editMode bool
+	newQuery bool
 	selector string
 }
 
@@ -28,32 +29,32 @@ func (a *App) handleQuery() {
 		printError("No active connection.  Use 'pam switch <connection>' first")
 	}
 
-	currConn := config.FromConnectionYaml(a.config. Connections[a.config.CurrentConnection])
+	currConn := config. FromConnectionYaml(a. config.Connections[a.config.CurrentConnection])
 	query, isInlineSQL := a.resolveQuery(flags, currConn)
 	
-	// Handle editing with external editor
-	if flags.editMode {
+	// Handle editing with external editor (skip if query was already edited via --new)
+	if flags.editMode && !flags.newQuery {
 		var err error
 		query, err = a.openExternalEditor(query)
 		if err != nil {
-			return // Error already printed
+			return
 		}
 		
 		// Save changes to saved queries (not inline)
-		if query.Name != "<inline>" && query.SQL != "" {
-			a.config.Connections[a. config.CurrentConnection]. Queries[query.Name] = query
+		if query.Name != "<inline>" && query. SQL != "" {
+			a. config.Connections[a.config.CurrentConnection].Queries[query.Name] = query
 			a.config.Save()
 		}
 	}
 	
-	// Save last query only if it's not inline
+	// Save last query only if it's not inline or runtime
 	if !isInlineSQL {
-		a.config. Connections[a.config.CurrentConnection].LastQuery = query
+		a. config.Connections[a.config.CurrentConnection].LastQuery = query
 		a.config.Save()
 	}
 
-	// Display query info for non-inline queries
-	if !isInlineSQL {
+	// Display query info for non-inline queries AND runtime queries
+	if !isInlineSQL || flags.newQuery {
 		a. displayQueryInfo(query)
 	}
 
@@ -64,10 +65,12 @@ func (a *App) handleQuery() {
 func parseQueryFlags() queryFlags {
 	flags := queryFlags{}
 	
-	for _, arg := range os.Args[2:] {
+	for _, arg := range os. Args[2:] {
 		switch arg {
 		case "--edit", "-e":
-			flags.editMode = true
+			flags. editMode = true
+		case "--new", "-n":
+			flags.newQuery = true
 		default:
 			flags.selector = arg
 		}
@@ -77,6 +80,21 @@ func parseQueryFlags() queryFlags {
 }
 
 func (a *App) resolveQuery(flags queryFlags, currConn db.DatabaseConnection) (db.Query, bool) {
+	// New query in editor
+	if flags.newQuery {
+		query := db.Query{
+			Name: "<runtime>",
+			SQL:   "",
+			Id:   -1,
+		}
+		
+		editedQuery, err := a.openExternalEditor(query)
+		if err != nil {
+			printError("Error opening editor:  %v", err)
+		}
+		return editedQuery, true
+	}
+	
 	// Inline SQL query
 	if flags.selector != "" && isLikelySQL(flags.selector) {
 		return db.Query{
@@ -91,20 +109,20 @@ func (a *App) resolveQuery(flags queryFlags, currConn db.DatabaseConnection) (db
 		queries := currConn.GetQueries()
 		q, found := db.FindQueryWithSelector(queries, flags.selector)
 		if !found {
-			printError("Could not find query with name/id: %v", flags.selector)
+			printError("Could not find query with name/id:  %v", flags.selector)
 		}
 		return q, false
 	}
 	
-	// Last query
+	// Last query (default when no selector)
 	query := a.config. Connections[a.config.CurrentConnection].LastQuery
-	if query. Name == "" {
-		printError("No last query found.  Usage: pam query/run <query-name|sql>")
+	if query.Name == "" {
+		printError("No last query found.  Usage: pam run <query-name|sql> or pam run -n for new query")
 	}
 	return query, false
 }
 
-func (a *App) openExternalEditor(query db. Query) (db.Query, error) {
+func (a *App) openExternalEditor(query db.Query) (db.Query, error) {
 	editorCmd := os.Getenv("EDITOR")
 	if editorCmd == "" {
 		editorCmd = "vim"
@@ -137,7 +155,7 @@ func (a *App) openExternalEditor(query db. Query) (db.Query, error) {
 	}
 
 	// Read edited content
-	editedData, err := os. ReadFile(tmpPath)
+	editedData, err := os.ReadFile(tmpPath)
 	if err != nil {
 		printError("Failed to read edited file: %v", err)
 		return db.Query{}, err
@@ -154,9 +172,9 @@ func (a *App) openExternalEditor(query db. Query) (db.Query, error) {
 }
 
 func (a *App) displayQueryInfo(query db.Query) {
-	fmt.Printf("%s\n", styles.Title. Render("\n◆ "+query.Name))
-	fmt.Println(editor. HighlightSQL(editor. FormatSQLWithLineBreaks(query.SQL)))
-	fmt.Println(styles.Separator.Render("────────────────────────────────────────────────────────────────────────────────"))
+	fmt.Printf("%s\n", styles.Title.Render("\n◆ "+query.Name))
+	fmt. Println(editor. HighlightSQL(editor.FormatSQLWithLineBreaks(query.SQL)))
+	fmt.Println(styles. Separator.Render("────────────────────────────────────────────────────────────────────────────────"))
 }
 
 func (a *App) executeQuery(query db.Query, currConn db.DatabaseConnection, isInlineSQL bool) {
@@ -186,7 +204,7 @@ func (a *App) executeSelectQuery(query db.Query, currConn db.DatabaseConnection,
 	if isInlineSQL {
 		rows, err = currConn.ExecQuery(query.SQL)
 	} else {
-		rows, err = currConn.Query(query.Name)
+		rows, err = currConn.Query(query. Name)
 	}
 
 	if err != nil {
@@ -212,37 +230,37 @@ func (a *App) executeSelectQuery(query db.Query, currConn db.DatabaseConnection,
 		tableName = metadata.TableName
 		primaryKeyCol = metadata.PrimaryKey
 	} else if ! isInlineSQL {
-		fmt.Fprintf(os.Stderr, styles.Faint. Render("Warning: Could not extract table metadata:  %v\n"), err)
-		fmt.Fprintf(os. Stderr, styles.Faint.Render("Update functionality will be limited.\n"))
+		fmt.Fprintf(os.Stderr, styles. Faint.Render("Warning: Could not extract table metadata:  %v\n"), err)
+		fmt.Fprintf(os.Stderr, styles.Faint. Render("Update functionality will be limited.\n"))
 	}
 
 	// Render the table view
-	if err := table.Render(columns, data, elapsed, currConn, tableName, primaryKeyCol); err != nil {
+	if err := table. Render(columns, data, elapsed, currConn, tableName, primaryKeyCol); err != nil {
 		printError("Error rendering table: %v", err)
 	}
 }
 
 func (a *App) executeNonSelectQuery(query db.Query, currConn db. DatabaseConnection, isInlineSQL bool, done chan struct{}, start time.Time) {
-	err := currConn.Exec(query.SQL)
+	err := currConn. Exec(query.SQL)
 	done <- struct{}{}
-	elapsed := time. Since(start)
+	elapsed := time.Since(start)
 
 	if err != nil {
 		printError("Could not execute command: %v", err)
 	}
 
 	// Show success message
-	fmt. Println(styles.Success.Render(fmt.Sprintf("✓ Command executed successfully in %. 2fs", elapsed.Seconds())))
+	fmt.Println(styles.Success.Render(fmt.Sprintf("✓ Command executed successfully in %. 2fs", elapsed.Seconds())))
 
 	// For saved queries, show the SQL that was executed
-	if !isInlineSQL {
+	if ! isInlineSQL {
 		fmt.Println(styles. Faint.Render("\nExecuted SQL:"))
 		fmt.Println(editor.HighlightSQL(query.SQL))
 	}
 }
 
 func isSelectQuery(sql string) bool {
-	trimmedSQL := strings. TrimSpace(strings.ToUpper(sql))
+	trimmedSQL := strings.TrimSpace(strings.ToUpper(sql))
 	selectKeywords := []string{
 		"SELECT", "WITH", "SHOW", "DESCRIBE", "DESC", "EXPLAIN", "PRAGMA",
 	}
