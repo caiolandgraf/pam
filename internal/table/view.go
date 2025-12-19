@@ -34,14 +34,25 @@ func (m Model) View() string {
 
 func (m Model) renderHeader() string {
 	var cells []string
-	endCol := min(m.offsetX+m.visibleCols, m.numCols())
+	endCol := min(m. offsetX+m.visibleCols, m.numCols())
 
 	for j := m.offsetX; j < endCol; j++ {
-		content := formatCell(m.columns[j])
+		typeIcon := ""
+		if j < len(m.columnTypes) && m.columnTypes[j] != "" {
+			typeIcon = getTypeIcon(m.columnTypes[j]) + " "
+		}
+		
+		pkIcon := ""
+		if m.primaryKeyCol != "" && j < len(m.columns) && m.columns[j] == m.primaryKeyCol {
+			pkIcon = "⚿ "
+		}
+		
+		columnDisplay := pkIcon + typeIcon + m.columns[j]
+		content := formatCell(columnDisplay)
 		cells = append(cells, styles.TableHeader.Render(content))
 	}
 
-	return strings.Join(cells, styles.TableBorder.Render("│"))
+	return strings.Join(cells, styles. TableBorder.Render("│"))
 }
 
 func (m Model) renderDataRow(rowIndex int) string {
@@ -104,4 +115,86 @@ func formatCell(content string) string {
 		return content[:cellWidth-1] + "…"
 	}
 	return fmt.Sprintf("%-*s", cellWidth, content)
+}
+
+func getTypeIcon(typeName string) string {
+	upper := strings.ToUpper(typeName)
+	
+	// String/Text types - Latin letter A
+	if strings.Contains(upper, "CHAR") || strings.Contains(upper, "TEXT") || 
+	   strings.Contains(upper, "STRING") || strings.Contains(upper, "CLOB") ||
+	   strings.Contains(upper, "VARCHAR") || strings.Contains(upper, "NVARCHAR") {
+		return "α" // Greek alpha (text/string)
+	}
+	
+	// Integer types - Hash/number sign
+	if strings.Contains(upper, "INT") || strings.Contains(upper, "SERIAL") ||
+	   strings.Contains(upper, "BIGINT") || strings.Contains(upper, "SMALLINT") ||
+	   strings.Contains(upper, "TINYINT") {
+		return "№" // Numero sign (integers)
+	}
+	
+	// Decimal/Float types - Almost equal
+	if strings.Contains(upper, "DECIMAL") || strings.Contains(upper, "NUMERIC") ||
+	   strings.Contains(upper, "FLOAT") || strings.Contains(upper, "DOUBLE") ||
+	   strings.Contains(upper, "REAL") || strings.Contains(upper, "NUMBER") ||
+	   strings.Contains(upper, "MONEY") {
+		return "≈" // Almost equal (floating point)
+	}
+	
+	// Date types - Calendar symbol
+	if strings.Contains(upper, "DATE") && !strings.Contains(upper, "TIME") {
+		return "⊞" // Calendar (date)
+	}
+	
+	// Time/Timestamp types - Clock
+	if strings.Contains(upper, "TIME") || strings.Contains(upper, "TIMESTAMP") {
+		return "◷" // Alarm clock (time)
+	}
+	
+	// Boolean types - Checkmark
+	if strings.Contains(upper, "BOOL") || strings.Contains(upper, "BIT") {
+		return "✓" // Check mark (boolean)
+	}
+	
+	// Binary/Blob types - Diamond
+	if strings.Contains(upper, "BLOB") || strings.Contains(upper, "BINARY") ||
+	   strings.Contains(upper, "BYTEA") || strings.Contains(upper, "RAW") ||
+	   strings.Contains(upper, "VARBINARY") || strings.Contains(upper, "IMAGE") {
+		return "◆" // Diamond (binary)
+	}
+	
+	// JSON types - Braces
+	if strings.Contains(upper, "JSON") || strings.Contains(upper, "JSONB") {
+		return "{ }" // Curly braces (JSON)
+	}
+	
+	// UUID types - Key symbol
+	if strings.Contains(upper, "UUID") || strings.Contains(upper, "GUID") {
+		return "I" // Three lines converging (unique ID)
+	}
+	
+	// Array types - List symbol
+	if strings.Contains(upper, "ARRAY") || strings.HasSuffix(upper, "[]") {
+		return "≡" // Triple bar (list/array)
+	}
+	
+	// Enum types - Ellipsis
+	if strings.Contains(upper, "ENUM") || strings.Contains(upper, "SET") {
+		return "⋮" // Midline ellipsis (enumeration)
+	}
+	
+	// XML types
+	if strings.Contains(upper, "XML") {
+		return "⟨⟩" // Angle brackets (XML)
+	}
+	
+	// Geometric/Spatial types
+	if strings. Contains(upper, "GEOMETRY") || strings.Contains(upper, "POINT") ||
+	   strings.Contains(upper, "POLYGON") || strings.Contains(upper, "LINE") {
+		return "◉" // Fisheye (geometric)
+	}
+	
+	// Default fallback
+	return "•" // Bullet point (unknown)
 }

@@ -94,7 +94,14 @@ func (oc *OracleConnection) GetTableMetadata(tableName string) (*TableMetadata, 
 	}
 	
 	colQuery := `
-		SELECT column_name
+		SELECT column_name,
+		       CASE
+		           WHEN data_type IN ('VARCHAR2', 'CHAR', 'NVARCHAR2', 'NCHAR') 
+		           THEN data_type || '(' || data_length || ')'
+		           WHEN data_type = 'NUMBER' AND data_precision IS NOT NULL
+		           THEN data_type || '(' || data_precision || ',' || NVL(data_scale, 0) || ')'
+		           ELSE data_type
+		       END as full_type
 		FROM all_tab_columns
 		WHERE table_name = :1
 		ORDER BY column_id
@@ -104,9 +111,10 @@ func (oc *OracleConnection) GetTableMetadata(tableName string) (*TableMetadata, 
 	if err == nil {
 		defer colRows.Close()
 		for colRows.Next() {
-			var colName string
-			if err := colRows.Scan(&colName); err == nil {
+			var colName, colType string
+			if err := colRows.Scan(&colName, &colType); err == nil {
 				metadata.Columns = append(metadata.Columns, colName)
+				metadata.ColumnTypes = append(metadata.ColumnTypes, colType)  // ADD THIS
 			}
 		}
 	}

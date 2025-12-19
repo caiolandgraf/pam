@@ -9,6 +9,7 @@ import (
 type TableMetadata struct {
 	TableName  string
 	PrimaryKey string
+	ColumnTypes []string
 	Columns    []string
 }
 

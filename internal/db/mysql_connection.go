@@ -83,7 +83,7 @@ func (m *MySQLConnection) GetTableMetadata(tableName string) (*TableMetadata, er
 		TableName: tableName,
 	}
 	
-	if rows.Next() {
+	if rows. Next() {
 		var pkColumn string
 		if err := rows. Scan(&pkColumn); err == nil {
 			metadata.PrimaryKey = pkColumn
@@ -91,20 +91,22 @@ func (m *MySQLConnection) GetTableMetadata(tableName string) (*TableMetadata, er
 	}
 	
 	colQuery := `
-		SELECT COLUMN_NAME
-		FROM INFORMATION_SCHEMA.COLUMNS
-		WHERE TABLE_NAME = ? 
+		SELECT COLUMN_NAME,
+		       COLUMN_TYPE
+		FROM INFORMATION_SCHEMA. COLUMNS
+		WHERE TABLE_NAME = ?  
 		AND TABLE_SCHEMA = DATABASE()
 		ORDER BY ORDINAL_POSITION
 	`
 	
-	colRows, err := m.db.Query(colQuery, tableName)
+	colRows, err := m.db. Query(colQuery, tableName)
 	if err == nil {
-		defer colRows. Close()
+		defer colRows.Close()
 		for colRows.Next() {
-			var colName string
-			if err := colRows.Scan(&colName); err == nil {
+			var colName, colType string
+			if err := colRows.Scan(&colName, &colType); err == nil {
 				metadata.Columns = append(metadata.Columns, colName)
+				metadata.ColumnTypes = append(metadata.ColumnTypes, colType)  // ADD THIS
 			}
 		}
 	}

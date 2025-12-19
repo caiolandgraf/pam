@@ -67,7 +67,7 @@ func (p *PostgresConnection) GetTableMetadata(tableName string) (*TableMetadata,
 		SELECT a.attname
 		FROM pg_index i
 		JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
-		WHERE i.indrelid = $1::regclass
+		WHERE i.indrelid = $1:: regclass
 		AND i.indisprimary
 		ORDER BY a.attnum
 		LIMIT 1
@@ -80,30 +80,38 @@ func (p *PostgresConnection) GetTableMetadata(tableName string) (*TableMetadata,
 	defer rows.Close()
 	
 	metadata := &TableMetadata{
-		TableName: tableName,
+		TableName:  tableName,
 	}
 	
 	if rows.Next() {
 		var pkColumn string
-		if err := rows. Scan(&pkColumn); err == nil {
+		if err := rows.Scan(&pkColumn); err == nil {
 			metadata.PrimaryKey = pkColumn
 		}
 	}
 	
 	colQuery := `
-		SELECT column_name
+		SELECT column_name, 
+		       CASE 
+		           WHEN character_maximum_length IS NOT NULL 
+		           THEN data_type || '(' || character_maximum_length || ')'
+		           WHEN numeric_precision IS NOT NULL 
+		           THEN data_type || '(' || numeric_precision || ',' || numeric_scale || ')'
+		           ELSE data_type
+		       END as full_type
 		FROM information_schema.columns
 		WHERE table_name = $1
 		ORDER BY ordinal_position
 	`
 	
-	colRows, err := p.db. Query(colQuery, tableName)
+	colRows, err := p.db.Query(colQuery, tableName)
 	if err == nil {
 		defer colRows. Close()
 		for colRows.Next() {
-			var colName string
-			if err := colRows.Scan(&colName); err == nil {
-				metadata.Columns = append(metadata.Columns, colName)
+			var colName, colType string
+			if err := colRows.Scan(&colName, &colType); err == nil {
+				metadata. Columns = append(metadata.Columns, colName)
+				metadata.ColumnTypes = append(metadata. ColumnTypes, colType)
 			}
 		}
 	}

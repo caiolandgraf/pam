@@ -19,6 +19,7 @@ type Model struct {
 	visibleCols     int
 	visibleRows     int
 	columns         []string
+	columnTypes      []string
 	data            [][]string
 	elapsed         time.Duration
 	blinkCopiedCell bool
@@ -38,17 +39,26 @@ type Model struct {
 type blinkMsg struct{}
 
 func New(columns []string, data [][]string, elapsed time.Duration, conn db.DatabaseConnection, tableName, primaryKeyCol string) Model {
+	columnTypes := make([]string, len(columns))
+	if tableName != "" && conn != nil {
+		metadata, err := conn.GetTableMetadata(tableName)
+		if err == nil && len(metadata.ColumnTypes) == len(columns) {
+			columnTypes = metadata.ColumnTypes
+		}
+	}
+	
 	return Model{
-		selectedRow: 0,
-		selectedCol: 0,
-		offsetX:     0,
-		offsetY:     0,
-		columns:     columns,
-		data:        data,
-		elapsed:     elapsed,
-		visualMode:  false,
-		dbConnection:  conn,
-		tableName:     tableName,
+		selectedRow:   0,
+		selectedCol:   0,
+		offsetX:       0,
+		offsetY:       0,
+		columns:       columns,
+		columnTypes:   columnTypes,  // ADD THIS LINE
+		data:           data,
+		elapsed:       elapsed,
+		visualMode:    false,
+		dbConnection:   conn,
+		tableName:      tableName,
 		primaryKeyCol: primaryKeyCol,
 	}
 }

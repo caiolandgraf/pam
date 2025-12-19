@@ -86,6 +86,7 @@ func (s *SQLiteConnection) GetTableMetadata(tableName string) (*TableMetadata, e
 		}
 		
 		metadata.Columns = append(metadata. Columns, name)
+		metadata.ColumnTypes = append(metadata.ColumnTypes, colType)  // ADD THIS
 		
 		if pk == 1 {
 			metadata.PrimaryKey = name
