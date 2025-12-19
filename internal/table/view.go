@@ -99,7 +99,7 @@ func (m Model) renderFooter() string {
 	}
 
 	sel := styles.TableHeader. Render("v") + styles.Faint.Render("sel")
-	del := styles.TableHeader.Render("d") + styles.Faint.Render("el")
+	del := styles.TableHeader.Render("D") + styles.Faint.Render("el")
 	yank := styles.TableHeader.Render("y") + styles.Faint.Render("ank")
 	cmd := styles.TableHeader. Render(";") + styles.Faint.Render("cmd")
 	quit := styles.TableHeader.Render("q") + styles.Faint.Render("uit")

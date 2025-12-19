@@ -53,10 +53,8 @@ func (a *App) handleQuery() {
 		a.config.Save()
 	}
 
-	// Display query info for non-inline queries AND runtime queries
-	if !isInlineSQL || flags.newQuery {
-		a. displayQueryInfo(query)
-	}
+	// Display query info
+	a.displayQueryInfo(query)
 
 	// Execute query
 	a.executeQuery(query, currConn, isInlineSQL)

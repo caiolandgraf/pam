@@ -55,7 +55,7 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "u":
 		return m.updateCell()
-	case "d":
+	case "D":
 		return m.deleteRow()
 	}
 
