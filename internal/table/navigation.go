@@ -1,6 +1,7 @@
 package table
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -139,26 +140,48 @@ func (m Model) isCellInSelection(row, col int) bool {
 func (m Model) copySelection() (Model, tea.Cmd) {
 	minRow, maxRow, minCol, maxCol := m.getSelectionBounds()
 	
-	var result strings.Builder
+	var allRows [][]string
 	
 	if m.visualMode {
+		headerRow := make([]string, 0)
 		for col := minCol; col <= maxCol; col++ {
-			if col > minCol {
-				result.WriteString("\t")
-			}
-			result.WriteString(m.columns[col])
+			headerRow = append(headerRow, m.columns[col])
 		}
-		result.WriteString("\n")
+		allRows = append(allRows, headerRow)
 	}
 	
 	for row := minRow; row <= maxRow; row++ {
+		dataRow := make([]string, 0)
 		for col := minCol; col <= maxCol; col++ {
-			if col > minCol {
-				result.WriteString("\t")
-			}
-			result.WriteString(m.data[row][col])
+			dataRow = append(dataRow, m.data[row][col])
 		}
-		if row < maxRow {
+		allRows = append(allRows, dataRow)
+	}
+	
+	numCols := maxCol - minCol + 1
+	colWidths := make([]int, numCols)
+	
+	for _, row := range allRows {
+		for i, cell := range row {
+			if len(cell) > colWidths[i] {
+				colWidths[i] = len(cell)
+			}
+		}
+	}
+	
+	var result strings.Builder
+	
+	for rowIdx, row := range allRows {
+		for colIdx, cell := range row {
+			paddedCell := fmt.Sprintf("%-*s", colWidths[colIdx], cell)
+			result.WriteString(paddedCell)
+			
+			if colIdx < len(row)-1 {
+				result.WriteString("  ")
+			}
+		}
+		
+		if rowIdx < len(allRows)-1 {
 			result.WriteString("\n")
 		}
 	}
