@@ -202,12 +202,12 @@ func (a *App) executeSelectQuery(query db.Query, currConn db.DatabaseConnection,
 	if isInlineSQL {
 		rows, err = currConn.ExecQuery(query.SQL)
 	} else {
-		rows, err = currConn.Query(query. Name)
+		rows, err = currConn.Query(query.Name)
 	}
 
 	if err != nil {
 		done <- struct{}{}
-		printError("Could not complete query: %v", err)
+		printError("Could not complete query:  %v", err)
 	}
 
 	columns, data, err := db.FormatTableData(rows. (*sql.Rows))
@@ -228,13 +228,22 @@ func (a *App) executeSelectQuery(query db.Query, currConn db.DatabaseConnection,
 		tableName = metadata.TableName
 		primaryKeyCol = metadata.PrimaryKey
 	} else if ! isInlineSQL {
-		fmt.Fprintf(os.Stderr, styles. Faint.Render("Warning: Could not extract table metadata:  %v\n"), err)
-		fmt.Fprintf(os.Stderr, styles.Faint. Render("Update functionality will be limited.\n"))
+		fmt.Fprintf(os.Stderr, styles. Faint. Render("Warning: Could not extract table metadata:   %v\n"), err)
+		fmt.Fprintf(os. Stderr, styles.Faint. Render("Update functionality will be limited.\n"))
 	}
 
 	// Render the table view
-	if err := table. Render(columns, data, elapsed, currConn, tableName, primaryKeyCol); err != nil {
+	model, err := table. Render(columns, data, elapsed, currConn, tableName, primaryKeyCol, query)
+	if err != nil {
 		printError("Error rendering table: %v", err)
+	}
+
+	// Check if user edited and wants to re-run the query
+	if model.ShouldRerunQuery() {
+		editedQuery := model.GetEditedQuery()
+		a.displayQueryInfo(editedQuery)
+		// IMPORTANT: Pass true for isInlineSQL since we're executing edited SQL directly
+		a.executeQuery(editedQuery, currConn, true)
 	}
 }
 

@@ -10,56 +10,62 @@ import (
 const cellWidth = 15
 
 type Model struct {
-	width           int
-	height          int
-	selectedRow     int
-	selectedCol     int
-	offsetX         int
-	offsetY         int
-	visibleCols     int
-	visibleRows     int
-	columns         []string
+	width            int
+	height           int
+	selectedRow      int
+	selectedCol      int
+	offsetX          int
+	offsetY          int
+	visibleCols      int
+	visibleRows      int
+	columns          []string
 	columnTypes      []string
-	data            [][]string
-	elapsed         time.Duration
-	blinkCopiedCell bool
-	visualMode      bool
-	visualStartRow  int
-	visualStartCol  int
-	dbConnection    db.DatabaseConnection
-	tableName       string
-	primaryKeyCol   string
+	data             [][]string
+	elapsed          time.Duration
+	blinkCopiedCell  bool
+	visualMode       bool
+	visualStartRow   int
+	visualStartCol   int
+	dbConnection     db.DatabaseConnection
+	tableName        string
+	primaryKeyCol    string
 	blinkUpdatedCell bool
 	updatedRow       int
 	updatedCol       int
 	blinkDeletedRow  bool
 	deletedRow       int
+	currentQuery     db.Query
+	shouldRerunQuery bool
+	editedQuery      string
 }
 
 type blinkMsg struct{}
 
-func New(columns []string, data [][]string, elapsed time.Duration, conn db.DatabaseConnection, tableName, primaryKeyCol string) Model {
+func New(columns []string, data [][]string, elapsed time.Duration, conn db. DatabaseConnection, tableName, primaryKeyCol string, query db.Query) Model {
 	columnTypes := make([]string, len(columns))
 	if tableName != "" && conn != nil {
 		metadata, err := conn.GetTableMetadata(tableName)
-		if err == nil && len(metadata.ColumnTypes) == len(columns) {
+		if err == nil && len(metadata. ColumnTypes) == len(columns) {
 			columnTypes = metadata.ColumnTypes
 		}
 	}
 	
 	return Model{
-		selectedRow:   0,
-		selectedCol:   0,
-		offsetX:       0,
-		offsetY:       0,
-		columns:       columns,
-		columnTypes:   columnTypes,  // ADD THIS LINE
-		data:           data,
-		elapsed:       elapsed,
-		visualMode:    false,
-		dbConnection:   conn,
-		tableName:      tableName,
-		primaryKeyCol: primaryKeyCol,
+		selectedRow:      0,
+		selectedCol:      0,
+		offsetX:          0,
+		offsetY:          0,
+		columns:          columns,
+		columnTypes:      columnTypes,
+		data:             data,
+		elapsed:          elapsed,
+		visualMode:       false,
+		dbConnection:     conn,
+		tableName:        tableName,
+		primaryKeyCol:    primaryKeyCol,
+		currentQuery:     query,
+		shouldRerunQuery: false,
+		editedQuery:      "",
 	}
 }
 
@@ -72,5 +78,18 @@ func (m Model) numRows() int {
 }
 
 func (m Model) numCols() int {
-	return len(m.columns)
+	return len(m. columns)
+}
+
+func (m Model) ShouldRerunQuery() bool {
+	return m.shouldRerunQuery
+}
+
+func (m Model) GetEditedQuery() db.Query {
+	// Create a new query with the edited SQL
+	updatedQuery := m.currentQuery
+	if m.editedQuery != "" {
+		updatedQuery. SQL = m.editedQuery
+	}
+	return updatedQuery
 }
