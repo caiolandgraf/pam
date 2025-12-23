@@ -135,18 +135,17 @@ func (m Model) renderFooter() string {
 
 	sel := styles.TableHeader. Render("v") + styles.Faint.Render("sel")
 	del := styles.TableHeader.Render("D") + styles.Faint.Render("el")
-	edit := styles.TableHeader.Render("e") + styles.Faint.Render("dit")
+	edit := styles.TableHeader.Render("e") + styles.Faint.Render("ditSQL")
 	yank := styles.TableHeader.Render("y") + styles.Faint.Render("ank")
-	cmd := styles.TableHeader. Render(";") + styles.Faint.Render("cmd")
 	quit := styles.TableHeader.Render("q") + styles.Faint.Render("uit")
 	hjkl := styles.TableHeader.Render("hjkl") + styles.Faint.Render("←↓↑→")
 
-	footer := fmt.Sprintf("\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s  %s",
+	footer := fmt.Sprintf("\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s",
 		cellPreview,
 		styles.Faint.Render(fmt.Sprintf("%dx%d", m.numRows(), m.numCols())),
 		styles.Faint.Render(fmt.Sprintf("In %.2fs", m.elapsed.Seconds())),
 		styles.Faint. Render(fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1)),
-		updateInfo, del, yank, edit, sel, cmd, quit, hjkl)
+		updateInfo, del, yank, edit, sel, quit, hjkl)
 	
 	
 	return footer
