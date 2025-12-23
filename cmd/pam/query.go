@@ -53,9 +53,6 @@ func (a *App) handleQuery() {
 		a.config.Save()
 	}
 
-	// Display query info
-	// a.displayQueryInfo(query)
-
 	// Execute query
 	a.executeQuery(query, currConn, isInlineSQL)
 }
@@ -169,12 +166,6 @@ func (a *App) openExternalEditor(query db.Query) (db.Query, error) {
 	return query, nil
 }
 
-func (a *App) displayQueryInfo(query db.Query) {
-	fmt.Printf("%s\n", styles.Title.Render("\n◆ "+query.Name))
-	fmt. Println(editor. HighlightSQL(editor.FormatSQLWithLineBreaks(query.SQL)))
-	fmt.Println(styles. Separator.Render("────────────────────────────────────────────────────────────────────────────────"))
-}
-
 func (a *App) executeQuery(query db.Query, currConn db.DatabaseConnection, isInlineSQL bool) {
 	// Open database connection
 	if err := currConn.Open(); err != nil {
@@ -238,13 +229,11 @@ func (a *App) executeSelectQuery(query db.Query, currConn db.DatabaseConnection,
 		printError("Error rendering table: %v", err)
 	}
 
-	// Check if user edited and wants to re-run the query
-	if model.ShouldRerunQuery() {
-		editedQuery := model.GetEditedQuery()
-		a.displayQueryInfo(editedQuery)
-		// IMPORTANT: Pass true for isInlineSQL since we're executing edited SQL directly
-		a.executeQuery(editedQuery, currConn, true)
-	}
+// Check if user edited and wants to re-run the query
+if model.ShouldRerunQuery() {
+	editedQuery := model.GetEditedQuery()
+	a.executeQuery(editedQuery, currConn, true)
+}
 }
 
 func (a *App) executeNonSelectQuery(query db.Query, currConn db. DatabaseConnection, isInlineSQL bool, done chan struct{}, start time.Time) {

@@ -17,7 +17,7 @@ func (m Model) View() string {
 	var b strings.Builder
 
 	// Display query name header
-	b.WriteString(styles.Title.Render("\n◆ " + m.currentQuery.Name))
+	b.WriteString(styles.Title.Render("◆ " + m.currentQuery.Name))
 	b.WriteString("\n")
 	
 	// Show the last executed query (for updates) or the current query (for selects)
