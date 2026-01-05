@@ -3,7 +3,6 @@ package table
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 
@@ -33,9 +32,8 @@ func (m Model) deleteRow() (tea.Model, tea.Cmd) {
 	tmpPath := tmpFile.Name()
 
 	header := `-- DELETE Statement
--- WARNING: This will permanently delete data!   
--- Ensure the WHERE clause is present and correct before saving.  
--- To cancel, delete all content and save.    
+-- WARNING: This will permanently delete data! 
+-- To cancel, delete all content and save. 
 --
 `
 	content := header + deleteStmt
@@ -48,12 +46,12 @@ func (m Model) deleteRow() (tea.Model, tea.Cmd) {
 	tmpFile.Close()
 
 	// Store the row index before entering async operation
-	rowToDelete := m.selectedRow
+	rowToDelete := m. selectedRow
 
-	// Use tea.ExecProcess to run the editor
-	cmd := exec.Command(editorCmd, tmpPath)
+	// Build command with cursor at WHERE clause
+	cmd := buildEditorCommand(editorCmd, tmpPath, content, CursorAtWhereClause)
 	
-	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
+	return m, tea. ExecProcess(cmd, func(err error) tea.Msg {
 		// Read the edited file BEFORE removing it
 		editedSQL, readErr := os.ReadFile(tmpPath)
 		

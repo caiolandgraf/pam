@@ -3,7 +3,6 @@ package table
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 	"time"
@@ -38,8 +37,8 @@ func (m Model) updateCell() (tea.Model, tea.Cmd) {
 	}
 	tmpFile.Close()
 
-	// Use tea.ExecProcess to run the editor
-	cmd := exec.Command(editorCmd, tmpPath)
+	// Build command with cursor positioning
+	cmd := buildEditorCommand(editorCmd, tmpPath, updateStmt, CursorAtUpdateValue)
 
 	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
 		// Read the edited file BEFORE removing it
@@ -65,6 +64,12 @@ type editorCompleteMsg struct {
 }
 
 func (m Model) handleEditorComplete(msg editorCompleteMsg) (tea.Model, tea.Cmd) {
+	// Validate the update statement
+	if err := validateUpdateStatement(msg.sql); err != nil {
+		printError("Update validation failed:  %v", err)
+		return m, nil
+	}
+
 	newValue := m.extractNewValue(msg.sql, m.columns[msg.colIndex])
 
 	// Store the cleaned SQL for display
@@ -73,6 +78,7 @@ func (m Model) handleEditorComplete(msg editorCompleteMsg) (tea.Model, tea.Cmd) 
 	// Execute the update
 	if err := m.executeUpdate(msg.sql); err != nil {
 		printError("Could not execute update: %v", err)
+		return m, nil
 	}
 
 	// Successfully updated - update the model data in-place
@@ -80,7 +86,7 @@ func (m Model) handleEditorComplete(msg editorCompleteMsg) (tea.Model, tea.Cmd) 
 
 	m.blinkUpdatedCell = true
 	m.updatedRow = m.selectedRow
-	m.updatedCol = msg.colIndex
+	m. updatedCol = msg.colIndex
 
 	// Force a full re-render with screen clear
 	return m, tea.Batch(
@@ -90,14 +96,14 @@ func (m Model) handleEditorComplete(msg editorCompleteMsg) (tea.Model, tea.Cmd) 
 }
 
 func (m Model) blinkCmd() tea.Cmd {
-	return tea.Tick(time.Millisecond*500, func(t time.Time) tea.Msg {
+	return tea.Tick(time. Millisecond*500, func(t time.Time) tea.Msg {
 		return blinkMsg{}
 	})
 }
 
 func (m Model) buildUpdateStatement() string {
 	columnName := m.columns[m.selectedCol]
-	currentValue := m.data[m.selectedRow][m.selectedCol]
+	currentValue := m.data[m.selectedRow][m. selectedCol]
 
 	pkValue := ""
 	if m.primaryKeyCol != "" {
@@ -113,7 +119,7 @@ func (m Model) buildUpdateStatement() string {
 		m.tableName,
 		columnName,
 		currentValue,
-		m.primaryKeyCol,
+		m. primaryKeyCol,
 		pkValue,
 	)
 }
@@ -136,6 +142,40 @@ func (m Model) executeUpdate(sql string) error {
 	}
 
 	return m.dbConnection.Exec(cleanSQL)
+}
+
+// validateUpdateStatement ensures the UPDATE statement is safe to execute
+func validateUpdateStatement(sql string) error {
+	var result strings.Builder
+	for line := range strings.SplitSeq(sql, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, "--") && trimmed != "" {
+			result.WriteString(trimmed)
+			result.WriteString(" ")
+		}
+	}
+	cleanSQL := strings.TrimSpace(result.String())
+
+	if cleanSQL == "" {
+		return fmt.Errorf("empty SQL statement")
+	}
+
+	updateRegex := regexp.MustCompile(`(?i)^\s*UPDATE\s+`)
+	if ! updateRegex.MatchString(cleanSQL) {
+		return fmt.Errorf("not an UPDATE statement")
+	}
+
+	setRegex := regexp.MustCompile(`(?i)\bSET\b`)
+	if !setRegex.MatchString(cleanSQL) {
+		return fmt.Errorf("UPDATE statement must include a SET clause")
+	}
+
+	whereRegex := regexp.MustCompile(`(?i)\bWHERE\b`)
+	if !whereRegex.MatchString(cleanSQL) {
+		return fmt.Errorf("UPDATE statement must include a WHERE clause for safety")
+	}
+
+	return nil
 }
 
 // cleanSQLForDisplay removes comments and formats SQL for display
@@ -166,7 +206,7 @@ func (m Model) extractNewValue(sql string, columnName string) string {
 	}
 	cleanSQL := strings.TrimSpace(result.String())
 
-	// Try to match:   SET column_name = 'value' or SET column_name = value
+	// Try to match:  SET column_name = 'value' or SET column_name = value
 	// This regex handles both quoted and unquoted values
 	pattern := fmt.Sprintf(`SET\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`, regexp.QuoteMeta(columnName))
 	re := regexp.MustCompile(`(?i)` + pattern)

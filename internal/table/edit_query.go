@@ -2,7 +2,6 @@ package table
 
 import (
 	"os"
-	"os/exec"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -28,15 +27,15 @@ func (m Model) editAndRerunQuery() (tea.Model, tea.Cmd) {
 	}
 	tmpFile.Close()
 
-	// Use tea.ExecProcess to run the editor
-	cmd := exec. Command(editorCmd, tmpPath)
+	// Build command with cursor at end of file
+	cmd := buildEditorCommand(editorCmd, tmpPath, m.currentQuery. SQL, CursorAtEndOfFile)
 	
-	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
+	return m, tea. ExecProcess(cmd, func(err error) tea.Msg {
 		// Read the edited file BEFORE removing it
 		editedData, readErr := os.ReadFile(tmpPath)
 		
 		// Now remove the temp file
-		os.Remove(tmpPath)
+		os. Remove(tmpPath)
 		
 		if err != nil || readErr != nil {
 			return nil

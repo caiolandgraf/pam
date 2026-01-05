@@ -19,7 +19,7 @@ func (a *App) handleList() {
 	switch objectType {
 	case "connections":
 		if len(a.config.Connections) == 0 {
-			fmt.Println(styles. Faint.Render("No connections configured"))
+			fmt.Println(styles.Faint.Render("No connections configured"))
 			return
 		}
 		for name, connection := range a.config.Connections {
@@ -38,17 +38,17 @@ func (a *App) handleList() {
 		}
 		conn := a.config.Connections[a.config.CurrentConnection]
 		if len(conn.Queries) == 0 {
-			fmt. Println(styles.Faint. Render("No queries saved"))
+			fmt.Println(styles.Faint.Render("No queries saved"))
 			return
 		}
 		for _, query := range conn.Queries {
 			formatedItem := fmt.Sprintf("◆ %d/%s", query.Id, query.Name)
-			fmt. Println(styles.Title.Render(formatedItem))
-			fmt.Println(editor. HighlightSQL(editor.FormatSQLWithLineBreaks(query.SQL)))
-			fmt.Println()
+			fmt.Println(styles.Title.Render(formatedItem))
+			fmt.Print(editor.HighlightSQL(editor.FormatSQLWithLineBreaks(query.SQL)))
+			fmt.Println() // Only add blank line between queries, not after the last one
 		}
 
-	default: 
+	default:
 		printError("Unknown list type: %s.  Use 'queries' or 'connections'", objectType)
 	}
 }
