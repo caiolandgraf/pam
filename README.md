@@ -94,45 +94,30 @@ q          # Quit back to terminal
 ---
 
 ## 🗄️ Database Support
+Examples of init/create commands to start working with different database types
 
 ### PostgreSQL
 
 ```bash
-# Standard connection
-pam init pg_prod postgres "postgresql://user:password@localhost:5432/dbname"
-
-# With SSL
-pam init pg_secure postgres "postgresql://user:pass@host:5432/db? sslmode=require"
+pam init pg-prod postgres postgres://myuser:mypassword@localhost:5432/mydb?sslmode=disable
 ```
 
 ### MySQL / MariaDB
 
 ```bash
-# Basic connection
-pam init mysql_dev mysql "user:password@tcp(localhost:3306)/dbname"
-
-# With parameters
-pam init mysql_prod mysql "user:pass@tcp(host:3306)/db?charset=utf8mb4&parseTime=True"
+pam init mysql-dev mysql 'myuser:mypassword@tcp(127.0.0.1:3306)/mydb'
 ```
 
 ### SQLite
 
 ```bash
-# Local file
-pam init local_db sqlite "/path/to/database.db"
-
-# Relative path
-pam init app_db sqlite "./data/app.db"
+pam init sqlite-local sqlite file:/home/eduardo/code/dbeesly/sqlite/mydb.sqlite
 ```
 
 ### Oracle
 
 ```bash
-# Standard connection
-pam init oracle_prod oracle "user/password@localhost:1521/ORCL"
-
-# TNS connection
-pam init oracle_tns oracle "user/pass@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=host)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=svc)))"
+pam init oracle-stg oracle myuser/mypassword@localhost:1521/XEPDB1
 ```
 
 ---
