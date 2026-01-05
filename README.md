@@ -4,7 +4,7 @@
 
 <img width="320" height="224" alt="Pam mascot" src="https://github.com/user-attachments/assets/f995ce07-3742-4e98-b737-bbdbf982012e" />
 
-### *"Pam, the secretary, has been doing a fantastic job."*
+### *"Pam, the receptionist, has been doing a fantastic job."*
 
 > **Michael Scott:** "You know what's amazing? Pam. Pam is amazing. She's got this drawer - not just any drawer - a database drawer. Full of SQL queries. I didn't even know we needed that, but apparently everyone does because they keep asking her for them. 'Pam, I need the users query.' 'Pam, where's that sales report?' And she just opens the drawer and boom. There it is. I think it's the most popular drawer in the entire office. Maybe even in Scranton. Possibly Pennsylvania."
 
@@ -13,8 +13,7 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![go badge](https://img.shields.io/badge/Go-1.21+-00ADD8?%20logo=go&logoColor=white)
 
-**A minimal, pretty fast CLI tool for managing and executing SQL queries across multiple databases**
-**Written in Go, powered by CharmBracelet's Bubblegum**
+**A minimal, pretty fast CLI tool for managing and executing SQL queries across multiple databases. Written in Go, made beautify with CharmBracelet's BubbleTea**
 
 
 [Quick Start](#-quick-start) • [Database Support](#%EF%B8%8F-database-support) • [Features](#-features) • [Commands](#-all-commands) • [TUI Navigation](#%EF%B8%8F-tui-table-navigation) • [Roadmap](#%EF%B8%8F-roadmap)
@@ -29,13 +28,12 @@
 
 ### Highlights
 
-- **Lightning Fast** - Execute queries instantly with minimal overhead
-- **Beautiful TUI** - Keyboard focused navigation with vim-style bindings
+- **Pretty Fast** - Execute queries with minimal overhead
+- **Table view TUI** - Keyboard focused navigation with vim-style bindings
 - **Query Library** - Save and organize your most-used queries
 - **Multi-Database** - Works with PostgreSQL, MySQL, SQLite, and Oracle
 - **In-Place Editing** - Update cells, delete rows and edit your SQL directly from the results table
 - **Smart Copy** - Yank cells or ranges with visual mode
-- **Inline Execution** - Run ad-hoc queries without saving
 
 ---
 
@@ -312,7 +310,7 @@ ADD GIF HERE
 Pam wouldn't exist without the inspiration and groundwork laid by these fantastic projects:
 
 - **[naggie/dstask](https://github.com/naggie/dstask)** - For the elegant CLI/TUI design patterns and file-based configuration approach
-- **[DeprecatedLuar/better-curl-saul](https://github.com/DeprecatedLuar/better-curl-saul)** - For demonstrating an easier, reapetable way to make http requests in the terminal
+- **[DeprecatedLuar/better-curl-saul](https://github.com/DeprecatedLuar/better-curl-saul)** - For demonstrating a simple and genius approach to making a CLI program
 
 Built with: 
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) - The TUI framework
