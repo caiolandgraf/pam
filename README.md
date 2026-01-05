@@ -282,10 +282,10 @@ ADD GIF HERE
 
 ### v0.1 Kelly
 - [x] Multi-database support (PostgreSQL, MySQL, SQLite, Oracle)
-- [x] Query library with save/remove functionality
+- [x] Query library with save/edit/remove functionality
 - [x] Interactive TUI with Vim navigation
-- [x] In-place cell updates
-- [x] Visual selection and copy
+- [x] In-place cell updates and row deletion
+- [x] Visual selection and copy (single and multi cell)
 - [x] Syntax highlighting
 - [x] Query editing in external editor
 - [x] Primary key detection
@@ -301,7 +301,6 @@ ADD GIF HERE
 
 ### v0.3 - Dwight
 - [ ] Shell autocomplete (bash, fish, zsh)
-- [ ] Search/filter within table view
 - [ ] `pam info table <table>` - Show table metadata (columns, types, constraints)
 - [ ] `pam info tables` - List all tables in current connection
 - [ ] `pam info connection` - Show connection/database overview
