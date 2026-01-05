@@ -1,8 +1,13 @@
 <div align="center">
 
-# 🗃️ Pam's Database Drawer
-
+<h1>
+  <img src="https://github.com/user-attachments/assets/ba9b84d3-860b-4225-bf34-34572d4833e0" alt="Pam logo" height="45" style="vertical-align: middle;"/> 
+  Pam's Database Drawer
+</h1>
 <img width="320" height="224" alt="Pam mascot" src="https://github.com/user-attachments/assets/f995ce07-3742-4e98-b737-bbdbf982012e" />
+</div>
+
+
 
 ### *"Pam, the receptionist, has been doing a fantastic job."*
 
