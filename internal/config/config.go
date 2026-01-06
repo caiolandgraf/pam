@@ -12,10 +12,11 @@ var CfgPath = os.ExpandEnv("$HOME/.config/pam/")
 var CfgFile = filepath.Join(CfgPath, "config.yaml")
 
 type Config struct {
-	CurrentConnection string                    `yaml:"current_connection"`
+	CurrentConnection string                     `yaml:"current_connection"`
 	Connections       map[string]*ConnectionYAML `yaml:"connections"`
-	Style             Style                     `yaml:"style"`
-	History           History                   `yaml:"history"`
+	Style             Style                      `yaml:"style"`
+	History           History                    `yaml:"history"`
+	DefaultRowLimit   int                        `yaml:"default_row_limit"`
 }
 
 type Style struct {
@@ -36,6 +37,7 @@ func LoadConfig(path string) (*Config, error) {
 				Connections:       make(map[string]*ConnectionYAML),
 				Style:             Style{},
 				History:           History{},
+				DefaultRowLimit:   1000,
 			}
 			err := cfg.Save()
 			if err != nil {

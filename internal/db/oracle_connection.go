@@ -236,6 +236,20 @@ func (oc *OracleConnection) BuildUpdateStatement(tableName, columnName, currentV
 	)
 }
 
+func (oc *OracleConnection) ApplyRowLimit(sql string, limit int) string {
+	trimmedSQL := strings.ToUpper(strings.TrimSpace(sql))
+	if !strings.HasPrefix(trimmedSQL, "SELECT") && !strings.HasPrefix(trimmedSQL, "WITH") {
+		return sql
+	}
+	
+	upperSQL := strings.ToUpper(sql)
+	if strings.Contains(upperSQL, "FETCH FIRST") || strings.Contains(upperSQL, "ROWNUM") {
+		return sql
+	}
+	
+	return fmt.Sprintf("%s\nFETCH FIRST %d ROWS ONLY", strings.TrimRight(sql, ";"), limit)
+}
+
 func (oc *OracleConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string {
 	escapedPkValue := strings. ReplaceAll(pkValue, "'", "''")
 	

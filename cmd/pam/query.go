@@ -190,10 +190,15 @@ func (a *App) executeSelectQuery(query db.Query, currConn db.DatabaseConnection,
 	var rows any
 	var err error
 
+	sqlToExecute := query.SQL
+	if a.config.DefaultRowLimit > 0 {
+		sqlToExecute = currConn.ApplyRowLimit(query.SQL, a.config.DefaultRowLimit)
+	}
+
 	if isInlineSQL {
-		rows, err = currConn.ExecQuery(query.SQL)
+		rows, err = currConn.ExecQuery(sqlToExecute)
 	} else {
-		rows, err = currConn.Query(query.Name)
+		rows, err = currConn.ExecQuery(sqlToExecute)
 	}
 
 	if err != nil {

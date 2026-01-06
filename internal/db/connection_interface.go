@@ -12,6 +12,7 @@ type DatabaseConnection interface {
 	GetTableMetadata(tableName string) (*TableMetadata, error)
 	BuildUpdateStatement(tableName, columnName, currentValue, pkColumn, pkValue string) string
 	BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string
+	ApplyRowLimit(sql string, limit int) string
 
 	GetName() string
 	GetDbType() string

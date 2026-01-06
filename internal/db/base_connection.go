@@ -61,6 +61,19 @@ func (b *BaseConnection) BuildUpdateStatement(tableName, columnName, currentValu
 	)
 }
 
+func (b *BaseConnection) ApplyRowLimit(sql string, limit int) string {
+	trimmedSQL := strings.ToUpper(strings.TrimSpace(sql))
+	if ! strings.HasPrefix(trimmedSQL, "SELECT") && !strings.HasPrefix(trimmedSQL, "WITH") {
+		return sql
+	}
+	
+	if strings.Contains(strings.ToUpper(sql), " LIMIT ") {
+		return sql
+	}
+	
+	return fmt.Sprintf("%s\nLIMIT %d", strings.TrimRight(sql, ";"), limit)
+}
+
 func (b *BaseConnection) GetName() string                     { return b.Name }
 func (b *BaseConnection) GetDbType() string                   { return b.DbType }
 func (b *BaseConnection) GetConnString() string               { return b.ConnString }
