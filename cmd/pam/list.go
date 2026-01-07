@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 
-	"github.com/eduardofuncao/pam/internal/editor"
+	"github.com/eduardofuncao/pam/internal/db"
+	"github.com/eduardofuncao/pam/internal/parser"
 	"github.com/eduardofuncao/pam/internal/styles"
 )
 
@@ -41,11 +43,21 @@ func (a *App) handleList() {
 			fmt.Println(styles.Faint.Render("No queries saved"))
 			return
 		}
+
+		// Get sorted list of queries
+		queryList := make([]db.Query, 0, len(conn.Queries))
 		for _, query := range conn.Queries {
+			queryList = append(queryList, query)
+		}
+		sort.Slice(queryList, func(i, j int) bool {
+			return queryList[i].Id < queryList[j].Id
+		})
+
+		for _, query := range queryList {
 			formatedItem := fmt.Sprintf("◆ %d/%s", query.Id, query.Name)
 			fmt.Println(styles.Title.Render(formatedItem))
-			fmt.Print(editor.HighlightSQL(editor.FormatSQLWithLineBreaks(query.SQL)))
-			fmt.Println() // Only add blank line between queries, not after the last one
+			fmt.Print(parser.HighlightSQL(parser.FormatSQLWithLineBreaks(query.SQL)))
+			fmt.Println()
 		}
 
 	default:

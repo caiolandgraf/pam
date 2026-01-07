@@ -21,7 +21,7 @@ func (a *App) handleRemove() {
 		printError("Query '%s' could not be found", os.Args[2])
 	}
 
-	delete(conn.Queries, query. Name)
+	delete(conn.Queries, query.Name)
 
 	err := a.config.Save()
 	if err != nil {

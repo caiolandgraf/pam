@@ -45,17 +45,13 @@ func (m Model) deleteRow() (tea.Model, tea.Cmd) {
 	}
 	tmpFile.Close()
 
-	// Store the row index before entering async operation
-	rowToDelete := m. selectedRow
+	rowToDelete := m.selectedRow
 
 	// Build command with cursor at WHERE clause
 	cmd := buildEditorCommand(editorCmd, tmpPath, content, CursorAtWhereClause)
 	
 	return m, tea. ExecProcess(cmd, func(err error) tea.Msg {
-		// Read the edited file BEFORE removing it
 		editedSQL, readErr := os.ReadFile(tmpPath)
-		
-		// Now remove the temp file
 		os.Remove(tmpPath)
 		
 		if err != nil || readErr != nil {
@@ -76,15 +72,12 @@ type deleteCompleteMsg struct {
 }
 
 func (m Model) handleDeleteComplete(msg deleteCompleteMsg) (tea.Model, tea.Cmd) {
-	// Validate the delete statement
 	if err := validateDeleteStatement(msg.sql); err != nil {
 		printError("Delete validation failed: %v", err)
 	}
 
-	// Store the cleaned SQL for display
 	m.lastExecutedQuery = m.cleanSQLForDisplay(msg.sql)
 
-	// Execute the delete
 	if err := m.executeDelete(msg.sql); err != nil {
 		printError("Could not execute delete: %v", err)
 	}
@@ -101,7 +94,6 @@ func (m Model) handleDeleteComplete(msg deleteCompleteMsg) (tea.Model, tea.Cmd) 
 	m.blinkDeletedRow = true
 	m.deletedRow = m.selectedRow
 
-	// Force a full re-render with screen clear
 	return m, tea.Batch(
 		tea.ClearScreen,
 		m.blinkCmd(),

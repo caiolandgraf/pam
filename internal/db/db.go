@@ -53,7 +53,7 @@ func (c *Connection) Close() error {
 	return nil
 }
 
-func (c *Connection) Query(queryName string, args ...interface{}) ([]string, [][]string, error) {
+func (c *Connection) Query(queryName string, args ...any) ([]string, [][]string, error) {
 	rows, err := c.DB.Query(c.Queries[queryName].SQL, args...)
 	if err != nil {
 		return nil, nil, err
@@ -64,8 +64,8 @@ func (c *Connection) Query(queryName string, args ...interface{}) ([]string, [][
 		log.Fatalf("Error getting columns: %v", err)
 	}
 
-	values := make([]interface{}, len(columns))
-	valuePtrs := make([]interface{}, len(columns))
+	values := make([]any, len(columns))
+	valuePtrs := make([]any, len(columns))
 	for i := range columns {
 		valuePtrs[i] = &values[i]
 	}

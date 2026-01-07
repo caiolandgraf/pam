@@ -31,7 +31,7 @@ func (a *App) handleEdit() {
 		a.editQueries(editorCmd)
 		fmt.Println(styles.Success. Render("✓ Queries edited"))
 	default:
-		printError("Unknown edit type: %s.   Use 'config' or 'queries'", editType)
+		printError("Unknown edit type: %s. Use 'config' or 'queries'", editType)
 	}
 }
 
@@ -54,7 +54,7 @@ func (a *App) editConfig(editorCmd string) {
 
 func (a *App) editQueries(editorCmd string) {
 	if a.config.CurrentConnection == "" {
-		log.Fatal("No active connection. Use 'pam switch <connection>' first")
+		log.Fatal("No active connection. Use 'pam switch <connection>' or 'pam init' first")
 	}
 
 	conn, ok := a.config.Connections[a.config.CurrentConnection]
@@ -120,81 +120,46 @@ func (a *App) editQueries(editorCmd string) {
 // SQL query here
 func parseSQLQueriesFile(content string) (map[string]db.Query, error) {
 	queries := make(map[string]db.Query)
-	lines := strings.Split(content, "\n")
-	
-	var currentQueryName string
-	var currentSQL strings.Builder
-	queryID := 0
+	var name string
+	var sql strings. Builder
+	id := 1
 
-	for i := range lines {
-		line := lines[i]
+	save := func() {
+		if name != "" && sql.Len() > 0 {
+			queries[name] = db.Query{Name: name, SQL: strings.TrimSpace(sql.String()), Id: id}
+			id++
+			sql.Reset()
+		}
+	}
+
+	for line := range strings.SplitSeq(content, "\n") {
 		trimmed := strings.TrimSpace(line)
 
-		if trimmed == "" {
-			if currentQueryName != "" {
-				currentSQL.WriteString("\n")
-			}
-			continue
-		}
-
-		if strings.HasPrefix(trimmed, "--") {
-			comment := strings.TrimSpace(strings.TrimPrefix(trimmed, "--"))
+		// Check for query name comment
+		if comment, ok := strings.CutPrefix(trimmed, "--"); ok {
+			comment = strings.TrimSpace(comment)
 			
-			if strings.HasPrefix(comment, "Editing queries") || 
-			   strings.HasPrefix(comment, "Format:") ||
-			   strings.HasPrefix(comment, "SQL query") ||
-			   strings.HasPrefix(comment, "Save and close") {
+			// Skip help comments
+			if strings.HasPrefix(comment, "Editing") || strings.HasPrefix(comment, "Format") ||
+			   strings.HasPrefix(comment, "SQL") || strings.HasPrefix(comment, "Save") {
 				continue
 			}
 
-			if currentQueryName != "" {
-				sql := strings.TrimSpace(currentSQL.String())
-				if sql != "" {
-					queries[currentQueryName] = db.Query{
-						Name: currentQueryName,
-						SQL:  sql,
-						Id:   queryID,
-					}
-					queryID++
-				}
-				currentSQL.Reset()
-			}
+			save()
+			name = comment
+			continue
+		}
 
-			currentQueryName = comment
-		} else if currentQueryName != "" {
-			// Add line to current query SQL
-			if currentSQL.Len() > 0 {
-				currentSQL.WriteString("\n")
+		// Add SQL line
+		if name != "" {
+			if sql.Len() > 0 {
+				sql.WriteString("\n")
 			}
-			currentSQL.WriteString(line)
+			sql.WriteString(line)
 		}
 	}
 
-	if currentQueryName != "" {
-		sql := strings.TrimSpace(currentSQL.String())
-		if sql != "" {
-			queries[currentQueryName] = db.Query{
-				Name: currentQueryName,
-				SQL:  sql,
-				Id:   queryID,
-			}
-		}
-	}
-
+	save()
 	return queries, nil
 }
 
-func removeCommentLines(content string) string {
-	lines := strings.Split(content, "\n")
-	var result strings.Builder
-
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if !strings.HasPrefix(trimmed, "--") {
-			result.WriteString(line)
-			result.WriteString("\n")
-		}
-	}
-
-	return result.String()
-}

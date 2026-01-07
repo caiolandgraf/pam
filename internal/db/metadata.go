@@ -91,7 +91,6 @@ func HasJoinClause(sqlQuery string) bool {
 	}
 
 	// Also check for comma-separated implicit joins (old style)
-	// Simple heuristic: more than one table in FROM clause
 	fromPattern := regexp.MustCompile(`FROM\s+([^WHERE^GROUP^ORDER^LIMIT^;]+)`)
 	if matches := fromPattern.FindStringSubmatch(normalized); len(matches) > 1 {
 		tables := strings.Split(matches[1], ",")

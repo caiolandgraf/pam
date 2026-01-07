@@ -19,7 +19,6 @@ func (a *App) handleInit() {
 		printError("Could not create connection interface: %s/%s, %s", os.Args[3], os.Args[2], err)
 	}
 
-	// ADD THIS:  Check if schema parameter is provided (5th argument)
 	if len(os.Args) >= 6 && os.Args[5] != "" {
 		conn.SetSchema(os.Args[5])
 	}
@@ -36,8 +35,8 @@ func (a *App) handleInit() {
 		printError("Could not communicate with the database: %s/%s, %s", os.Args[3], os.Args[2], err)
 	}
 
-	a.config. CurrentConnection = conn. GetName()
-	a.config. Connections[a.config.CurrentConnection] = config.ToConnectionYAML(conn)
+	a.config.CurrentConnection = conn.GetName()
+	a.config.Connections[a.config.CurrentConnection] = config.ToConnectionYAML(conn)
 	err = a.config.Save()
 	if err != nil {
 		printError("Could not save configuration file: %v", err)
@@ -47,5 +46,5 @@ func (a *App) handleInit() {
 	if conn.GetSchema() != "" {
 		schemaInfo = fmt.Sprintf(" (schema: %s)", conn.GetSchema())
 	}
-	fmt. Println(styles.Success.Render("✓ Connection created:  "), styles.Title.Render(fmt.Sprintf("%s/%s%s", conn.GetDbType(), conn.GetName(), schemaInfo)))
+	fmt.Println(styles.Success.Render("✓ Connection created: "), styles.Title.Render(fmt.Sprintf("%s/%s%s", conn.GetDbType(), conn.GetName(), schemaInfo)))
 }

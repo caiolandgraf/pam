@@ -95,18 +95,6 @@ func (m Model) pageDown() Model {
 	return m
 }
 
-// func (m Model) copySelectedCell() (Model, tea.Cmd) {
-// 	if m.selectedRow >= 0 && m.selectedRow < m.numRows() &&
-// 		m.selectedCol >= 0 && m.selectedCol < m.numCols() {
-// 		go clipboard.WriteAll(m.data[m.selectedRow][m.selectedCol])
-// 		m.blinkCopiedCell = true
-// 		return m, tea.Tick(time.Millisecond*400, func(time.Time) tea.Msg {
-// 			return blinkMsg{}
-// 		})
-// 	}
-// 	return m, nil
-// }
-
 func (m Model) toggleVisualMode() (Model, tea.Cmd) {
 	m.visualMode = !m.visualMode
 	

@@ -83,14 +83,14 @@ func (m Model) handleWindowResize(msg tea.WindowSizeMsg) Model {
 	headerLines := m.calculateHeaderLines()
 	
 	// Reserve space for:  header + footer + data header row + separator
-	reservedLines := headerLines + 5  // 5 = separator + table header + empty line + footer (2 lines)
+	reservedLines := headerLines + 5
 	
 	m.visibleRows = m. height - reservedLines
 	if m.visibleRows > m.numRows() {
 		m.visibleRows = m.numRows()
 	}
-	if m.visibleRows < 1 {
-		m.visibleRows = 1
+	if m.visibleRows < 3 {
+		m.visibleRows = 3
 	}
 
 	return m

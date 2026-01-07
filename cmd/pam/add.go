@@ -17,14 +17,14 @@ func (a *App) handleAdd() {
 	}
 
 	if a.config.CurrentConnection == "" {
-		printError("No active connection.  Use 'pam switch <connection>' first")
+		printError("No active connection.  Use 'pam switch <connection>' or 'pam init' first")
 	}
 
 	_, ok := a.config.Connections[a.config.CurrentConnection]
 	if !ok {
 		a.config.Connections[a. config.CurrentConnection] = &config.ConnectionYAML{}
 	}
-	queries := a.config.Connections[a.config.CurrentConnection]. Queries
+	queries := a.config.Connections[a.config.CurrentConnection].Queries
 
 	queryName := os.Args[2]
 	var querySQL string
@@ -88,4 +88,19 @@ func (a *App) handleAdd() {
 	}
 
 	fmt.Println(styles.Success.Render(fmt.Sprintf("✓ Added query '%s' with ID %d", queryName, queries[queryName].Id)))
+}
+
+func removeCommentLines(content string) string {
+	lines := strings.Split(content, "\n")
+	var result strings.Builder
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, "--") {
+			result.WriteString(line)
+			result.WriteString("\n")
+		}
+	}
+
+	return result.String()
 }

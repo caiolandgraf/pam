@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/eduardofuncao/pam/internal/editor"
+	"github.com/eduardofuncao/pam/internal/parser"
 	"github.com/eduardofuncao/pam/internal/styles"
 )
 
@@ -19,7 +19,7 @@ func (m Model) View() string {
 	// Display query name header
 	b.WriteString(styles.Title.Render("◆ " + m.currentQuery.Name))
 	b.WriteString("\n")
-	
+
 	// Show the last executed query (for updates) or the current query (for selects)
 	var queryToDisplay string
 	if m.lastExecutedQuery != "" {
@@ -27,23 +27,20 @@ func (m Model) View() string {
 	} else {
 		queryToDisplay = m.currentQuery.SQL
 	}
-	
-	// Import the editor package at the top of your view.go file:
-	// "github.com/eduardofuncao/pam/internal/editor"
-	
+
 	// Format and highlight the SQL
-	formattedSQL := editor.FormatSQLWithLineBreaks(queryToDisplay)
-	highlightedSQL := editor.HighlightSQL(formattedSQL)
+	formattedSQL := parser.FormatSQLWithLineBreaks(queryToDisplay)
+	highlightedSQL := parser.HighlightSQL(formattedSQL)
 	b.WriteString(highlightedSQL)
 	b.WriteString("\n")
-	
+
 	// Add separator line
 	separatorWidth := 0
 	endCol := min(m.offsetX+m.visibleCols, m.numCols())
 	for j := m.offsetX; j < endCol; j++ {
 		separatorWidth += cellWidth
 		if j < endCol-1 {
-			separatorWidth += 1 // For the │ separator between cells
+			separatorWidth += 1
 		}
 	}
 
@@ -69,19 +66,19 @@ func (m Model) View() string {
 
 func (m Model) renderHeader() string {
 	var cells []string
-	endCol := min(m. offsetX+m.visibleCols, m.numCols())
+	endCol := min(m.offsetX+m.visibleCols, m.numCols())
 
 	for j := m.offsetX; j < endCol; j++ {
 		typeIcon := ""
 		if j < len(m.columnTypes) && m.columnTypes[j] != "" {
 			typeIcon = getTypeIcon(m.columnTypes[j]) + " "
 		}
-		
+
 		pkIcon := ""
 		if m.primaryKeyCol != "" && j < len(m.columns) && m.columns[j] == m.primaryKeyCol {
 			pkIcon = "⚿ "
 		}
-		
+
 		columnDisplay := pkIcon + typeIcon + m.columns[j]
 		content := formatCell(columnDisplay)
 		cells = append(cells, styles.TableHeader.Render(content))
@@ -106,38 +103,38 @@ func (m Model) renderDataRow(rowIndex int) string {
 func (m Model) renderFooter() string {
 	currentCellValue := ""
 	columnType := ""
-	
+
 	if m.selectedRow >= 0 && m.selectedRow < len(m.data) &&
-	   m.selectedCol >= 0 && m.selectedCol < len(m.data[m.selectedRow]) {
-		currentCellValue = m.data[m.selectedRow][m. selectedCol]
+		m.selectedCol >= 0 && m.selectedCol < len(m.data[m.selectedRow]) {
+		currentCellValue = m.data[m.selectedRow][m.selectedCol]
 	}
-	
-	if m. selectedCol >= 0 && m.selectedCol < len(m.columnTypes) {
+
+	if m.selectedCol >= 0 && m.selectedCol < len(m.columnTypes) {
 		columnType = m.columnTypes[m.selectedCol]
 	}
-	
+
 	maxPreviewWidth := m.width - len(columnType) - 10
 	displayValue := currentCellValue
 	if len(displayValue) > maxPreviewWidth && maxPreviewWidth > 0 {
-		displayValue = displayValue[: maxPreviewWidth-3] + "..."
+		displayValue = displayValue[:maxPreviewWidth-3] + "..."
 	}
-	
+
 	cellPreview := fmt.Sprintf("%s %s\n",
-		styles.Faint. Render(columnType),
+		styles.Faint.Render(columnType),
 		styles.TableCell.Render(displayValue))
-	
+
 	updateInfo := ""
 	delInfo := ""
-	
+
 	if m.tableName != "" && m.primaryKeyCol != "" {
-		updateInfo = styles.TableHeader.Render("u") + styles. Faint.Render("pdate")
-		delInfo = styles.TableHeader. Render("D") + styles.Faint.Render("el")
+		updateInfo = styles.TableHeader.Render("u") + styles.Faint.Render("pdate")
+		delInfo = styles.TableHeader.Render("D") + styles.Faint.Render("el")
 	} else if m.tableName != "" {
-		updateInfo = styles.TableHeader. Render("u") + styles.Faint.Render("pdate (no PK)")
+		updateInfo = styles.TableHeader.Render("u") + styles.Faint.Render("pdate (no PK)")
 		delInfo = ""
 	} else {
 		// No table name means JOIN or complex query
-		updateInfo = styles. Faint.Render("(update/delete disabled)")
+		updateInfo = styles.Faint.Render("(update/delete disabled)")
 		delInfo = ""
 	}
 
@@ -145,25 +142,16 @@ func (m Model) renderFooter() string {
 	edit := styles.TableHeader.Render("e") + styles.Faint.Render("ditSQL")
 	yank := styles.TableHeader.Render("y") + styles.Faint.Render("ank")
 	quit := styles.TableHeader.Render("q") + styles.Faint.Render("uit")
-	hjkl := styles.TableHeader. Render("hjkl") + styles.Faint. Render("←↓↑→")
+	hjkl := styles.TableHeader.Render("hjkl") + styles.Faint.Render("←↓↑→")
 
 	var footer string
-	if delInfo != "" {
-		footer = fmt.Sprintf("\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s",
-			cellPreview,
-			styles.Faint.Render(fmt.Sprintf("%dx%d", m.numRows(), m.numCols())),
-			styles. Faint.Render(fmt.Sprintf("In %.2fs", m.elapsed. Seconds())),
-			styles.Faint.Render(fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1)),
-			updateInfo, delInfo, yank, sel, edit, quit, hjkl)
-	} else {
-		footer = fmt.Sprintf("\n%s%s %s | %s | %s  %s  %s  %s  %s  %s",
-			cellPreview,
-			styles.Faint.Render(fmt. Sprintf("%dx%d", m. numRows(), m.numCols())),
-			styles.Faint.Render(fmt. Sprintf("In %.2fs", m.elapsed.Seconds())),
-			styles.Faint. Render(fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1)),
-			updateInfo, yank, sel, edit, quit, hjkl)
-	}
-	
+	footer = fmt.Sprintf("\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s",
+		cellPreview,
+		styles.Faint.Render(fmt.Sprintf("%dx%d", m.numRows(), m.numCols())),
+		styles.Faint.Render(fmt.Sprintf("In %.2fs", m.elapsed.Seconds())),
+		styles.Faint.Render(fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1)),
+		updateInfo, delInfo, yank, sel, edit, quit, hjkl)
+
 	return footer
 }
 
@@ -171,111 +159,111 @@ func (m Model) getCellStyle(row, col int) lipgloss.Style {
 	if m.blinkDeletedRow && m.deletedRow == row {
 		return styles.TableDeleted
 	}
-	
+
 	if m.blinkUpdatedCell && m.updatedRow == row && m.updatedCol == col {
 		return styles.TableUpdated
 	}
-	
+
 	if m.isCellInSelection(row, col) {
 		if m.blinkCopiedCell {
 			return styles.TableCopiedBlink
 		}
 		return styles.TableSelected
 	}
-	
-	return styles. TableCell
+
+	return styles.TableCell
 }
 
 func formatCell(content string) string {
 	runes := []rune(content)
 	runeCount := len(runes)
-	
+
 	if runeCount > cellWidth {
 		return string(runes[:cellWidth-1]) + "…"
 	}
-	
+
 	padding := cellWidth - runeCount
 	return content + strings.Repeat(" ", padding)
 }
 
 func getTypeIcon(typeName string) string {
 	upper := strings.ToUpper(typeName)
-	
+
 	// String/Text types
-	if strings.Contains(upper, "CHAR") || strings.Contains(upper, "TEXT") || 
-	   strings.Contains(upper, "STRING") || strings.Contains(upper, "CLOB") ||
-	   strings.Contains(upper, "VARCHAR") || strings.Contains(upper, "NVARCHAR") {
+	if strings.Contains(upper, "CHAR") || strings.Contains(upper, "TEXT") ||
+		strings.Contains(upper, "STRING") || strings.Contains(upper, "CLOB") ||
+		strings.Contains(upper, "VARCHAR") || strings.Contains(upper, "NVARCHAR") {
 		return "α"
 	}
-	
+
 	// Integer types
 	if strings.Contains(upper, "INT") || strings.Contains(upper, "SERIAL") ||
-	   strings.Contains(upper, "BIGINT") || strings.Contains(upper, "SMALLINT") ||
-	   strings.Contains(upper, "TINYINT") {
+		strings.Contains(upper, "BIGINT") || strings.Contains(upper, "SMALLINT") ||
+		strings.Contains(upper, "TINYINT") {
 		return "№"
 	}
-	
+
 	// Decimal/Float types
 	if strings.Contains(upper, "DECIMAL") || strings.Contains(upper, "NUMERIC") ||
-	   strings.Contains(upper, "FLOAT") || strings.Contains(upper, "DOUBLE") ||
-	   strings.Contains(upper, "REAL") || strings.Contains(upper, "NUMBER") ||
-	   strings.Contains(upper, "MONEY") {
+		strings.Contains(upper, "FLOAT") || strings.Contains(upper, "DOUBLE") ||
+		strings.Contains(upper, "REAL") || strings.Contains(upper, "NUMBER") ||
+		strings.Contains(upper, "MONEY") {
 		return "≈"
 	}
-	
+
 	// Date types
 	if strings.Contains(upper, "DATE") && !strings.Contains(upper, "TIME") {
 		return "⊞"
 	}
-	
+
 	// Time/Timestamp types
 	if strings.Contains(upper, "TIME") || strings.Contains(upper, "TIMESTAMP") {
 		return "◷"
 	}
-	
+
 	// Boolean types
 	if strings.Contains(upper, "BOOL") || strings.Contains(upper, "BIT") {
 		return "✓"
 	}
-	
+
 	// Binary/Blob types
 	if strings.Contains(upper, "BLOB") || strings.Contains(upper, "BINARY") ||
-	   strings.Contains(upper, "BYTEA") || strings.Contains(upper, "RAW") ||
-	   strings.Contains(upper, "VARBINARY") || strings.Contains(upper, "IMAGE") {
+		strings.Contains(upper, "BYTEA") || strings.Contains(upper, "RAW") ||
+		strings.Contains(upper, "VARBINARY") || strings.Contains(upper, "IMAGE") {
 		return "◆"
 	}
-	
+
 	// JSON types
 	if strings.Contains(upper, "JSON") || strings.Contains(upper, "JSONB") {
 		return "{ }"
 	}
-	
+
 	// UUID types
 	if strings.Contains(upper, "UUID") || strings.Contains(upper, "GUID") {
 		return "I"
 	}
-	
+
 	// Array types
 	if strings.Contains(upper, "ARRAY") || strings.HasSuffix(upper, "[]") {
 		return "≡"
 	}
-	
+
 	// Enum types
 	if strings.Contains(upper, "ENUM") || strings.Contains(upper, "SET") {
 		return "⋮"
 	}
-	
+
 	// XML types
 	if strings.Contains(upper, "XML") {
 		return "⟨⟩"
 	}
-	
+
 	// Geometric/Spatial types
-	if strings. Contains(upper, "GEOMETRY") || strings.Contains(upper, "POINT") ||
-	   strings.Contains(upper, "POLYGON") || strings.Contains(upper, "LINE") {
+	if strings.Contains(upper, "GEOMETRY") || strings.Contains(upper, "POINT") ||
+		strings.Contains(upper, "POLYGON") || strings.Contains(upper, "LINE") {
 		return "◉"
 	}
-	
+
 	// Default fallback
 	return "•"
 }

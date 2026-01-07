@@ -19,7 +19,6 @@ func (m Model) editAndRerunQuery() (tea.Model, tea.Cmd) {
 	}
 	tmpPath := tmpFile.Name()
 
-	// Write current query to temp file
 	if _, err := tmpFile.WriteString(m.currentQuery. SQL); err != nil {
 		tmpFile.Close()
 		os.Remove(tmpPath)
@@ -27,14 +26,10 @@ func (m Model) editAndRerunQuery() (tea.Model, tea.Cmd) {
 	}
 	tmpFile.Close()
 
-	// Build command with cursor at end of file
 	cmd := buildEditorCommand(editorCmd, tmpPath, m.currentQuery. SQL, CursorAtEndOfFile)
 	
 	return m, tea. ExecProcess(cmd, func(err error) tea.Msg {
-		// Read the edited file BEFORE removing it
 		editedData, readErr := os.ReadFile(tmpPath)
-		
-		// Now remove the temp file
 		os. Remove(tmpPath)
 		
 		if err != nil || readErr != nil {
@@ -52,17 +47,13 @@ func (m Model) editAndRerunQuery() (tea.Model, tea.Cmd) {
 	})
 }
 
-// Message sent when query editor completes
 type queryEditCompleteMsg struct {
 	sql string
 }
 
-// Handle the query edit complete message
 func (m Model) handleQueryEditComplete(msg queryEditCompleteMsg) (tea.Model, tea.Cmd) {
-	// Store the edited query and signal that we should re-run
 	m.editedQuery = msg.sql
 	m.shouldRerunQuery = true
 
-	// Quit the TUI - the calling code will handle re-execution
 	return m, tea.Quit
 }

@@ -37,14 +37,10 @@ func (m Model) updateCell() (tea.Model, tea.Cmd) {
 	}
 	tmpFile.Close()
 
-	// Build command with cursor positioning
 	cmd := buildEditorCommand(editorCmd, tmpPath, updateStmt, CursorAtUpdateValue)
 
 	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
-		// Read the edited file BEFORE removing it
 		editedSQL, readErr := os.ReadFile(tmpPath)
-
-		// Now remove the temp file
 		os.Remove(tmpPath)
 
 		if err != nil || readErr != nil {
@@ -57,14 +53,12 @@ func (m Model) updateCell() (tea.Model, tea.Cmd) {
 	})
 }
 
-// Message sent when editor completes
 type editorCompleteMsg struct {
 	sql      string
 	colIndex int
 }
 
 func (m Model) handleEditorComplete(msg editorCompleteMsg) (tea.Model, tea.Cmd) {
-	// Validate the update statement
 	if err := validateUpdateStatement(msg.sql); err != nil {
 		printError("Update validation failed:  %v", err)
 		return m, nil
@@ -72,23 +66,19 @@ func (m Model) handleEditorComplete(msg editorCompleteMsg) (tea.Model, tea.Cmd) 
 
 	newValue := m.extractNewValue(msg.sql, m.columns[msg.colIndex])
 
-	// Store the cleaned SQL for display
 	m.lastExecutedQuery = m.cleanSQLForDisplay(msg.sql)
 
-	// Execute the update
 	if err := m.executeUpdate(msg.sql); err != nil {
 		printError("Could not execute update: %v", err)
 		return m, nil
 	}
 
-	// Successfully updated - update the model data in-place
 	m.data[m.selectedRow][msg.colIndex] = newValue
 
 	m.blinkUpdatedCell = true
 	m.updatedRow = m.selectedRow
 	m. updatedCol = msg.colIndex
 
-	// Force a full re-render with screen clear
 	return m, tea.Batch(
 		tea.ClearScreen,
 		m.blinkCmd(),
@@ -144,7 +134,6 @@ func (m Model) executeUpdate(sql string) error {
 	return m.dbConnection.Exec(cleanSQL)
 }
 
-// validateUpdateStatement ensures the UPDATE statement is safe to execute
 func validateUpdateStatement(sql string) error {
 	var result strings.Builder
 	for line := range strings.SplitSeq(sql, "\n") {
@@ -178,7 +167,6 @@ func validateUpdateStatement(sql string) error {
 	return nil
 }
 
-// cleanSQLForDisplay removes comments and formats SQL for display
 func (m Model) cleanSQLForDisplay(sql string) string {
 	var result strings.Builder
 	for line := range strings.SplitSeq(sql, "\n") {
@@ -193,9 +181,7 @@ func (m Model) cleanSQLForDisplay(sql string) string {
 	return cleanSQL
 }
 
-// extractNewValue parses the SQL UPDATE statement to extract the new value
 func (m Model) extractNewValue(sql string, columnName string) string {
-	// Remove comments and consolidate to single line
 	var result strings.Builder
 	for line := range strings.SplitSeq(sql, "\n") {
 		trimmed := strings.TrimSpace(line)
@@ -207,7 +193,6 @@ func (m Model) extractNewValue(sql string, columnName string) string {
 	cleanSQL := strings.TrimSpace(result.String())
 
 	// Try to match:  SET column_name = 'value' or SET column_name = value
-	// This regex handles both quoted and unquoted values
 	pattern := fmt.Sprintf(`SET\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`, regexp.QuoteMeta(columnName))
 	re := regexp.MustCompile(`(?i)` + pattern)
 

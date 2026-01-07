@@ -30,7 +30,6 @@ func buildEditorCommand(editorCmd, tmpPath, content string, cursorHint cursorPos
 	}
 }
 
-// cursorPositionHint tells the function where to look for the cursor position
 type cursorPositionHint int
 
 const (
@@ -39,7 +38,6 @@ const (
 	CursorAtEndOfFile                              // At the end of the file
 )
 
-// findCursorPosition finds the appropriate cursor position based on the hint
 func findCursorPosition(content string, hint cursorPositionHint) (line int, col int) {
 	lines := strings.Split(content, "\n")
 
@@ -50,11 +48,10 @@ func findCursorPosition(content string, hint cursorPositionHint) (line int, col 
 		for i, lineText := range lines {
 			match := re.FindStringIndex(lineText)
 			if match != nil {
-				// Position cursor right after the opening quote
 				return i + 1, match[1] + 1
 			}
 		}
-		return 3, 1 // fallback
+		return 3, 1
 
 	case CursorAtWhereClause:
 		// Look for: WHERE column = 'value' and position inside the quotes
@@ -62,23 +59,21 @@ func findCursorPosition(content string, hint cursorPositionHint) (line int, col 
 		for i, lineText := range lines {
 			match := re.FindStringIndex(lineText)
 			if match != nil {
-				// Position cursor right after the opening quote in WHERE clause
 				return i + 1, match[1] + 1
 			}
 		}
-		// Fallback: just find WHERE and position after it
+		// Fallback: position after WHERE
 		for i, lineText := range lines {
 			if strings.Contains(strings.ToUpper(lineText), "WHERE") {
 				idx := strings.Index(strings.ToUpper(lineText), "WHERE")
 				if idx != -1 {
-					return i + 1, idx + 7 // Position after "WHERE "
+					return i + 1, idx + 7
 				}
 			}
 		}
-		return len(lines), 1 // fallback to last line
+		return len(lines), 1
 
 	case CursorAtEndOfFile:
-		// Position at the end of the last non-empty line
 		for i := len(lines) - 1; i >= 0; i-- {
 			if strings.TrimSpace(lines[i]) != "" {
 				return i + 1, len(lines[i]) + 1

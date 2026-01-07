@@ -6,7 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/editor"
+	"github.com/eduardofuncao/pam/internal/parser"
 )
 
 const cellWidth = 15
@@ -44,7 +44,7 @@ type Model struct {
 
 type blinkMsg struct{}
 
-func New(columns []string, data [][]string, elapsed time.Duration, conn db. DatabaseConnection, tableName, primaryKeyCol string, query db.Query) Model {
+func New(columns []string, data [][]string, elapsed time.Duration, conn db.DatabaseConnection, tableName, primaryKeyCol string, query db.Query) Model {
 	columnTypes := make([]string, len(columns))
 	if tableName != "" && conn != nil {
 		metadata, err := conn.GetTableMetadata(tableName)
@@ -100,10 +100,9 @@ func (m Model) ShouldRerunQuery() bool {
 }
 
 func (m Model) GetEditedQuery() db.Query {
-	// Create a new query with the edited SQL
 	updatedQuery := m.currentQuery
 	if m.editedQuery != "" {
-		updatedQuery. SQL = m.editedQuery
+		updatedQuery.SQL = m.editedQuery
 	}
 	return updatedQuery
 }
@@ -118,7 +117,7 @@ func (m Model) calculateHeaderLines() int {
 		queryToDisplay = m.currentQuery. SQL
 	}
 	
-	formattedSQL := editor.FormatSQLWithLineBreaks(queryToDisplay)
+	formattedSQL := parser.FormatSQLWithLineBreaks(queryToDisplay)
 	sqlLines := strings.Count(formattedSQL, "\n") + 1
 	
 	return titleLines + sqlLines + 1

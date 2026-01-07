@@ -1,4 +1,4 @@
-package editor
+package parser
 
 import (
 	"regexp"
