@@ -1,10 +1,12 @@
 package table
 
 import (
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/eduardofuncao/pam/internal/db"
+	"github.com/eduardofuncao/pam/internal/editor"
 )
 
 const cellWidth = 15
@@ -104,4 +106,20 @@ func (m Model) GetEditedQuery() db.Query {
 		updatedQuery. SQL = m.editedQuery
 	}
 	return updatedQuery
+}
+
+func (m Model) calculateHeaderLines() int {
+	titleLines := 1
+	
+	var queryToDisplay string
+	if m.lastExecutedQuery != "" {
+		queryToDisplay = m.lastExecutedQuery
+	} else {
+		queryToDisplay = m.currentQuery. SQL
+	}
+	
+	formattedSQL := editor.FormatSQLWithLineBreaks(queryToDisplay)
+	sqlLines := strings.Count(formattedSQL, "\n") + 1
+	
+	return titleLines + sqlLines + 1
 }

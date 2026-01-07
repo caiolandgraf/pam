@@ -72,17 +72,22 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea. Cmd) {
 
 func (m Model) handleWindowResize(msg tea.WindowSizeMsg) Model {
 	m.width = msg.Width
-	m. height = msg.Height
+	m.height = msg.Height
 
 	m.visibleCols = (m.width - 2) / (cellWidth + 1)
 	if m.visibleCols > m.numCols() {
 		m.visibleCols = m.numCols()
 	}
 
-	// Offset so table doesn't take full terminal height
-	m.visibleRows = m.height - 9
+	// Calculate dynamic header height
+	headerLines := m.calculateHeaderLines()
+	
+	// Reserve space for:  header + footer + data header row + separator
+	reservedLines := headerLines + 5  // 5 = separator + table header + empty line + footer (2 lines)
+	
+	m.visibleRows = m. height - reservedLines
 	if m.visibleRows > m.numRows() {
-		m.visibleRows = m. numRows()
+		m.visibleRows = m.numRows()
 	}
 	if m.visibleRows < 1 {
 		m.visibleRows = 1
