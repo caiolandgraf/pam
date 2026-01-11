@@ -48,6 +48,12 @@ var (
 
 	SQLString = lipgloss.NewStyle().
 		Foreground(lipgloss.Color(ColorString))
+
+	// SearchMatch style - used for highlighting search term matches
+	SearchMatch = lipgloss.NewStyle().
+		Foreground(lipgloss.Color("226")). // Bright Yellow
+		Bold(true).
+		Background(lipgloss.Color("57"))   // Purple background for contrast
 )
 
 // Table component styles

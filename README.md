@@ -35,7 +35,7 @@
 - **Pretty Fast** - Execute queries with minimal overhead
 - **Table view TUI** - Keyboard focused navigation with vim-style bindings
 - **Query Library** - Save and organize your most-used queries
-- **Multi-Database** - Works with PostgreSQL, MySQL, SQLite, and Oracle
+- **Multi-Database** - Works with PostgreSQL, MySQL, SQLite, Oracle, and SQL Server
 - **In-Place Editing** - Update cells, delete rows and edit your SQL directly from the results table
 - **Smart Copy** - Yank cells or ranges with visual mode
 
@@ -52,8 +52,11 @@ go install github.com/eduardofuncao/pam/cmd/pam@latest
 ### Basic Usage
 
 ```bash
-# Create your first connection
+# Create your first connection (PostgreSQL example)
 pam init mydb postgres "postgresql://user:pass@localhost:5432/mydb"
+
+# Or use SQL Server with Docker (see Database Support section below for setup)
+pam init sqlserver-docker sqlserver "sqlserver://sa:MyStrongPass123@localhost:1433/master"
 
 # Add a saved query
 pam add list_users "SELECT * FROM users"
@@ -107,6 +110,13 @@ pam init pg-prod postgres postgres://myuser:mypassword@localhost:5432/mydb?sslmo
 pam init mysql-dev mysql 'myuser:mypassword@tcp(127.0.0.1:3306)/mydb'
 ```
 
+### SQL Server
+
+
+```bash
+pam init sqlserver-docker sqlserver "sqlserver://sa:MyStrongPass123@localhost:1433/master"
+```
+
 ### SQLite
 
 ```bash
@@ -133,9 +143,14 @@ ADD GIF HERE
 # Add queries with auto-incrementing IDs
 pam add daily_report "SELECT * FROM sales WHERE date = CURRENT_DATE"
 pam add user_count "SELECT COUNT(*) FROM users"
+pam add employees "SELECT TOP 10 * FROM employees ORDER BY last_name"
 
 # List all saved queries
 pam list queries
+
+# Search for specific queries
+pam list queries emp    # Finds queries with 'emp' in name or SQL
+pam list queries employees
 
 # Run by name or ID
 pam run daily_report
@@ -268,7 +283,7 @@ ADD GIF HERE
 ## 🗺️ Roadmap
 
 ### v0.1 Kelly
-- [x] Multi-database support (PostgreSQL, MySQL, SQLite, Oracle)
+- [x] Multi-database support (PostgreSQL, MySQL, SQLite, Oracle, SQL Server)
 - [x] Query library with save/edit/remove functionality
 - [x] Interactive TUI with Vim navigation
 - [x] In-place cell updates and row deletion
@@ -277,10 +292,10 @@ ADD GIF HERE
 - [x] Query editing in external editor
 - [x] Primary key detection
 - [x] Column type indicators
-- [ ] SQL Server driver support
+- [x] SQL Server driver support
+- [x] Row limiting configuration option
 
 ### v0.2 - Jim
-- [ ] Row limit configuration option
 - [ ] Query parameter/placeholder support (e.g., `WHERE id = $1`)
 - [ ] Query execution history with persistence
 - [ ] CSV/JSON export for multiple cells
