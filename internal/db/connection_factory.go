@@ -12,6 +12,8 @@ func CreateConnection(name, dbType, connString string) (DatabaseConnection, erro
 		return NewMySQLConnection(name, connString)
 	case "sqlite", "sqlite3":
 		return NewSQLiteConnection(name, connString)
+	case "sqlserver", "mssql":
+		return NewSQLServerConnection(name, connString)
 	case "godror", "oracle":
 		return NewOracleConnection(name, connString)
 	default:

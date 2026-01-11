@@ -50,6 +50,7 @@ func (a *App) PrintGeneralHelp() {
 	// Examples
 	fmt.Println(styles.Title.Render("Examples"))
 	fmt.Println("  pam init dev postgres \"postgres://user:pass@localhost:5432/dbname\"")
+	fmt.Println("  pam init prod sqlserver \"sqlserver://sa:password@localhost:1433?database=mydb\"")
 	fmt.Println("  pam switch dev")
 	fmt.Println("  pam add list_users \"SELECT * FROM users\"")
 	fmt.Println("  pam run list_users")
@@ -86,6 +87,8 @@ func (a *App) PrintCommandHelp() {
 		fmt.Println()
 		section("Examples")
 		fmt.Println("  pam init dev postgres \"postgres://user:pass@localhost:5432/dbname\"")
+		fmt.Println("  pam init prod sqlserver \"sqlserver://sa:password@localhost:1433?database=mydb\"")
+		fmt.Println("  pam init staging mysql \"user:pass@tcp(127.0.0.1:3306)/dbname\"")
 
 	case "switch", "use":
 		section("Command: switch")
