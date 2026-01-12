@@ -77,7 +77,7 @@ func (m Model) handleEditorComplete(msg editorCompleteMsg) (tea.Model, tea.Cmd) 
 
 	m.blinkUpdatedCell = true
 	m.updatedRow = m.selectedRow
-	m. updatedCol = msg.colIndex
+	m.updatedCol = msg.colIndex
 
 	return m, tea.Batch(
 		tea.ClearScreen,
@@ -86,14 +86,14 @@ func (m Model) handleEditorComplete(msg editorCompleteMsg) (tea.Model, tea.Cmd) 
 }
 
 func (m Model) blinkCmd() tea.Cmd {
-	return tea.Tick(time. Millisecond*500, func(t time.Time) tea.Msg {
+	return tea.Tick(time.Millisecond*500, func(t time.Time) tea.Msg {
 		return blinkMsg{}
 	})
 }
 
 func (m Model) buildUpdateStatement() string {
 	columnName := m.columns[m.selectedCol]
-	currentValue := m.data[m.selectedRow][m. selectedCol]
+	currentValue := m.data[m.selectedRow][m.selectedCol]
 
 	pkValue := ""
 	if m.primaryKeyCol != "" {
@@ -109,7 +109,7 @@ func (m Model) buildUpdateStatement() string {
 		m.tableName,
 		columnName,
 		currentValue,
-		m. primaryKeyCol,
+		m.primaryKeyCol,
 		pkValue,
 	)
 }
@@ -149,16 +149,32 @@ func validateUpdateStatement(sql string) error {
 		return fmt.Errorf("empty SQL statement")
 	}
 
-	updateRegex := regexp.MustCompile(`(?i)^\s*UPDATE\s+`)
-	if ! updateRegex.MatchString(cleanSQL) {
-		return fmt.Errorf("not an UPDATE statement")
+	upperSQL := strings.ToUpper(cleanSQL)
+
+	// Check for ClickHouse ALTER TABLE UPDATE or standard UPDATE
+	isClickHouse := strings.Contains(upperSQL, "ALTER TABLE") && strings.Contains(upperSQL, "UPDATE")
+	isStandardUpdate := strings.HasPrefix(upperSQL, "UPDATE")
+
+	if !isClickHouse && !isStandardUpdate {
+		return fmt.Errorf("not a valid UPDATE statement (expected UPDATE or ALTER TABLE UPDATE)")
 	}
 
-	setRegex := regexp.MustCompile(`(?i)\bSET\b`)
-	if !setRegex.MatchString(cleanSQL) {
-		return fmt.Errorf("UPDATE statement must include a SET clause")
+	// For ClickHouse: ALTER TABLE ... UPDATE ... WHERE ...
+	if isClickHouse {
+		// Check for UPDATE keyword after ALTER TABLE
+		updateRegex := regexp.MustCompile(`(?i)ALTER\s+TABLE\s+\S+\s+UPDATE\s+`)
+		if !updateRegex.MatchString(cleanSQL) {
+			return fmt.Errorf("ClickHouse ALTER TABLE UPDATE must include UPDATE clause")
+		}
+	} else {
+		// For standard SQL: UPDATE ... SET ...
+		setRegex := regexp.MustCompile(`(?i)\bSET\b`)
+		if !setRegex.MatchString(cleanSQL) {
+			return fmt.Errorf("UPDATE statement must include a SET clause")
+		}
 	}
 
+	// Both syntaxes require WHERE clause
 	whereRegex := regexp.MustCompile(`(?i)\bWHERE\b`)
 	if !whereRegex.MatchString(cleanSQL) {
 		return fmt.Errorf("UPDATE statement must include a WHERE clause for safety")
@@ -181,34 +197,47 @@ func (m Model) cleanSQLForDisplay(sql string) string {
 	return cleanSQL
 }
 
-func (m Model) extractNewValue(sql string, columnName string) string {
-	var result strings.Builder
-	for line := range strings.SplitSeq(sql, "\n") {
-		trimmed := strings.TrimSpace(line)
-		if !strings.HasPrefix(trimmed, "--") && trimmed != "" {
-			result.WriteString(trimmed)
-			result.WriteString(" ")
-		}
-	}
-	cleanSQL := strings.TrimSpace(result.String())
+  func (m Model) extractNewValue(sql string, columnName string) string {
+      var result strings.Builder
+      for line := range strings.SplitSeq(sql, "\n") {
+          trimmed := strings.TrimSpace(line)
+          if !strings.HasPrefix(trimmed, "--") && trimmed != "" {
+              result.WriteString(trimmed)
+              result.WriteString(" ")
+          }
+      }
+      cleanSQL := strings.TrimSpace(result.String())
 
-	// Try to match:  SET column_name = 'value' or SET column_name = value
-	pattern := fmt.Sprintf(`SET\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`, regexp.QuoteMeta(columnName))
-	re := regexp.MustCompile(`(?i)` + pattern)
+      // First try standard SQL: SET column_name = 'value'
+      setPattern := fmt.Sprintf(`SET\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`, regexp.QuoteMeta(columnName))
+      setRe := regexp.MustCompile(`(?i)` + setPattern)
 
-	matches := re.FindStringSubmatch(cleanSQL)
-	if len(matches) > 0 {
-		// matches[2] = single quoted value
-		// matches[3] = double quoted value
-		// matches[4] = unquoted value
-		if matches[2] != "" {
-			return matches[2]
-		} else if matches[3] != "" {
-			return matches[3]
-		} else if matches[4] != "" {
-			return matches[4]
-		}
-	}
+      matches := setRe.FindStringSubmatch(cleanSQL)
+      if len(matches) > 0 {
+          if matches[2] != "" {
+              return matches[2]
+          } else if matches[3] != "" {
+              return matches[3]
+          } else if matches[4] != "" {
+              return matches[4]
+          }
+      }
 
-	return "<unknown>"
-}
+      // Try ClickHouse: UPDATE column_name = 'value' (no SET keyword)
+      updatePattern := fmt.Sprintf(`UPDATE\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`,
+  regexp.QuoteMeta(columnName))
+      updateRe := regexp.MustCompile(`(?i)` + updatePattern)
+
+      matches = updateRe.FindStringSubmatch(cleanSQL)
+      if len(matches) > 0 {
+          if matches[2] != "" {
+              return matches[2]
+          } else if matches[3] != "" {
+              return matches[3]
+          } else if matches[4] != "" {
+              return matches[4]
+          }
+      }
+
+      return "<unknown>"
+  }

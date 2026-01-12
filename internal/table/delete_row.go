@@ -138,30 +138,51 @@ func (m Model) executeDelete(sql string) error {
 	return m.dbConnection. Exec(cleanSQL)
 }
 
-func validateDeleteStatement(sql string) error {
-	var result strings.Builder
-	for line := range strings.SplitSeq(sql, "\n") {
-		trimmed := strings.TrimSpace(line)
-		if !strings.HasPrefix(trimmed, "--") && trimmed != "" {
-			result.WriteString(trimmed)
-			result.WriteString(" ")
-		}
-	}
-	cleanSQL := strings.TrimSpace(result.String())
+  func validateDeleteStatement(sql string) error {
+      var result strings.Builder
+      for line := range strings.SplitSeq(sql, "\n") {
+          trimmed := strings.TrimSpace(line)
+          if !strings.HasPrefix(trimmed, "--") && trimmed != "" {
+              result.WriteString(trimmed)
+              result.WriteString(" ")
+          }
+      }
+      cleanSQL := strings.TrimSpace(result.String())
 
-	if cleanSQL == "" {
-		return fmt.Errorf("empty SQL statement")
-	}
+      if cleanSQL == "" {
+          return fmt.Errorf("empty SQL statement")
+      }
 
-	deleteRegex := regexp.MustCompile(`(?i)^\s*DELETE\s+FROM`)
-	if ! deleteRegex.MatchString(cleanSQL) {
-		return fmt.Errorf("not a DELETE statement")
-	}
+      upperSQL := strings.ToUpper(cleanSQL)
 
-	whereRegex := regexp.MustCompile(`(?i)\bWHERE\b`)
-	if !whereRegex.MatchString(cleanSQL) {
-		return fmt.Errorf("DELETE statement must include a WHERE clause for safety")
-	}
+      // Check for ClickHouse ALTER TABLE DELETE or standard DELETE FROM
+      isClickHouse := strings.Contains(upperSQL, "ALTER TABLE") && strings.Contains(upperSQL, "DELETE")
+      isStandardDelete := strings.HasPrefix(upperSQL, "DELETE")
 
-	return nil
-}
+      if !isClickHouse && !isStandardDelete {
+          return fmt.Errorf("not a valid DELETE statement (expected DELETE FROM or ALTER TABLE DELETE)")
+      }
+
+      // For ClickHouse: ALTER TABLE ... DELETE ...
+      if isClickHouse {
+          // Check for DELETE keyword after ALTER TABLE
+          alterDeleteRegex := regexp.MustCompile(`(?i)ALTER\s+TABLE\s+\S+\s+DELETE`)
+          if !alterDeleteRegex.MatchString(cleanSQL) {
+              return fmt.Errorf("ClickHouse ALTER TABLE DELETE must include DELETE clause")
+          }
+      } else {
+          // For standard SQL: DELETE FROM ...
+          deleteFromRegex := regexp.MustCompile(`(?i)DELETE\s+FROM\s+`)
+          if !deleteFromRegex.MatchString(cleanSQL) {
+              return fmt.Errorf("DELETE statement must include FROM clause")
+          }
+      }
+
+      // Both syntaxes require WHERE clause
+      whereRegex := regexp.MustCompile(`(?i)\bWHERE\b`)
+      if !whereRegex.MatchString(cleanSQL) {
+          return fmt.Errorf("DELETE statement must include a WHERE clause for safety")
+      }
+
+      return nil
+  }
