@@ -4,7 +4,7 @@
   <img src="https://github.com/user-attachments/assets/ba9b84d3-860b-4225-bf34-34572d4833e0" alt="Pam logo" height="45" style="vertical-align: middle;"/> 
   Pam's Database Drawer
 </h1>
-<img width="320" height="224" alt="Pam mascot" src="https://github.com/user-attachments/assets/f995ce07-3742-4e98-b737-bbdbf982012e" />
+<img width="363" height="120" alt="image" src="https://github.com/user-attachments/assets/4495a407-4897-4b22-8b5e-6ac8a9340ca5" />
 
 
 
@@ -30,7 +30,8 @@
 
 ## 🎬 Demo
 
-![demo](https://github.com/user-attachments/assets/c20ee5e9-ce01-41e4-ac12-e5206da49cdc)
+![output3](https://github.com/user-attachments/assets/3fbf822f-d5fe-4393-959a-9a7f9f408f94)
+
 
 ### Highlights
 
@@ -169,7 +170,7 @@ pam init clickhouse-docker clickhouse "clickhouse://myuser:mypassword@localhost:
 
 Save, organize, and execute your SQL queries with ease. 
 
-ADD GIF HERE
+<img width="832" height="627" alt="image" src="https://github.com/user-attachments/assets/0a8e69eb-1dfc-40c5-92c7-cfbdf7e4d538" />
 
 ```bash
 # Add queries with auto-incrementing IDs
@@ -193,8 +194,6 @@ pam run 2
 
 Open queries in your favorite editor before execution.
 
-ADD GIF HERE
-
 ```bash
 # Edit existing query before running
 pam run daily_report --edit
@@ -208,9 +207,9 @@ pam edit queries
 
 ### TUI Table Viewer
 
-Navigate query results with Vim-style keybindings, update cells in-place, and copy data effortlessly.
+Navigate query results with Vim-style keybindings, update cells in-place, dekete rows and copy data effortlessly.
 
-ADD GIF HERE
+<img width="859" height="604" alt="image" src="https://github.com/user-attachments/assets/da4a6141-7cb9-4263-b8bb-2afa771906a2" />
 
 **Key Features:**
 - Syntax-highlighted SQL display
@@ -233,12 +232,6 @@ pam switch mysql_prod
 # Check current connection
 pam status
 ```
-
-### In-Place Updates & Deletes
-
-Modify data directly from the results table - no need to write UPDATE statements manually! 
-
-ADD GIF HERE
 
 ---
 
@@ -384,5 +377,8 @@ MIT License - see [LICENSE](LICENSE) file for details
 **Made with ❤️ by [@eduardofuncao](https://github.com/eduardofuncao)**
 
 > *"I don't think it would be the worst thing if it didn't work out...  Wait, can I say that?"* - Pam Beesly (definitely NOT about Pam's Database Drawer)
+
+<img width="320" height="224" alt="Pam mascot" src="https://github.com/user-attachments/assets/f995ce07-3742-4e98-b737-bbdbf982012e" />
+
 
 </div>
