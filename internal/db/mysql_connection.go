@@ -28,6 +28,16 @@ func (m *MySQLConnection) Open() error {
 		return err
 	}
 	m.db = db
+
+	if m.Schema != "" {
+		setDatabaseSQL := fmt.Sprintf("USE `%s`", m.Schema)
+		_, err = m.db.Exec(setDatabaseSQL)
+		if err != nil {
+			m.db.Close()
+			return fmt.Errorf("failed to set database to '%s': %w", m.Schema, err)
+		}
+	}
+
 	return nil
 }
 

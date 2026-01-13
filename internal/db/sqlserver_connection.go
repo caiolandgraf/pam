@@ -30,15 +30,6 @@ func (s *SQLServerConnection) Open() error {
 	}
 	s.db = db
 
-	if s.Schema != "" {
-		setSchemaSQL := fmt.Sprintf("ALTER SESSION SET CURRENT_SCHEMA = %s", s.Schema)
-		_, err = s.db.Exec(setSchemaSQL)
-		if err != nil {
-			s.db.Close()
-			return fmt.Errorf("failed to set schema to '%s': %w", s.Schema, err)
-		}
-	}
-
 	return nil
 }
 
