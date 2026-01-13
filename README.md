@@ -21,9 +21,9 @@
 
 [Quick Start](#-quick-start) • [Configuration](#%EF%B8%8F-configuration) • [Database Support](#%EF%B8%8F-database-support) • [Features](#-features) • [Commands](#-all-commands) • [TUI Navigation](#%EF%B8%8F-tui-table-navigation) • [Roadmap](#%EF%B8%8F-roadmap) • [Contributing](#-contributing)
 
+> Note: This project is currently in beta. Errors and unexpected behavior may occur
 </div>
 
-> Note: This project is currently in beta. Errors and unexpected behavior may occur
 
 ---
 
@@ -36,7 +36,7 @@
 
 - **Query Library** - Save and organize your most-used queries
 - **Runs in the CLI** - Execute queries with minimal overhead
-- **Multi-Database** - Works with PostgreSQL, MySQL, SQLite, Oracle, SQL Server, DuckDB, and ClickHouse
+- **Multi-Database** - Works with PostgreSQL, MySQL, SQLite, Oracle, SQL Server and ClickHouse
 - **Table view TUI** - Keyboard focused navigation with vim-style bindings
 - **In-Place Editing** - Update cells, delete rows and edit your SQL directly from the results table
 
@@ -139,12 +139,6 @@ pam init sqlserver-docker sqlserver "sqlserver://sa:MyStrongPass123@localhost:14
 pam init sqlite-local sqlite file:/home/eduardo/code/dbeesly/sqlite/mydb.sqlite
 ```
 
-### DuckDB
-
-```bash
-pam init duckdb-local duckdb /home/user/code/dbeesly/duckdb/data/dundermifflin.duckdb
-```
-
 ### Oracle
 
 ```bash
@@ -153,6 +147,7 @@ pam init oracle-stg oracle myuser/mypassword@localhost:1521/XEPDB1
 # or connect to a specific schema:
 pam init oracle-stg oracle myuser/mypassword@localhost:1521/XEPDB1 schema-name
 ```
+> Make sure you have the [Oracle Instant Client](https://www.oracle.com/database/technologies/instant-client/downloads.html) or equivalent installed in your system
 
 ### ClickHouse
 
@@ -160,7 +155,13 @@ pam init oracle-stg oracle myuser/mypassword@localhost:1521/XEPDB1 schema-name
 pam init clickhouse-docker clickhouse "clickhouse://myuser:mypassword@localhost:9000/dundermifflin"
 ```
 
-> To run containerized test database servers for all supported databases, use the sister project [dbeesly](https://github.com/eduardofuncao/dbeesly)
+---
+
+## 🐝 Dbeesly
+
+To run containerized test database servers for all supported databases, use the sister project [dbeesly](https://github.com/eduardofuncao/dbeesly)
+
+<img width="879" height="571" alt="image" src="https://github.com/user-attachments/assets/c0a131eb-ea95-4523-86ac-cd00a561a5e0" />
 
 ---
 
@@ -329,8 +330,8 @@ Press `v` to enter visual mode, then navigate to select a range of cells.  Press
 ## 🗺️ Roadmap
 > Note: This project is currently in beta. Errors and unexpected behavior may occur
 
-### v0.1 Kelly
-- [x] Multi-database support (PostgreSQL, MySQL, SQLite, Oracle, SQL Server, DuckDB, ClickHouse)
+### v0.1 Ryan
+- [x] Multi-database support (PostgreSQL, MySQL, SQLite, Oracle, SQL Server, ClickHouse)
 - [x] Query library with save/edit/remove functionality
 - [x] Interactive TUI with Vim navigation
 - [x] In-place cell updates and row deletion
@@ -341,19 +342,19 @@ Press `v` to enter visual mode, then navigate to select a range of cells.  Press
 - [x] Column type indicators
 - [x] Row limit configuration option
 
-### v0.2 - Jim
+### v0.2 - Kelly
 - [ ] Dynamic column width
 - [ ] Program colors configuration option
 - [ ] Query parameter/placeholder support (e.g., `WHERE id = $1`)
 - [ ] Query execution history with persistence
 - [ ] CSV/JSON export for multiple cells
-- [ ] Database schema handling
+- [ ] Database schema handling (currently implemented for postgres and oracle only)
 - [ ] Display column types correctly for join queries
 
-### v0.3 - Dwight
+### v0.3 - Jim
 - [ ] Shell autocomplete (bash, fish, zsh)
-- [ ] `pam info table <table>` - Show table metadata (columns, types, constraints)
 - [ ] `pam info tables` - List all tables in current connection
+- [ ] `pam info table <table>` - Show table metadata (columns, types, constraints)
 - [ ] `pam info connection` - Show connection/database overview
 
 ---
@@ -362,12 +363,20 @@ Press `v` to enter visual mode, then navigate to select a range of cells.  Press
 
 We welcome contributions! Get started with detailed instructions from [CONTRIBUTING.md](CONTRIBUTING.md)
 
+Thanks a lot to all the contributors:
+
+<a href="https://github.com/DeprecatedLuar"><img src="https://github.com/DeprecatedLuar.png" width="40" /></a>
+<a href="https://github.com/eduardofuncao"><img src="https://github.com/eduardofuncao.png" width="40" /></a>
+
+
 ## 🙏 Acknowledgments
 
 Pam wouldn't exist without the inspiration and groundwork laid by these fantastic projects:
 
-- **[naggie/dstask](https://github.com/naggie/dstask)** - For the elegant CLI/TUI design patterns and file-based configuration approach
+- **[naggie/dstask](https://github.com/naggie/dstask)** - For the elegant CLI design patterns and file-based data storage approach
 - **[DeprecatedLuar/better-curl-saul](https://github.com/DeprecatedLuar/better-curl-saul)** - For demonstrating a simple and genius approach to making a CLI tool
+- **[dbeaver](https://github.com/dbeaver/dbeaver)** - The OG database management tool
+
 
 Built with: 
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) - The TUI framework
