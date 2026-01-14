@@ -1,8 +1,9 @@
 <div align="center">
 
 <h1>
-  <img src="https://github.com/user-attachments/assets/ba9b84d3-860b-4225-bf34-34572d4833e0" alt="Pam logo" height="45" style="vertical-align: middle;"/> 
+    <img src="https://github.com/user-attachments/assets/ba9b84d3-860b-4225-bf34-34572d4833e0" alt="Pam logo" height="45" style="vertical-align: middle;"/> 
   Pam's Database Drawer
+  <img width="auto" height="45" alt="bitmap" src="https://github.com/user-attachments/assets/c4dd1637-3e8d-45e8-8196-0d8b48324265" />
 </h1>
 <img width="363" height="120" alt="image" src="https://github.com/user-attachments/assets/4495a407-4897-4b22-8b5e-6ac8a9340ca5" />
 
@@ -29,8 +30,7 @@
 
 ## 🎬 Demo
 
-![output3-cropped](https://github.com/user-attachments/assets/8e350874-fd12-4686-8cc7-d40c258e7b50)
-
+![pam-demo](https://github.com/user-attachments/assets/b62bec1d-2255-4d02-9b7f-1c99afbeb664)
 
 ### Highlights
 
@@ -45,11 +45,30 @@
 ## 🚀 Quick Start
 
 ### Installation
-Find the pre-built binaries for your computer's architecture in the Releases page or install it with go:
+Go to [the releases page](https://github.com/eduardofuncao/pam/releases) and find the correct version for your system. Download it and make sure the file is executable and moved to a directory in your $PATH.
 
+
+<details>
+<summary>Go install</summary>
+
+Use go to install `pam` directly
 ```bash
 go install github.com/eduardofuncao/pam/cmd/pam@latest
 ```
+this will put the binary `pam` in your $GOBIN path (usually `~/go/bin`)
+</details>
+
+<details>
+<summary>Build Manually</summary>
+
+Follow these instructions to build the project locally
+```bash
+git clone https://ithub.com/eduardofuncao/pam
+
+go build -o pam ./cmd/pam
+```
+The pam binary will be available in the root project directory
+</details>
 
 ### Basic Usage
 
@@ -60,8 +79,8 @@ pam init mydb postgres "postgresql://user:pass@localhost:5432/mydb"
 # Add a saved query
 pam add list_users "SELECT * FROM users"
 
-# List your saved queries containing the word users
-pam list queries users
+# List your saved queries
+pam list queries
 
 # Run it, this opens the interactive table viewer
 pam run list_users
@@ -101,8 +120,11 @@ q          # Quit back to terminal
 
 Pam stores its configuration at `~/.config/pam/config.yaml`.
 
-### Row Limit
+### Row Limit `default_row_limit: 1000`
 All queries are automatically limited to prevent fetching massive result sets. Configure via `default_row_limit` in config or use explicit `LIMIT` in your SQL queries.
+
+### Column Width `default_column_width: 15`
+The width for all columns in the table TUI is fixed to a constant size, which can be configured through `default_column_width` in the config file. There are plans to make the column widths flexible in version v0.2.0.
 
 ---
 
@@ -193,7 +215,7 @@ pam run 2
 
 ### TUI Table Viewer
 
-Navigate query results with Vim-style keybindings, update cells in-place, dekete rows and copy data effortlessly.
+Navigate query results with Vim-style keybindings, update cells in-place, dekete rows and copy data
 
 <img width="1155" height="689" alt="image" src="https://github.com/user-attachments/assets/839bb77d-b358-43d0-98cd-0dc8102a9ac0" />
 
@@ -223,11 +245,6 @@ pam status
 </div>
 
 ---
-### Interactive Editing
-
-Open queries in your favorite $EDITOR before execution.
-
-
 
 ### 📝 Editor Integration
 
@@ -281,6 +298,13 @@ pam edit queries
 | `run --edit` | Edit query before running | `pam run users --edit` |
 | `run --new` | Create and run new query | `pam run --new` |
 | `run` | Re-run last query | `pam run` |
+
+### Info
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `info tables` | List all tables from current schema | `pam info tables` |
+| `info views` | List all views from current schema | `pam info views` |
 
 ### Configuration
 
@@ -341,6 +365,7 @@ Press `v` to enter visual mode, then navigate to select a range of cells.  Press
 - [x] Primary key detection
 - [x] Column type indicators
 - [x] Row limit configuration option
+- [x] Info command, list all tables/views in current connection
 
 ### v0.2 - Kelly
 - [ ] Dynamic column width
@@ -348,14 +373,13 @@ Press `v` to enter visual mode, then navigate to select a range of cells.  Press
 - [ ] Query parameter/placeholder support (e.g., `WHERE id = $1`)
 - [ ] Query execution history with persistence
 - [ ] CSV/JSON export for multiple cells
-- [ ] Database schema handling (currently implemented for postgres and oracle only)
 - [ ] Display column types correctly for join queries
 
 ### v0.3 - Jim
 - [ ] Shell autocomplete (bash, fish, zsh)
-- [ ] `pam info tables` - List all tables in current connection
 - [ ] `pam info table <table>` - Show table metadata (columns, types, constraints)
 - [ ] `pam info connection` - Show connection/database overview
+
 
 ---
 
