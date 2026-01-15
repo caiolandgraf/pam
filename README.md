@@ -70,6 +70,91 @@ go build -o pam ./cmd/pam
 The pam binary will be available in the root project directory
 </details>
 
+<details>
+<summary>Nix / NixOS (Flake)</summary>
+
+Pam is available as a Nix flake for easy installation on NixOS and systems with
+Nix.
+
+
+#### Run directly without installing
+```bash
+nix run github:eduardofuncao/pam
+```
+
+#### Install to user profile
+```bash
+nix profile install github:eduardofuncao/pam
+```
+
+#### Enter development shell
+```bash
+nix develop github:eduardofuncao/pam
+```
+
+#### NixOS System-wide
+
+Add to your flake-based configuration.nix or flake.nix:
+
+```nix
+{
+description = "My NixOS config";
+
+inputs = {
+  nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  pam.url = "github:eduardofuncao/pam";
+};
+
+outputs = { self, nixpkgs, pam, ... }: {
+  nixosConfigurations.myHostname = nixpkgs.lib.nixosSystem {
+    system = "x86_64-linux";
+    modules = [
+      {
+        nixpkgs.config.allowUnfree = true;
+        environment.systemPackages = [
+          pam.packages.x86_64-linux.default
+        ];
+      }
+    ];
+  };
+};
+}
+```
+
+Then rebuild: sudo nixos-rebuild switch
+
+#### Home Manager
+
+Add to your home.nix or flake config:
+
+```nix
+{
+inputs = {
+  nixpkgs.url = "github:NixOS/nixpkgs/nix-unstable";
+  pam.url = "github:eduardofuncao/pam";
+};
+
+outputs = { self, nixpkgs, pam, ... }: {
+  homeConfigurations."username" = {
+    pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    modules = [
+      {
+        nixpkgs.config.allowUnfree = true;
+        home.packages = [
+          pam.packages.x86_64-linux.default
+        ];
+      }
+    ];
+  };
+};
+}
+```
+
+Then apply: home-manager switch
+
+Note: Oracle support requires `allowUnfree = true` in your Nix configuration.
+</details>
+
 ### Basic Usage
 
 ```bash

@@ -5,7 +5,7 @@ set -e
 APP_NAME="pam"
 VERSION=${1:-"dev"}
 BUILD_DIR="./dist"
-DOCKER_IMAGE="ghcr.io/goreleaser/goreleaser-cross:v1.22"
+DOCKER_IMAGE="ghcr.io/goreleaser/goreleaser-cross:v1.25"
 
 echo "Building $APP_NAME version $VERSION"
 echo "=================================="
@@ -100,12 +100,18 @@ git archive --format=zip --prefix="${APP_NAME}-${VERSION}/" -o "$BUILD_DIR/sourc
 echo "✓ Source archives created"
 
 echo ""
+echo "Generating checksums for all artifacts..."
+find "$BUILD_DIR" -type f -exec sha256sum {} + | sed "s|$BUILD_DIR/||" > "$BUILD_DIR/checksums.txt"
+echo "✓ Checksums generated in $BUILD_DIR/checksums.txt"
+
+echo ""
 echo "=================================="
 echo "All tasks complete!"
 echo "=================================="
 echo ""
 echo "Binaries location: $BUILD_DIR/"
 echo "Source archives location: $BUILD_DIR/source/"
+echo "Checksum file: $BUILD_DIR/checksums.txt"
 echo ""
 ls -lh "$BUILD_DIR/"
 echo ""

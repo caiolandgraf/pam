@@ -11,7 +11,10 @@ You need Go 1.21+ and the database client libraries for the databases you want t
 Enter the development shell with all required dependencies:
 
 ```bash
+## using shell.nix
 nix-shell
+## or using flake.nix
+nix develop
 ```
 
 This provides:

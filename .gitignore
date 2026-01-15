@@ -1,17 +1,21 @@
 /*
 !.gitignore
-!.goreleaser.yaml
 !.github/
 !.github/workflows/
 !.github/workflows/release.yml
-!build-local.sh
 
 !go.mod
 !go.sum
+
 !LICENSE
 !README.md
 !CONTRIBUTING.md
+
 !shell.nix
+!flake.nix
+!flake.lock
+
+!build-local.sh
 
 !cmd/
 !internal/
