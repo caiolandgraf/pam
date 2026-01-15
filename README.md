@@ -20,9 +20,10 @@
 
 **A minimal CLI tool for managing and executing SQL queries across multiple databases. Written in Go, made beautiful with BubbleTea**
 
-[Quick Start](#-quick-start) • [Configuration](#%EF%B8%8F-configuration) • [Database Support](#%EF%B8%8F-database-support) • [Features](#-features) • [Commands](#-all-commands) • [TUI Navigation](#%EF%B8%8F-tui-table-navigation) • [Roadmap](#%EF%B8%8F-roadmap) • [Contributing](#-contributing)
+[Quick Start](#--------quick-start) • [Configuration](#--------configuration) • [Database Support](#--------database-support) • [Dbeesly](#-dbeesly) • [Features](#--------features) • [Commands](#--------all-commands) • [TUI Navigation](#--------tui-table-navigation) • [Roadmap](#--------roadmap) • [Contributing](#contributing)
 
-> Note: This project is currently in beta. Errors and unexpected behavior may occur
+> This project is currently in beta, please report unexpected behavior through the issues tab
+
 </div>
 
 
@@ -278,7 +279,7 @@ pam init clickhouse-docker clickhouse "clickhouse://myuser:mypassword@localhost:
 
 ---
 
-### 🐝 Dbeesly
+## 🐝 Dbeesly
 
 To run containerized test database servers for all supported databases, use the sister project [dbeesly](https://github.com/eduardofuncao/dbeesly)
 
@@ -466,7 +467,7 @@ Press `v` to enter visual mode, then navigate to select a range of cells.  Press
     Roadmap
 </h2>
 
-> Note: This project is currently in beta. Errors and unexpected behavior may occur
+> This project is currently in beta, please report unexpected behavior through the issues tab
 
 ### v0.1.0 Ryan
 - [x] Multi-database support (PostgreSQL, MySQL, SQLite, Oracle, SQL Server, ClickHouse)
