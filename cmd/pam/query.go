@@ -266,8 +266,7 @@ func (a *App) extractMetadata(conn db.DatabaseConnection, query db.Query, isInli
 	}
 
 	if !isInline {
-		fmt.Fprintf(os.Stderr, styles.Faint.Render("Warning: Could not extract table metadata: %v\n"), err)
-		fmt.Fprint(os.Stderr, styles.Faint.Render("Update functionality will be limited.\n"))
+		fmt.Fprintf(os.Stderr, styles.Faint.Render("Warning: Could not extract table metadata %v\n"), err)
 	}
 
 	return "", ""
