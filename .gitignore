@@ -4,6 +4,7 @@
 !.github/
 !.github/workflows/
 !.github/workflows/release.yml
+!build-local.sh
 
 !go.mod
 !go.sum

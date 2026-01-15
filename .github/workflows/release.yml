@@ -181,22 +181,22 @@ jobs:
       - name: Create archives
         run: |
           mkdir -p release
-          
+
           # Linux AMD64
           tar -czf release/${{ env.APP_NAME }}_${GITHUB_REF_NAME}_linux_amd64.tar.gz -C artifacts/linux-amd64 .
-          
+
           # Linux ARM64
           tar -czf release/${{ env.APP_NAME }}_${GITHUB_REF_NAME}_linux_arm64.tar.gz -C artifacts/linux-arm64 .
-          
+
           # macOS AMD64
           tar -czf release/${{ env.APP_NAME }}_${GITHUB_REF_NAME}_darwin_amd64.tar.gz -C artifacts/darwin-amd64 .
-          
+
           # macOS ARM64
           tar -czf release/${{ env.APP_NAME }}_${GITHUB_REF_NAME}_darwin_arm64.tar.gz -C artifacts/darwin-arm64 .
-          
+
           # Windows AMD64
           cd artifacts/windows-amd64 && zip ../../release/${{ env.APP_NAME }}_${GITHUB_REF_NAME}_windows_amd64.zip * && cd ../..
-          
+
           # Generate checksums
           cd release
           sha256sum * > checksums.txt
