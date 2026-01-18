@@ -258,7 +258,7 @@ pam init sqlserver-docker sqlserver "sqlserver://sa:MyStrongPass123@localhost:14
 ### SQLite
 
 ```bash
-pam init sqlite-local sqlite file:/home/eduardo/code/dbeesly/sqlite/mydb.sqlite
+pam init sqlite-local sqlite file:///home/eduardo/dbeesly/sqlite/mydb.sqlite
 ```
 
 ### Oracle
