@@ -131,8 +131,18 @@ func (m Model) renderFooter() string {
 
 	updateInfo := ""
 	delInfo := ""
+	enterInfo := ""
 
-	if m.tableName != "" && m.primaryKeyCol != "" {
+	if m.isTablesList {
+		// Special footer for tables list
+		enterInfo = styles.TableHeader.Render(
+			"↵",
+		) + styles.Faint.Render(
+			"enter",
+		)
+		updateInfo = ""
+		delInfo = ""
+	} else if m.tableName != "" && m.primaryKeyCol != "" {
 		updateInfo = styles.TableHeader.Render(
 			"u",
 		) + styles.Faint.Render(
@@ -159,22 +169,39 @@ func (m Model) renderFooter() string {
 	hjkl := styles.TableHeader.Render("hjkl") + styles.Faint.Render("←↓↑→")
 
 	var footer string
-	footer = fmt.Sprintf(
-		"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s",
-		cellPreview,
-		styles.Faint.Render(fmt.Sprintf("%dx%d", m.numRows(), m.numCols())),
-		styles.Faint.Render(fmt.Sprintf("In %.2fs", m.elapsed.Seconds())),
-		styles.Faint.Render(
-			fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1),
-		),
-		updateInfo,
-		delInfo,
-		yank,
-		sel,
-		edit,
-		quit,
-		hjkl,
-	)
+	if m.isTablesList {
+		footer = fmt.Sprintf(
+			"\n%s%s %s | %s | %s  %s  %s  %s  %s",
+			cellPreview,
+			styles.Faint.Render(fmt.Sprintf("%dx%d", m.numRows(), m.numCols())),
+			styles.Faint.Render(fmt.Sprintf("In %.2fs", m.elapsed.Seconds())),
+			styles.Faint.Render(
+				fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1),
+			),
+			enterInfo,
+			yank,
+			edit,
+			quit,
+			hjkl,
+		)
+	} else {
+		footer = fmt.Sprintf(
+			"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s",
+			cellPreview,
+			styles.Faint.Render(fmt.Sprintf("%dx%d", m.numRows(), m.numCols())),
+			styles.Faint.Render(fmt.Sprintf("In %.2fs", m.elapsed.Seconds())),
+			styles.Faint.Render(
+				fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1),
+			),
+			updateInfo,
+			delInfo,
+			yank,
+			sel,
+			edit,
+			quit,
+			hjkl,
+		)
+	}
 
 	return footer
 }
@@ -234,10 +261,8 @@ func getTypeIcon(typeName string) string {
 	}
 
 	// Decimal/Float types
-	if strings.Contains(upper, "DECIMAL") ||
-		strings.Contains(upper, "NUMERIC") ||
-		strings.Contains(upper, "FLOAT") ||
-		strings.Contains(upper, "DOUBLE") ||
+	if strings.Contains(upper, "DECIMAL") || strings.Contains(upper, "NUMERIC") ||
+		strings.Contains(upper, "FLOAT") || strings.Contains(upper, "DOUBLE") ||
 		strings.Contains(upper, "REAL") ||
 		strings.Contains(upper, "NUMBER") ||
 		strings.Contains(upper, "MONEY") {
@@ -295,8 +320,7 @@ func getTypeIcon(typeName string) string {
 	}
 
 	// Geometric/Spatial types
-	if strings.Contains(upper, "GEOMETRY") ||
-		strings.Contains(upper, "POINT") ||
+	if strings.Contains(upper, "GEOMETRY") || strings.Contains(upper, "POINT") ||
 		strings.Contains(upper, "POLYGON") ||
 		strings.Contains(upper, "LINE") {
 		return "◉"
