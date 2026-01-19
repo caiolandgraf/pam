@@ -71,7 +71,7 @@ this will put the binary `pam` in your $GOBIN path (usually `~/go/bin`)
 
 Follow these instructions to build the project locally
 ```bash
-git clone https://ithub.com/eduardofuncao/pam
+git clone https://github.com/eduardofuncao/pam
 
 go build -o pam ./cmd/pam
 ```
