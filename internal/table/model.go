@@ -42,6 +42,9 @@ type Model struct {
 	detailViewMode    bool
 	detailViewContent string
 	detailViewScroll  int
+	isTablesList      bool
+	onTableSelect     func(string) tea.Cmd
+	selectedTableName string
 }
 
 type blinkMsg struct{}
@@ -75,22 +78,28 @@ func New(
 	}
 
 	return Model{
-		selectedRow:      0,
-		selectedCol:      0,
-		offsetX:          0,
-		offsetY:          0,
-		columns:          columns,
-		columnTypes:      columnTypes,
-		data:             data,
-		elapsed:          elapsed,
-		visualMode:       false,
-		dbConnection:     conn,
-		tableName:        tableName,
-		primaryKeyCol:    primaryKeyCol,
-		currentQuery:     query,
-		shouldRerunQuery: false,
-		editedQuery:      "",
-		cellWidth:        columnWidth,
+		selectedRow:       0,
+		selectedCol:       0,
+		offsetX:           0,
+		offsetY:           0,
+		columns:           columns,
+		columnTypes:       columnTypes,
+		data:              data,
+		elapsed:           elapsed,
+		visualMode:        false,
+		dbConnection:      conn,
+		tableName:         tableName,
+		primaryKeyCol:     primaryKeyCol,
+		currentQuery:      query,
+		shouldRerunQuery:  false,
+		editedQuery:       "",
+		cellWidth:         columnWidth,
+		isTablesList:      false,
+		onTableSelect:     nil,
+		selectedTableName: "",
+		detailViewMode:    false,
+		detailViewContent: "",
+		detailViewScroll:  0,
 	}
 }
 
@@ -132,4 +141,14 @@ func (m Model) calculateHeaderLines() int {
 	sqlLines := strings.Count(formattedSQL, "\n") + 1
 
 	return titleLines + sqlLines + 1
+}
+
+func (m Model) SetTablesList(onSelect func(string) tea.Cmd) Model {
+	m.isTablesList = true
+	m.onTableSelect = onSelect
+	return m
+}
+
+func (m Model) GetSelectedTableName() string {
+	return m.selectedTableName
 }

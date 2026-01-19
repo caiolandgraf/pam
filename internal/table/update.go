@@ -87,6 +87,15 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.copySelection()
 
 	case "enter":
+		// If this is a tables list, select the table
+		if m.isTablesList {
+			if m.selectedRow >= 0 && m.selectedRow < m.numRows() {
+				// Get table name from the first column (should be "name")
+				m.selectedTableName = m.data[m.selectedRow][0]
+				return m, tea.Quit
+			}
+		}
+		// Otherwise, show detail view (JSON viewer)
 		return m.showDetailView(), nil
 
 	case "u":
