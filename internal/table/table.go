@@ -27,6 +27,7 @@ func Render(
 		query,
 		columnWidth,
 	)
+  model.saveQueryCallback = saveCallback
 	p := tea.NewProgram(model)
 	finalModel, err := p.Run()
 	if err != nil {
