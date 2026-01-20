@@ -31,7 +31,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	// Se estiver no modo de visualização detalhada, lidar com teclas específicas
 	if m.detailViewMode {
 		switch msg.String() {
 		case "q", "esc":
@@ -45,6 +44,8 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				return m.editFromDetailView()
 			}
 			return m, nil
+		case "y":
+			return m.copySelection()
 		case "up", "k":
 			return m.scrollDetailViewUp(), nil
 		case "down", "j":
@@ -55,7 +56,7 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	// Navegação normal da tabela
+	// table tui navigation
 	switch msg.String() {
 	case "ctrl+c", "q":
 		return m, tea.Quit

@@ -343,7 +343,6 @@ func getTypeIcon(typeName string) string {
 func (m Model) renderDetailView() string {
 	var b strings.Builder
 
-	// Obter informações da célula selecionada
 	columnName := ""
 	columnType := ""
 	if m.selectedCol >= 0 && m.selectedCol < len(m.columns) {
@@ -361,7 +360,7 @@ func (m Model) renderDetailView() string {
 	b.WriteString(styles.Title.Render(titleLine))
 	b.WriteString("\n")
 
-	// Informação da posição
+	// position info
 	posInfo := fmt.Sprintf(
 		"Row %d, Column %d",
 		m.selectedRow+1,
@@ -369,7 +368,7 @@ func (m Model) renderDetailView() string {
 	)
 	b.WriteString(styles.Faint.Render(posInfo))
 
-	// Mostrar se pode editar
+	// Show if editing/updating is enabled
 	if m.tableName != "" && m.primaryKeyCol != "" {
 		b.WriteString(" ")
 		b.WriteString(styles.Faint.Render("• Press 'e' to edit"))
@@ -385,7 +384,7 @@ func (m Model) renderDetailView() string {
 	b.WriteString(styles.Separator.Render(strings.Repeat("─", separatorWidth)))
 	b.WriteString("\n\n")
 
-	// Conteúdo com scroll
+	// Content with scroll
 	lines := strings.Split(m.detailViewContent, "\n")
 	availableHeight := m.height - 10 // Reservar espaço para header e footer
 
@@ -406,7 +405,7 @@ func (m Model) renderDetailView() string {
 		}
 	}
 
-	// Renderizar as linhas visíveis
+	// Render visible lines
 	for i := startLine; i < endLine; i++ {
 		line := lines[i]
 		// Truncar linha se for muito longa
@@ -417,7 +416,7 @@ func (m Model) renderDetailView() string {
 		b.WriteString("\n")
 	}
 
-	// Padding se necessário
+	// Padding if necessary
 	renderedLines := endLine - startLine
 	for i := renderedLines; i < availableHeight; i++ {
 		b.WriteString("\n")
@@ -428,7 +427,7 @@ func (m Model) renderDetailView() string {
 	b.WriteString(styles.Separator.Render(strings.Repeat("─", separatorWidth)))
 	b.WriteString("\n")
 
-	// Footer com instruções
+	// Footer withn instructions
 	scrollInfo := ""
 	if len(lines) > availableHeight {
 		scrollInfo = styles.Faint.Render(
@@ -441,12 +440,14 @@ func (m Model) renderDetailView() string {
 		)
 	}
 
-	hjkl := styles.TableHeader.Render("↑↓") + styles.Faint.Render(" scroll")
+	hjkl := styles.TableHeader.Render("kj↑↓") + styles.Faint.Render(" scroll")
 
 	edit := ""
 	if m.tableName != "" && m.primaryKeyCol != "" {
-		edit = styles.TableHeader.Render("e") + styles.Faint.Render(" edit  ")
+		edit = styles.TableHeader.Render("e") + styles.Faint.Render(" edit")
 	}
+
+	yank := styles.TableHeader.Render("y") + styles.Faint.Render(" yank")
 
 	quit := styles.TableHeader.Render(
 		"q/esc/enter",
@@ -454,7 +455,7 @@ func (m Model) renderDetailView() string {
 		" close",
 	)
 
-	footer := fmt.Sprintf("\n%s%s  %s%s", scrollInfo, hjkl, edit, quit)
+	footer := fmt.Sprintf("\n%s  %s  %s  %s  %s", scrollInfo, hjkl, edit, yank, quit)
 	b.WriteString(footer)
 
 	return b.String()
