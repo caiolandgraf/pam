@@ -137,41 +137,6 @@ func (m *MySQLConnection) GetTableMetadata(
 	return metadata, nil
 }
 
-func (m *MySQLConnection) GetTables() ([]string, error) {
-	if m.db == nil {
-		return nil, fmt.Errorf("database is not open")
-	}
-
-	query := `
-		SELECT TABLE_NAME
-		FROM INFORMATION_SCHEMA.TABLES
-		WHERE TABLE_SCHEMA = DATABASE()
-		  AND TABLE_TYPE = 'BASE TABLE'
-		ORDER BY TABLE_NAME
-	`
-
-	rows, err := m.db.Query(query)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query tables: %w", err)
-	}
-	defer rows.Close()
-
-	var tables []string
-	for rows.Next() {
-		var tableName string
-		if err := rows.Scan(&tableName); err != nil {
-			return nil, fmt.Errorf("failed to scan table name: %w", err)
-		}
-		tables = append(tables, tableName)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating tables: %w", err)
-	}
-
-	return tables, nil
-}
-
 func (m *MySQLConnection) GetInfoSQL(infoType string) string {
 	switch infoType {
 	case "tables":

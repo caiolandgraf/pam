@@ -44,10 +44,6 @@ func (b *BaseConnection) GetTableMetadata(
 	)
 }
 
-func (b *BaseConnection) GetTables() ([]string, error) {
-	return nil, errors.New("GetTables() not implemented for base connection")
-}
-
 func (b *BaseConnection) BuildUpdateStatement(
 	tableName, columnName, currentValue, pkColumn, pkValue string,
 ) string {

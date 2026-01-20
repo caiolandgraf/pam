@@ -154,52 +154,6 @@ func (p *PostgresConnection) GetTableMetadata(
 	return metadata, nil
 }
 
-func (p *PostgresConnection) GetTables() ([]string, error) {
-	if p.db == nil {
-		return nil, fmt.Errorf("database is not open")
-	}
-
-	var currentSchema string
-	schemaQuery := `SELECT current_schema()`
-	row := p.db.QueryRow(schemaQuery)
-	if err := row.Scan(&currentSchema); err != nil {
-		if p.Schema != "" {
-			currentSchema = p.Schema
-		} else {
-			currentSchema = "public"
-		}
-	}
-
-	query := `
-		SELECT table_name
-		FROM information_schema.tables
-		WHERE table_schema = $1
-		  AND table_type = 'BASE TABLE'
-		ORDER BY table_name
-	`
-
-	rows, err := p.db.Query(query, currentSchema)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query tables: %w", err)
-	}
-	defer rows.Close()
-
-	var tables []string
-	for rows.Next() {
-		var tableName string
-		if err := rows.Scan(&tableName); err != nil {
-			return nil, fmt.Errorf("failed to scan table name: %w", err)
-		}
-		tables = append(tables, tableName)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating tables: %w", err)
-	}
-
-	return tables, nil
-}
-
 func (p *PostgresConnection) GetInfoSQL(infoType string) string {
 	schema := p.Schema
 	if schema == "" {

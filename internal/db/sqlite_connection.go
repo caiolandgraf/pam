@@ -114,41 +114,6 @@ func (s *SQLiteConnection) GetTableMetadata(
 	return metadata, nil
 }
 
-func (s *SQLiteConnection) GetTables() ([]string, error) {
-	if s.db == nil {
-		return nil, fmt.Errorf("database is not open")
-	}
-
-	query := `
-		SELECT name
-		FROM sqlite_master
-		WHERE type = 'table'
-		  AND name NOT LIKE 'sqlite_%'
-		ORDER BY name
-	`
-
-	rows, err := s.db.Query(query)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query tables: %w", err)
-	}
-	defer rows.Close()
-
-	var tables []string
-	for rows.Next() {
-		var tableName string
-		if err := rows.Scan(&tableName); err != nil {
-			return nil, fmt.Errorf("failed to scan table name: %w", err)
-		}
-		tables = append(tables, tableName)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating tables: %w", err)
-	}
-
-	return tables, nil
-}
-
 func (s *SQLiteConnection) GetInfoSQL(infoType string) string {
 	switch infoType {
 	case "tables":
