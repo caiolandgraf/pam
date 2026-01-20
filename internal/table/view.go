@@ -19,6 +19,11 @@ func (m Model) View() string {
 		return m.renderDetailView()
 	}
 
+	// Don't render if we're about to rerun the query (prevents duplicate output)
+	if m.shouldRerunQuery {
+		return ""
+	}
+
 	var b strings.Builder
 
 	// Display query name header
@@ -65,6 +70,14 @@ func (m Model) View() string {
 	}
 
 	b.WriteString(m.renderFooter())
+
+	// Always add a newline for status message area
+	b.WriteString("\n")
+
+	// Display status message if present
+	if m.statusMessage != "" {
+		b.WriteString(m.statusMessage)
+	}
 
 	return b.String()
 }
@@ -164,6 +177,7 @@ func (m Model) renderFooter() string {
 
 	sel := styles.TableHeader.Render("v") + styles.Faint.Render("sel")
 	edit := styles.TableHeader.Render("e") + styles.Faint.Render("ditSQL")
+	save := styles.TableHeader.Render("s") + styles.Faint.Render("ave")
 	yank := styles.TableHeader.Render("y") + styles.Faint.Render("ank")
 	quit := styles.TableHeader.Render("q") + styles.Faint.Render("uit")
 	hjkl := styles.TableHeader.Render("hjkl") + styles.Faint.Render("←↓↑→")
@@ -171,38 +185,35 @@ func (m Model) renderFooter() string {
 	var footer string
 	if m.isTablesList {
 		footer = fmt.Sprintf(
-			"\n%s%s %s | %s | %s  %s  %s  %s  %s",
+			"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s",
 			cellPreview,
 			styles.Faint.Render(fmt.Sprintf("%dx%d", m.numRows(), m.numCols())),
 			styles.Faint.Render(fmt.Sprintf("In %.2fs", m.elapsed.Seconds())),
-			styles.Faint.Render(
-				fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1),
-			),
+			styles.Faint.Render(fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1)),
 			enterInfo,
 			yank,
 			edit,
+			save,
 			quit,
 			hjkl,
 		)
 	} else {
 		footer = fmt.Sprintf(
-			"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s",
+			"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s  %s",
 			cellPreview,
 			styles.Faint.Render(fmt.Sprintf("%dx%d", m.numRows(), m.numCols())),
 			styles.Faint.Render(fmt.Sprintf("In %.2fs", m.elapsed.Seconds())),
-			styles.Faint.Render(
-				fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1),
-			),
+			styles.Faint.Render(fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1)),
 			updateInfo,
 			delInfo,
 			yank,
 			sel,
 			edit,
+			save,
 			quit,
 			hjkl,
 		)
 	}
-
 	return footer
 }
 
@@ -361,7 +372,7 @@ func (m Model) renderDetailView() string {
 	)
 	b.WriteString(styles.Faint.Render(posInfo))
 
-	// Show if can edit
+	// Show if editing/updating is enabled
 	if m.tableName != "" && m.primaryKeyCol != "" {
 		b.WriteString(" ")
 		b.WriteString(styles.Faint.Render("• Press 'e' to edit"))
@@ -433,12 +444,14 @@ func (m Model) renderDetailView() string {
 		)
 	}
 
-	hjkl := styles.TableHeader.Render("↑↓") + styles.Faint.Render(" scroll")
+	hjkl := styles.TableHeader.Render("kj↑↓") + styles.Faint.Render(" scroll")
 
 	edit := ""
 	if m.tableName != "" && m.primaryKeyCol != "" {
-		edit = styles.TableHeader.Render("e") + styles.Faint.Render(" edit  ")
+		edit = styles.TableHeader.Render("e") + styles.Faint.Render(" edit")
 	}
+
+	yank := styles.TableHeader.Render("y") + styles.Faint.Render(" yank")
 
 	quit := styles.TableHeader.Render(
 		"q/esc/enter",
@@ -446,7 +459,7 @@ func (m Model) renderDetailView() string {
 		" close",
 	)
 
-	footer := fmt.Sprintf("\n%s%s  %s%s", scrollInfo, hjkl, edit, quit)
+	footer := fmt.Sprintf("\n%s  %s  %s  %s  %s", scrollInfo, hjkl, edit, yank, quit)
 	b.WriteString(footer)
 
 	return b.String()

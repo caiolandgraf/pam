@@ -15,6 +15,7 @@ func Render(
 	tableName, primaryKeyCol string,
 	query db.Query,
 	columnWidth int,
+	saveCallback func(query db.Query) (db.Query, error),
 ) (Model, error) {
 	model := New(
 		columns,
@@ -26,6 +27,7 @@ func Render(
 		query,
 		columnWidth,
 	)
+  model.saveQueryCallback = saveCallback
 	p := tea.NewProgram(model)
 	finalModel, err := p.Run()
 	if err != nil {
