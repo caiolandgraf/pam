@@ -8,6 +8,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 func (m Model) updateCell() (tea.Model, tea.Cmd) {
@@ -59,8 +60,8 @@ func (m Model) updateCell() (tea.Model, tea.Cmd) {
 			os.Remove(tmpPath)
 			// Return a message that will show "cancelled" status
 			return editorCompleteMsg{
-				sql:      "",
-				colIndex: m.selectedCol,
+				sql:       "",
+				colIndex:  m.selectedCol,
 				cancelled: true,
 			}
 		}
@@ -72,8 +73,8 @@ func (m Model) updateCell() (tea.Model, tea.Cmd) {
 			return nil
 		}
 		return editorCompleteMsg{
-			sql:      string(editedSQL),
-			colIndex: m.selectedCol,
+			sql:       string(editedSQL),
+			colIndex:  m.selectedCol,
 			cancelled: false,
 		}
 	})
@@ -88,7 +89,7 @@ type editorCompleteMsg struct {
 func (m Model) handleEditorComplete(msg editorCompleteMsg) (tea.Model, tea.Cmd) {
 	// If user cancelled (exited without saving)
 	if msg.cancelled {
-		m.statusMessage = "Update cancelled"
+		m.statusMessage = styles.Error.Render("✗ Update canceled")
 		return m, tea.Tick(time.Millisecond*500, func(t time.Time) tea.Msg {
 			return blinkMsg{}
 		})
@@ -232,47 +233,47 @@ func (m Model) cleanSQLForDisplay(sql string) string {
 	return cleanSQL
 }
 
-  func (m Model) extractNewValue(sql string, columnName string) string {
-      var result strings.Builder
-      for line := range strings.SplitSeq(sql, "\n") {
-          trimmed := strings.TrimSpace(line)
-          if !strings.HasPrefix(trimmed, "--") && trimmed != "" {
-              result.WriteString(trimmed)
-              result.WriteString(" ")
-          }
-      }
-      cleanSQL := strings.TrimSpace(result.String())
+func (m Model) extractNewValue(sql string, columnName string) string {
+	var result strings.Builder
+	for line := range strings.SplitSeq(sql, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, "--") && trimmed != "" {
+			result.WriteString(trimmed)
+			result.WriteString(" ")
+		}
+	}
+	cleanSQL := strings.TrimSpace(result.String())
 
-      // First try standard SQL: SET column_name = 'value'
-      setPattern := fmt.Sprintf(`SET\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`, regexp.QuoteMeta(columnName))
-      setRe := regexp.MustCompile(`(?i)` + setPattern)
+	// First try standard SQL: SET column_name = 'value'
+	setPattern := fmt.Sprintf(`SET\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`, regexp.QuoteMeta(columnName))
+	setRe := regexp.MustCompile(`(?i)` + setPattern)
 
-      matches := setRe.FindStringSubmatch(cleanSQL)
-      if len(matches) > 0 {
-          if matches[2] != "" {
-              return matches[2]
-          } else if matches[3] != "" {
-              return matches[3]
-          } else if matches[4] != "" {
-              return matches[4]
-          }
-      }
+	matches := setRe.FindStringSubmatch(cleanSQL)
+	if len(matches) > 0 {
+		if matches[2] != "" {
+			return matches[2]
+		} else if matches[3] != "" {
+			return matches[3]
+		} else if matches[4] != "" {
+			return matches[4]
+		}
+	}
 
-      // Try ClickHouse: UPDATE column_name = 'value' (no SET keyword)
-      updatePattern := fmt.Sprintf(`UPDATE\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`,
-  regexp.QuoteMeta(columnName))
-      updateRe := regexp.MustCompile(`(?i)` + updatePattern)
+	// Try ClickHouse: UPDATE column_name = 'value' (no SET keyword)
+	updatePattern := fmt.Sprintf(`UPDATE\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`,
+		regexp.QuoteMeta(columnName))
+	updateRe := regexp.MustCompile(`(?i)` + updatePattern)
 
-      matches = updateRe.FindStringSubmatch(cleanSQL)
-      if len(matches) > 0 {
-          if matches[2] != "" {
-              return matches[2]
-          } else if matches[3] != "" {
-              return matches[3]
-          } else if matches[4] != "" {
-              return matches[4]
-          }
-      }
+	matches = updateRe.FindStringSubmatch(cleanSQL)
+	if len(matches) > 0 {
+		if matches[2] != "" {
+			return matches[2]
+		} else if matches[3] != "" {
+			return matches[3]
+		} else if matches[4] != "" {
+			return matches[4]
+		}
+	}
 
-      return "<unknown>"
-  }
+	return "<unknown>"
+}

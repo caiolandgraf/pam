@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/eduardofuncao/pam/internal/db"
+	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 type saveQueryCompleteMsg struct {
@@ -29,16 +30,16 @@ func (m Model) saveQuery() (tea.Model, tea.Cmd) {
 		queryToSave := db.Query{
 			Name: m.currentQuery.Name,
 
-			SQL:  sqlToSave,
-			Id:   m.currentQuery.Id,
+			SQL: sqlToSave,
+			Id:  m.currentQuery.Id,
 		}
 
 		if m.saveQueryCallback != nil {
 			savedQuery, err := m.saveQueryCallback(queryToSave)
 			if err != nil {
-				m.statusMessage = lipgloss.NewStyle().Foreground(lipgloss.Color("red")).Render("Error: " + err.Error())
+				m.statusMessage = styles.Error.Render("✗ Save failed: " + err.Error())
 			} else {
-				m.statusMessage = lipgloss.NewStyle().Foreground(lipgloss.Color("green")).Render("✓ Saved: " + m.currentQuery.Name)
+				m.statusMessage = styles.Success.Render("✓ Saved: " + m.currentQuery.Name)
 				// Update the model with the saved query info (in case ID changed)
 				m.currentQuery = savedQuery
 			}
@@ -125,14 +126,14 @@ func (m Model) saveQuery() (tea.Model, tea.Cmd) {
 
 func (m Model) handleSaveQueryComplete(msg saveQueryCompleteMsg) (tea.Model, tea.Cmd) {
 	if msg.success {
-		m.statusMessage = lipgloss.NewStyle().Foreground(lipgloss.Color("green")).Render("✓ Saved as: " + msg.query.Name)
+		m.statusMessage = styles.Success.Render("✓ Saved as: " + msg.query.Name)
 		// Update the model with the saved query info
 		m.currentQuery = msg.query
 	} else {
 		if msg.query.Name != "" {
-			m.statusMessage = lipgloss.NewStyle().Foreground(lipgloss.Color("red")).Render("Error: " + msg.query.Name)
+			m.statusMessage = styles.Error.Render("✗ Error: " + msg.query.Name)
 		} else {
-			m.statusMessage = lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render("Save cancelled")
+			m.statusMessage = styles.Error.Render("✗ Save cancelled")
 		}
 	}
 	return m, tea.Tick(time.Millisecond*500, func(t time.Time) tea.Msg {

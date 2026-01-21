@@ -8,6 +8,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 func (m Model) deleteRow() (tea.Model, tea.Cmd) {
@@ -102,7 +103,7 @@ type deleteCompleteMsg struct {
 func (m Model) handleDeleteComplete(msg deleteCompleteMsg) (tea.Model, tea.Cmd) {
 	// If user cancelled (exited without saving)
 	if msg.cancelled {
-		m.statusMessage = "Delete cancelled"
+		m.statusMessage = styles.Error.Render("✗ Delete Cancelled")
 		return m, tea.Tick(time.Millisecond*500, func(t time.Time) tea.Msg {
 			return blinkMsg{}
 		})
