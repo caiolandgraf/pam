@@ -41,7 +41,7 @@
 
 - **Query Library** - Save and organize your most-used queries
 - **Runs in the CLI** - Execute queries with minimal overhead
-- **Multi-Database** - Works with PostgreSQL, MySQL, SQLite, Oracle, SQL Server and ClickHouse
+- **Multi-Database** - Works with PostgreSQL, MySQL, SQLite, Oracle, SQL Server, ClickHouse and Firebird
 - **Table view TUI** - Keyboard focused navigation with vim-style bindings
 - **In-Place Editing** - Update cells, delete rows and edit your SQL directly from the results table
 - **Export your data** - Export your data as CSV, JSON, SQL, Markdown or HTML tables
@@ -277,6 +277,12 @@ pam init oracle-stg oracle myuser/mypassword@localhost:1521/XEPDB1 schema-name
 
 ```bash
 pam init clickhouse-docker clickhouse "clickhouse://myuser:mypassword@localhost:9000/dundermifflin"
+```
+
+### FireBird
+
+```bash
+pam init firebird-docker firebird user:masterkey@localhost:3050//var/lib/firebird/data/the_office
 ```
 
 ---
