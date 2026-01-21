@@ -44,6 +44,7 @@
 - **Multi-Database** - Works with PostgreSQL, MySQL, SQLite, Oracle, SQL Server and ClickHouse
 - **Table view TUI** - Keyboard focused navigation with vim-style bindings
 - **In-Place Editing** - Update cells, delete rows and edit your SQL directly from the results table
+- **Export your data** - Export your data as CSV, JSON, SQL, Markdown or HTML tables
 
 ---
 
@@ -195,6 +196,7 @@ g/G        # Jump to first/last row
 # Copy data
 y          # Yank (copy) current cell
 v          # Enter visual mode to select multiple cells and copy with y
+x          # Export selected data as csv, tsv, json, sql, markdown or html
 
 # Edit data directly
 u          # Update current cell (opens your $EDITOR)
@@ -485,7 +487,8 @@ When you press `e` in detail view:
 
 ### Visual Mode
 
-Press `v` to enter visual mode, then navigate to select a range of cells. Press `y` to copy the selection.
+Press `v` to enter visual mode, then navigate to select a range of cells. 
+Press `y` to copy the selection as plain text, or `x` to select export as csv, tsv, json, sql, markdown or html
 
 ---
 
