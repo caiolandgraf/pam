@@ -488,7 +488,7 @@ When you press `e` in detail view:
 ### Visual Mode
 
 Press `v` to enter visual mode, then navigate to select a range of cells. 
-Press `y` to copy the selection as plain text, or `x` to select export as csv, tsv, json, sql, markdown or html
+Press `y` to copy the selection as plain text, or `x` to export the selected data as csv, tsv, json, sql insert statement, markdown or html
 
 > The copied or exported data will be available in your clipboard
 
