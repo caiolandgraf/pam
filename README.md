@@ -507,7 +507,7 @@ Press `y` to copy the selection as plain text, or `x` to export the selected dat
 
 > This project is currently in beta, please report unexpected behavior through the issues tab
 
-### v0.1.0 Ryan
+### v0.1.0 Ryan 📎
 - [x] Multi-database support (PostgreSQL, MySQL, SQLite, Oracle, SQL Server, ClickHouse)
 - [x] Query library with save/edit/remove functionality
 - [x] Interactive TUI with Vim navigation
@@ -520,19 +520,18 @@ Press `y` to copy the selection as plain text, or `x` to export the selected dat
 - [x] Row limit configuration option
 - [x] Info command, list all tables/views in current connection
 
-### v0.2.0 - Kelly
-- [ ] Dynamic column width
+### v0.2.0 - Kelly 👗
 - [ ] Program colors configuration option
-- [ ] Query parameter/placeholder support (e.g., `WHERE id = $1`)
-- [ ] Query execution history with persistence
-- [ ] CSV/JSON export for multiple cells
+- [ ] Query parameter with prompt and defaults (e.g., `WHERE first_name = :name|Pam`)
+- [ ] Encryption on connection username/password in config file
+- [X] CSV/JSON export for multiple cells
 - [ ] Display column types correctly for join queries
 
-### v0.3.0 - Jim
+### v0.3.0 - Jim 👔
 - [ ] Shell autocomplete (bash, fish, zsh)
 - [ ] `pam info table <table>` - Show table metadata (columns, types, constraints)
 - [ ] `pam info connection` - Show connection/database overview
-
+- [ ] Dynamic column width
 
 ---
 
