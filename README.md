@@ -327,7 +327,7 @@ pam run 2
 
 ### TUI Table Viewer
 
-Navigate query results with Vim-style keybindings, update cells in-place, dekete rows and copy data
+Navigate query results with Vim-style keybindings, update cells in-place, delete rows and copy data
 
 <img width="1155" height="689" alt="image" src="https://github.com/user-attachments/assets/839bb77d-b358-43d0-98cd-0dc8102a9ac0" />
 
@@ -349,7 +349,7 @@ pam list connections
 # Switch active connection
 pam switch mysql_prod
 
-# Display current connection and check if it is reacheable
+# Display current connection and check if it is reachable
 pam status
 ```
 <div align=center>

@@ -123,7 +123,7 @@ func (a *App) PrintGeneralHelp() {
 	fmt.Println("  pam switch dev")
 	fmt.Println("  pam add list_users \"SELECT * FROM users\"")
 	fmt.Println("  pam run list_users")
-	fmt.Println(" pam run \"select * from users\"")
+	fmt.Println("  pam run \"select * from users\"")
 	fmt.Println("  pam list connections")
 	fmt.Println("  pam list queries")
 	fmt.Println("  pam edit config")
