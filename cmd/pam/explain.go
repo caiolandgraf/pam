@@ -25,12 +25,14 @@ func parseExplainFlags() (explainFlags, []string) {
 	remainingArgs := []string{}
 	args := os.Args[2:]
 
-	for i, arg := range args {
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
 		if arg == "--depth" || arg == "-d" {
 			if i+1 < len(args) {
 				if depth, err := strconv.Atoi(args[i+1]); err == nil {
 					flags.depth = depth
 				}
+				i++ // Skip the next argument
 			}
 		} else if arg == "--columns" || arg == "-c" {
 			flags.showColumns = true
@@ -106,13 +108,18 @@ func (a *App) buildRelationshipTree(conn db.DatabaseConnection, tableName string
 	belongsToFKs, err := conn.GetForeignKeys(tableName)
 	if err == nil {
 		for _, fk := range belongsToFKs {
+			// Create a unique key for deduplication
+			key := fmt.Sprintf("%s:%s:%s", fk.ReferencedTable, fk.Column, fk.ReferencedColumn)
+			if seenTables[key] {
+				continue
+			}
+			seenTables[key] = true
 			relationships = append(relationships, relationship{
 				relType:           belongsTo,
 				column:            fk.Column,
 				referencedTable:   fk.ReferencedTable,
 				referencedColumn:  fk.ReferencedColumn,
 			})
-			seenTables[fk.ReferencedTable] = true
 		}
 	}
 
@@ -120,10 +127,12 @@ func (a *App) buildRelationshipTree(conn db.DatabaseConnection, tableName string
 	hasManyFKs, err := conn.GetForeignKeysReferencingTable(tableName)
 	if err == nil {
 		for _, fk := range hasManyFKs {
-			// Skip if we already have this table via "belongs to"
-			if seenTables[fk.ReferencedTable] {
+			// Create a unique key for deduplication
+			key := fmt.Sprintf("%s:%s:%s", fk.ReferencedTable, fk.Column, fk.ReferencedColumn)
+			if seenTables[key] {
 				continue
 			}
+			seenTables[key] = true
 			relationships = append(relationships, relationship{
 				relType:           hasMany,
 				column:            fk.Column,
@@ -207,27 +216,29 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 		}
 
 		// Build child relationships
-		childPrefix := "    "
-		if !isLast {
-			childPrefix = "│   "
-		}
+		if currentDepth+1 < maxDepth {
+			childPrefix := "    "
+			if !isLast {
+				childPrefix = "│   "
+			}
 
-		// Get child relationships directly and render them with proper indentation
-		childRelationships := a.getChildRelationships(conn, rel.referencedTable, visited)
-		if len(childRelationships) > 0 {
-			for j, childRel := range childRelationships {
-				childIsLast := j == len(childRelationships)-1
-				childPrefix2 := childPrefix
-				if !childIsLast {
-					childPrefix2 += "│   "
-				} else {
-					childPrefix2 += "    "
+			// Get child relationships directly and render them with proper indentation
+			childRelationships := a.getChildRelationships(conn, rel.referencedTable, visited)
+			if len(childRelationships) > 0 {
+				for j, childRel := range childRelationships {
+					childIsLast := j == len(childRelationships)-1
+					childPrefix2 := childPrefix
+					if !childIsLast {
+						childPrefix2 += "│   "
+					} else {
+						childPrefix2 += "    "
+					}
+
+					// Render child relationship with full prefix
+					builder.WriteString(styles.TreeConnector.Render(childPrefix + "├── "))
+					builder.WriteString(a.renderRelationshipLine(childRel, rel.referencedTable))
+					builder.WriteString("\n")
 				}
-
-				// Render child relationship with full prefix
-				builder.WriteString(styles.TreeConnector.Render(childPrefix + "├── "))
-				builder.WriteString(a.renderRelationshipLine(childRel, rel.referencedTable))
-				builder.WriteString("\n")
 			}
 		}
 	}
