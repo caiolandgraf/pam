@@ -19,7 +19,7 @@ type explainFlags struct {
 
 func parseExplainFlags() (explainFlags, []string) {
 	flags := explainFlags{
-		depth:       3,
+		depth:       1, // Default to showing just direct relationships
 		showColumns: false,
 	}
 	remainingArgs := []string{}
@@ -142,14 +142,14 @@ func (a *App) buildRelationshipTree(conn db.DatabaseConnection, tableName string
 		}
 	}
 
-	return a.renderNode(conn, tableName, relationships, maxDepth, currentDepth, visited, fkCache)
+	return a.renderNode(conn, tableName, relationships, maxDepth, currentDepth, visited, fkCache, true)
 }
 
-func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relationships []relationship, maxDepth, currentDepth int, visited map[string]bool, fkCache map[string][]db.ForeignKey) string {
+func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relationships []relationship, maxDepth, currentDepth int, visited map[string]bool, fkCache map[string][]db.ForeignKey, isRoot bool) string {
 	var builder strings.Builder
 
 	// Render current table with PK info (only at root level)
-	if currentDepth == 0 {
+	if isRoot {
 		metadata, _ := conn.GetTableMetadata(tableName)
 		if len(metadata.PrimaryKeys) > 0 {
 			pks := strings.Join(metadata.PrimaryKeys, ", ")
@@ -162,6 +162,7 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 		builder.WriteString("\n")
 	}
 
+	// Mark current table as visited to prevent cycles
 	visited[tableName] = true
 
 	for i, rel := range relationships {
@@ -205,7 +206,7 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 
 		builder.WriteString("\n")
 
-		// Don't recurse into self-references
+		// Don't show children for self-references
 		if isSelfReference {
 			continue
 		}
@@ -215,28 +216,30 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 			continue
 		}
 
-		// Build child relationships
-		if currentDepth+1 < maxDepth {
-			childPrefix := "    "
-			if !isLast {
-				childPrefix = "│   "
-			}
-
-			// Get child relationships directly and render them with proper indentation
-			childRelationships := a.getChildRelationships(conn, rel.referencedTable, visited)
+		// Recursively render children if within depth limit
+		if currentDepth < maxDepth {
+			childRelationships := a.getChildRelationships(conn, rel.referencedTable)
 			if len(childRelationships) > 0 {
-				for j, childRel := range childRelationships {
-					childIsLast := j == len(childRelationships)-1
-					childPrefix2 := childPrefix
-					if !childIsLast {
-						childPrefix2 += "│   "
-					} else {
-						childPrefix2 += "    "
-					}
+				childPrefix := "    "
+				if !isLast {
+					childPrefix = "│   "
+				}
 
-					// Render child relationship with full prefix
-					builder.WriteString(styles.TreeConnector.Render(childPrefix + "├── "))
-					builder.WriteString(a.renderRelationshipLine(childRel, rel.referencedTable))
+				// Create local visited map for this branch to prevent cycles
+				localVisited := make(map[string]bool)
+				for k, v := range visited {
+					localVisited[k] = v
+				}
+				localVisited[rel.referencedTable] = true
+
+				childTree := a.renderNode(conn, rel.referencedTable, childRelationships, maxDepth, currentDepth+1, localVisited, fkCache, false)
+				lines := strings.Split(childTree, "\n")
+				for _, line := range lines {
+					if line == "" {
+						continue
+					}
+					builder.WriteString(styles.TreeConnector.Render(childPrefix))
+					builder.WriteString(line)
 					builder.WriteString("\n")
 				}
 			}
@@ -246,14 +249,17 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 	return builder.String()
 }
 
-func (a *App) getChildRelationships(conn db.DatabaseConnection, tableName string, visited map[string]bool) []relationship {
+func (a *App) getChildRelationships(conn db.DatabaseConnection, tableName string) []relationship {
 	var relationships []relationship
+	seenTables := make(map[string]bool)
 
 	// Get "belongs to" relationships
 	belongsToFKs, err := conn.GetForeignKeys(tableName)
 	if err == nil {
 		for _, fk := range belongsToFKs {
-			if !visited[fk.ReferencedTable] {
+			key := fmt.Sprintf("%s:%s:%s", fk.ReferencedTable, fk.Column, fk.ReferencedColumn)
+			if !seenTables[key] {
+				seenTables[key] = true
 				relationships = append(relationships, relationship{
 					relType:           belongsTo,
 					column:            fk.Column,
@@ -268,7 +274,9 @@ func (a *App) getChildRelationships(conn db.DatabaseConnection, tableName string
 	hasManyFKs, err := conn.GetForeignKeysReferencingTable(tableName)
 	if err == nil {
 		for _, fk := range hasManyFKs {
-			if !visited[fk.ReferencedTable] {
+			key := fmt.Sprintf("%s:%s:%s", fk.ReferencedTable, fk.Column, fk.ReferencedColumn)
+			if !seenTables[key] {
+				seenTables[key] = true
 				relationships = append(relationships, relationship{
 					relType:           hasMany,
 					column:            fk.Column,
@@ -282,10 +290,8 @@ func (a *App) getChildRelationships(conn db.DatabaseConnection, tableName string
 	return relationships
 }
 
-func (a *App) renderRelationshipLine(rel relationship, parentTable string) string {
+func (a *App) renderRelationshipLine(rel relationship, parentTable string, isSelfReference bool) string {
 	var builder strings.Builder
-
-	isSelfReference := (rel.referencedTable == parentTable)
 
 	var relText, cardinality, fkDetails string
 	var relStyle lipgloss.Style
