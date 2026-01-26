@@ -109,7 +109,7 @@ func (m *MySQLConnection) GetTableMetadata(
 	if rows.Next() {
 		var pkColumn string
 		if err := rows.Scan(&pkColumn); err == nil {
-			metadata.PrimaryKey = pkColumn
+			metadata.PrimaryKeys = append(metadata.PrimaryKeys, pkColumn)
 		}
 	}
 
@@ -146,6 +146,18 @@ func (m *MySQLConnection) GetInfoSQL(infoType string) string {
 	default:
 		return ""
 	}
+}
+
+func (m *MySQLConnection) GetTables() ([]string, error) {
+	return nil, fmt.Errorf("GetTables not implemented for mysql")
+}
+
+func (m *MySQLConnection) GetViews() ([]string, error) {
+	return nil, fmt.Errorf("GetViews not implemented for mysql")
+}
+
+func (m *MySQLConnection) GetForeignKeys(tableName string) ([]ForeignKey, error) {
+	return nil, fmt.Errorf("GetForeignKeys not implemented for mysql")
 }
 
 func (m *MySQLConnection) BuildUpdateStatement(

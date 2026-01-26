@@ -72,7 +72,7 @@ func (a *App) handleTables() {
 			tableName,
 		); err == nil &&
 			metadata != nil {
-			query.PrimaryKey = metadata.PrimaryKey
+			query.PrimaryKeys = metadata.PrimaryKeys
 		}
 
 		run.ExecuteSelect(
@@ -205,7 +205,7 @@ func (a *App) showTablesInteractive(
 				selectedTable,
 			); err == nil &&
 				metadata != nil {
-				query.PrimaryKey = metadata.PrimaryKey
+				query.PrimaryKeys = metadata.PrimaryKeys
 			}
 
 			run.ExecuteSelect(

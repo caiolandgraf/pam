@@ -131,7 +131,12 @@ func Execute(params ExecutionParams) {
 func extractMetadata(conn db.DatabaseConnection, query db.Query) (string, string) {
 	metadata, err := db.InferTableMetadata(conn, query)
 	if err == nil && metadata != nil {
-		return metadata.TableName, metadata.PrimaryKey
+		// Return first primary key if available
+		pk := ""
+		if len(metadata.PrimaryKeys) > 0 {
+			pk = metadata.PrimaryKeys[0]
+		}
+		return metadata.TableName, pk
 	}
 
 	fmt.Fprintf(os.Stderr, styles.Faint.Render("Warning: Could not extract table metadata %v\n"), err)

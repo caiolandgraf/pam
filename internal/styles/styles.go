@@ -88,3 +88,25 @@ var (
 				Foreground(lipgloss. Color(ColorAccent)).
 				Bold(true)
 )
+
+// Explain command styles
+var (
+	TableName = lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorAccent)).
+		Bold(true)
+
+	PrimaryKeyLabel = lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorSuccess)).
+		Bold(true)
+
+	BelongsToStyle = lipgloss.NewStyle().
+		Foreground(lipgloss.Color("218")). // Vivid Orange-1
+		Bold(true)
+
+	CardinalityStyle = lipgloss.NewStyle().
+		Foreground(lipgloss.Color("228")). // Orange/Yellow
+		Bold(true)
+
+	TreeConnector = lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorFaint))
+)

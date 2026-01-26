@@ -7,10 +7,16 @@ import (
 )
 
 type TableMetadata struct {
-	TableName   string
-	PrimaryKey  string
-	ColumnTypes []string
-	Columns     []string
+	TableName    string
+	PrimaryKeys  []string
+	ColumnTypes  []string
+	Columns      []string
+}
+
+type ForeignKey struct {
+	Column           string
+	ReferencedTable  string
+	ReferencedColumn string
 }
 
 func ExtractTableNameFromSQL(sqlQuery string) string {
@@ -38,31 +44,32 @@ func InferTableMetadata(conn DatabaseConnection, query Query) (*TableMetadata, e
 	if HasJoinClause(query.SQL) {
 		return nil, fmt.Errorf("update/delete operations are not supported for JOIN queries")
 	}
-	
+
 	if query.TableName != "" {
 		metadata := &TableMetadata{
-			TableName:  query. TableName,
-			PrimaryKey: query.PrimaryKey,
+			TableName: query.TableName,
 		}
-		
-		if metadata.PrimaryKey == "" && conn != nil {
+
+		if len(query.PrimaryKeys) == 0 && conn != nil {
 			if dbMeta, err := conn.GetTableMetadata(query.TableName); err == nil {
-				metadata. PrimaryKey = dbMeta. PrimaryKey
+				metadata.PrimaryKeys = dbMeta.PrimaryKeys
 			}
+		} else {
+			metadata.PrimaryKeys = query.PrimaryKeys
 		}
-		
+
 		return metadata, nil
 	}
-	
+
 	tableName := ExtractTableNameFromSQL(query.SQL)
 	if tableName == "" {
 		return nil, fmt.Errorf("could not extract table name from query")
 	}
-	
+
 	if conn != nil {
 		return conn.GetTableMetadata(tableName)
 	}
-	
+
 	return &TableMetadata{
 		TableName: tableName,
 	}, nil

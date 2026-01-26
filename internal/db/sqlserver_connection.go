@@ -107,7 +107,7 @@ func (s *SQLServerConnection) GetTableMetadata(tableName string) (*TableMetadata
 	if rows.Next() {
 		var pkColumn string
 		if err := rows.Scan(&pkColumn); err == nil {
-			metadata.PrimaryKey = pkColumn
+			metadata.PrimaryKeys = append(metadata.PrimaryKeys, pkColumn)
 		}
 	}
 
@@ -173,6 +173,18 @@ func (s *SQLServerConnection) GetInfoSQL(infoType string) string {
 	default:
 		return ""
 	}
+}
+
+func (s *SQLServerConnection) GetTables() ([]string, error) {
+	return nil, fmt.Errorf("GetTables not implemented for sqlserver")
+}
+
+func (s *SQLServerConnection) GetViews() ([]string, error) {
+	return nil, fmt.Errorf("GetViews not implemented for sqlserver")
+}
+
+func (s *SQLServerConnection) GetForeignKeys(tableName string) ([]ForeignKey, error) {
+	return nil, fmt.Errorf("GetForeignKeys not implemented for sqlserver")
 }
 
 func (s *SQLServerConnection) BuildUpdateStatement(tableName, columnName, currentValue, pkColumn, pkValue string) string {

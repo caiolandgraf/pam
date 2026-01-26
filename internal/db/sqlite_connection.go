@@ -107,7 +107,7 @@ func (s *SQLiteConnection) GetTableMetadata(
 		metadata.ColumnTypes = append(metadata.ColumnTypes, colType)
 
 		if pk == 1 {
-			metadata.PrimaryKey = name
+			metadata.PrimaryKeys = append(metadata.PrimaryKeys, name)
 		}
 	}
 
@@ -130,6 +130,18 @@ func (s *SQLiteConnection) GetInfoSQL(infoType string) string {
 	default:
 		return ""
 	}
+}
+
+func (s *SQLiteConnection) GetTables() ([]string, error) {
+	return nil, fmt.Errorf("GetTables not implemented for sqlite")
+}
+
+func (s *SQLiteConnection) GetViews() ([]string, error) {
+	return nil, fmt.Errorf("GetViews not implemented for sqlite")
+}
+
+func (s *SQLiteConnection) GetForeignKeys(tableName string) ([]ForeignKey, error) {
+	return nil, fmt.Errorf("GetForeignKeys not implemented for sqlite")
 }
 
 func (s *SQLiteConnection) BuildUpdateStatement(

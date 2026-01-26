@@ -135,6 +135,18 @@ func (f *FirebirdConnection) GetInfoSQL(infoType string) string {
 	}
 }
 
+func (f *FirebirdConnection) GetTables() ([]string, error) {
+	return nil, fmt.Errorf("GetTables not implemented for firebird")
+}
+
+func (f *FirebirdConnection) GetViews() ([]string, error) {
+	return nil, fmt.Errorf("GetViews not implemented for firebird")
+}
+
+func (f *FirebirdConnection) GetForeignKeys(tableName string) ([]ForeignKey, error) {
+	return nil, fmt.Errorf("GetForeignKeys not implemented for firebird")
+}
+
 func (f *FirebirdConnection) GetTableMetadata(tableName string) (*TableMetadata, error) {
 	metadata := &TableMetadata{
 		TableName: tableName,
@@ -155,9 +167,10 @@ func (f *FirebirdConnection) GetTableMetadata(tableName string) (*TableMetadata,
 			JOIN RDB$INDEX_SEGMENTS ICS ON RC.RDB$INDEX_NAME = ICS.RDB$INDEX_NAME
 			WHERE TRIM(RC.RDB$CONSTRAINT_NAME) = ?
 		`
-		err := f.db.QueryRow(pkColQuery, strings.TrimSpace(pkName.String)).Scan(&metadata.PrimaryKey)
-		if err != nil {
-			metadata.PrimaryKey = ""
+		var pkColumn string
+		err := f.db.QueryRow(pkColQuery, strings.TrimSpace(pkName.String)).Scan(&pkColumn)
+		if err == nil {
+			metadata.PrimaryKeys = append(metadata.PrimaryKeys, pkColumn)
 		}
 	}
 

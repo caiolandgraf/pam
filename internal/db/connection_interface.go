@@ -9,8 +9,11 @@ type DatabaseConnection interface {
 	Query(queryName string, args ...any) (any, error)
 	ExecQuery(sql string, args ...any) (*sql.Rows, error)
 	Exec(sql string, args ...any) error
-	GetTableMetadata(tableName string) (*TableMetadata, error)
 	GetInfoSQL(infoType string) string
+	GetTables() ([]string, error)
+	GetViews() ([]string, error)
+	GetTableMetadata(tableName string) (*TableMetadata, error)
+	GetForeignKeys(tableName string) ([]ForeignKey, error)
 	BuildUpdateStatement(
 		tableName, columnName, currentValue, pkColumn, pkValue string,
 	) string

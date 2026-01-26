@@ -112,7 +112,7 @@ func (c *ClickHouseConnection) GetTableMetadata(tableName string) (*TableMetadat
 			// Remove quotes and trim whitespace
 			pk := strings.TrimSpace(keys[0])
 			pk = strings.Trim(pk, "`\"'")
-			metadata.PrimaryKey = pk
+			metadata.PrimaryKeys = append(metadata.PrimaryKeys, pk)
 		}
 	}
 
@@ -171,6 +171,18 @@ func (c *ClickHouseConnection) GetInfoSQL(infoType string) string {
 	default:
 		return ""
 	}
+}
+
+func (c *ClickHouseConnection) GetTables() ([]string, error) {
+	return nil, fmt.Errorf("GetTables not implemented for clickhouse")
+}
+
+func (c *ClickHouseConnection) GetViews() ([]string, error) {
+	return nil, fmt.Errorf("GetViews not implemented for clickhouse")
+}
+
+func (c *ClickHouseConnection) GetForeignKeys(tableName string) ([]ForeignKey, error) {
+	return nil, fmt.Errorf("GetForeignKeys not implemented for clickhouse")
 }
 
 func (c *ClickHouseConnection) BuildUpdateStatement(tableName, columnName, currentValue, pkColumn, pkValue string) string {

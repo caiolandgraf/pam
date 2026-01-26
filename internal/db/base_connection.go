@@ -44,6 +44,22 @@ func (b *BaseConnection) GetTableMetadata(
 	)
 }
 
+func (b *BaseConnection) GetInfoSQL(infoType string) string {
+	return ""
+}
+
+func (b *BaseConnection) GetTables() ([]string, error) {
+	return nil, errors.New("GetTables() not implemented for base connection")
+}
+
+func (b *BaseConnection) GetViews() ([]string, error) {
+	return nil, errors.New("GetViews() not implemented for base connection")
+}
+
+func (b *BaseConnection) GetForeignKeys(tableName string) ([]ForeignKey, error) {
+	return nil, errors.New("GetForeignKeys() not implemented for base connection")
+}
+
 func (b *BaseConnection) BuildUpdateStatement(
 	tableName, columnName, currentValue, pkColumn, pkValue string,
 ) string {
@@ -66,6 +82,17 @@ func (b *BaseConnection) BuildUpdateStatement(
 		tableName,
 		columnName,
 		escapedValue,
+	)
+}
+
+func (b *BaseConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string {
+	escapedPkValue := strings.ReplaceAll(pkValue, "'", "''")
+
+	return fmt.Sprintf(
+		"DELETE FROM %s\nWHERE %s = '%s';",
+		tableName,
+		primaryKeyCol,
+		escapedPkValue,
 	)
 }
 

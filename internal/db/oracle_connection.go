@@ -140,7 +140,7 @@ func (oc *OracleConnection) GetTableMetadata(tableName string) (*TableMetadata, 
 	if rows.Next() {
 		var pkColumn string
 		if err := rows.Scan(&pkColumn); err == nil {
-			metadata.PrimaryKey = pkColumn
+			metadata.PrimaryKeys = append(metadata.PrimaryKeys, pkColumn)
 		}
 	}
 
@@ -238,6 +238,18 @@ func (oc *OracleConnection) GetInfoSQL(infoType string) string {
 	default:
 		return ""
 	}
+}
+
+func (oc *OracleConnection) GetTables() ([]string, error) {
+	return nil, fmt.Errorf("GetTables not implemented for oracle")
+}
+
+func (oc *OracleConnection) GetViews() ([]string, error) {
+	return nil, fmt.Errorf("GetViews not implemented for oracle")
+}
+
+func (oc *OracleConnection) GetForeignKeys(tableName string) ([]ForeignKey, error) {
+	return nil, fmt.Errorf("GetForeignKeys not implemented for oracle")
 }
 
 

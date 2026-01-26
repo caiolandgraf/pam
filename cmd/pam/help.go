@@ -94,6 +94,11 @@ func (a *App) PrintGeneralHelp() {
 		),
 	)
 	fmt.Println(
+		"  explain     " + styles.Faint.Render(
+			"Show relationships between tables",
+		),
+	)
+	fmt.Println(
 		"  help        " + styles.Faint.Render(
 			"Show help for pam or a specific command",
 		),
