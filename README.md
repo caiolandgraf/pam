@@ -347,6 +347,13 @@ Manage multiple database connections and switch between them instantly.
 pam list connections
 pam switch production
 ```
+Display current connection and check if it is reachable
+```
+pam status
+```
+<div align=center>
+  <img width="425" height="503" alt="image" src="https://github.com/user-attachments/assets/e291de99-3c03-4e2a-b559-dcbbb89dc232" />
+</div>
 
 ### Database Exploration
 
@@ -364,17 +371,12 @@ pam explain employees
 pam explain employees --depth 2    # Show relationships 2 levels deep
 ```
 
+<img width="855" height="171" alt="image" src="https://github.com/user-attachments/assets/e824e87d-d3b3-4a1a-9850-cc041cf94216" />
+
 **Note:** The `pam explain` command is currently a work in progress and may change in future versions.
 
-# Switch active connection
-pam switch mysql_prod
 
-# Display current connection and check if it is reachable
-pam status
-```
-<div align=center>
-  <img width="425" height="503" alt="image" src="https://github.com/user-attachments/assets/e291de99-3c03-4e2a-b559-dcbbb89dc232" />
-</div>
+
 
 ---
 
