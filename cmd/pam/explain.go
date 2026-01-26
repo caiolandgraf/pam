@@ -100,13 +100,32 @@ func (a *App) buildRelationshipTree(conn db.DatabaseConnection, tableName string
 	}
 
 	var relationships []relationship
+	seenTables := make(map[string]bool)
 
-	// Only show "belongs to" relationships (FKs from this table to other tables)
+	// Get "belongs to" relationships (FKs from this table to other tables)
 	belongsToFKs, err := conn.GetForeignKeys(tableName)
 	if err == nil {
 		for _, fk := range belongsToFKs {
 			relationships = append(relationships, relationship{
 				relType:           belongsTo,
+				column:            fk.Column,
+				referencedTable:   fk.ReferencedTable,
+				referencedColumn:  fk.ReferencedColumn,
+			})
+			seenTables[fk.ReferencedTable] = true
+		}
+	}
+
+	// Get "has many" relationships (FKs from other tables to this table)
+	hasManyFKs, err := conn.GetForeignKeysReferencingTable(tableName)
+	if err == nil {
+		for _, fk := range hasManyFKs {
+			// Skip if we already have this table via "belongs to"
+			if seenTables[fk.ReferencedTable] {
+				continue
+			}
+			relationships = append(relationships, relationship{
+				relType:           hasMany,
 				column:            fk.Column,
 				referencedTable:   fk.ReferencedTable,
 				referencedColumn:  fk.ReferencedColumn,
@@ -120,7 +139,7 @@ func (a *App) buildRelationshipTree(conn db.DatabaseConnection, tableName string
 func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relationships []relationship, maxDepth, currentDepth int, visited map[string]bool, fkCache map[string][]db.ForeignKey) string {
 	var builder strings.Builder
 
-	// Render current table with PK info
+	// Render current table with PK info (only at root level)
 	if currentDepth == 0 {
 		metadata, _ := conn.GetTableMetadata(tableName)
 		if len(metadata.PrimaryKeys) > 0 {
@@ -193,19 +212,95 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 			childPrefix = "│   "
 		}
 
-		childTree := a.buildRelationshipTree(conn, rel.referencedTable, maxDepth, currentDepth+1, visited, fkCache)
-		if childTree != "" {
-			lines := strings.Split(childTree, "\n")
-			for j, line := range lines {
-				if line == "" {
-					continue
+		// Get child relationships directly and render them with proper indentation
+		childRelationships := a.getChildRelationships(conn, rel.referencedTable, visited)
+		if len(childRelationships) > 0 {
+			for j, childRel := range childRelationships {
+				childIsLast := j == len(childRelationships)-1
+				childPrefix2 := childPrefix
+				if !childIsLast {
+					childPrefix2 += "│   "
+				} else {
+					childPrefix2 += "    "
 				}
-				if j > 0 {
-					builder.WriteString(styles.TreeConnector.Render(childPrefix))
-				}
-				builder.WriteString(line + "\n")
+
+				// Render child relationship with full prefix
+				builder.WriteString(styles.TreeConnector.Render(childPrefix + "├── "))
+				builder.WriteString(a.renderRelationshipLine(childRel, rel.referencedTable))
+				builder.WriteString("\n")
 			}
 		}
+	}
+
+	return builder.String()
+}
+
+func (a *App) getChildRelationships(conn db.DatabaseConnection, tableName string, visited map[string]bool) []relationship {
+	var relationships []relationship
+
+	// Get "belongs to" relationships
+	belongsToFKs, err := conn.GetForeignKeys(tableName)
+	if err == nil {
+		for _, fk := range belongsToFKs {
+			if !visited[fk.ReferencedTable] {
+				relationships = append(relationships, relationship{
+					relType:           belongsTo,
+					column:            fk.Column,
+					referencedTable:   fk.ReferencedTable,
+					referencedColumn:  fk.ReferencedColumn,
+				})
+			}
+		}
+	}
+
+	// Get "has many" relationships
+	hasManyFKs, err := conn.GetForeignKeysReferencingTable(tableName)
+	if err == nil {
+		for _, fk := range hasManyFKs {
+			if !visited[fk.ReferencedTable] {
+				relationships = append(relationships, relationship{
+					relType:           hasMany,
+					column:            fk.Column,
+					referencedTable:   fk.ReferencedTable,
+					referencedColumn:  fk.ReferencedColumn,
+				})
+			}
+		}
+	}
+
+	return relationships
+}
+
+func (a *App) renderRelationshipLine(rel relationship, parentTable string) string {
+	var builder strings.Builder
+
+	isSelfReference := (rel.referencedTable == parentTable)
+
+	var relText, cardinality, fkDetails string
+	var relStyle lipgloss.Style
+
+	if rel.relType == belongsTo {
+		relText = "belongs to"
+		cardinality = "[N:1]"
+		relStyle = styles.BelongsToStyle
+		fkDetails = fmt.Sprintf("(FK: %s → %s.%s)", rel.column, rel.referencedTable, rel.referencedColumn)
+	} else {
+		relText = "has many"
+		cardinality = "[1:N]"
+		relStyle = styles.HasManyStyle
+		fkDetails = fmt.Sprintf("(on: %s ← %s.%s)", rel.referencedColumn, rel.referencedTable, rel.column)
+	}
+
+	builder.WriteString(relStyle.Render(fmt.Sprintf("%s →", relText)))
+	builder.WriteString(" ")
+	builder.WriteString(styles.CardinalityStyle.Render(cardinality))
+	builder.WriteString(" ")
+	builder.WriteString(styles.TableName.Render(rel.referencedTable))
+	builder.WriteString(" ")
+	builder.WriteString(styles.Faint.Render(fkDetails))
+
+	if isSelfReference {
+		builder.WriteString(" " + styles.Faint.Render("(self-reference)"))
 	}
 
 	return builder.String()
