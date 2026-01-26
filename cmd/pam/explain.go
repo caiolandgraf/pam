@@ -165,6 +165,11 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 	// Mark current table as visited to prevent cycles
 	visited[tableName] = true
 
+	// Check if we should render relationships at this depth
+	if currentDepth >= maxDepth && !isRoot {
+		return builder.String()
+	}
+
 	for i, rel := range relationships {
 		isLast := i == len(relationships)-1
 		prefix := "├── "
@@ -217,7 +222,7 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 		}
 
 		// Recursively render children if within depth limit
-		if currentDepth < maxDepth {
+		if currentDepth+1 <= maxDepth {
 			childRelationships := a.getChildRelationships(conn, rel.referencedTable)
 			if len(childRelationships) > 0 {
 				childPrefix := "    "

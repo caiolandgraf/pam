@@ -99,14 +99,12 @@ func (a *App) listTablesAndViews() {
 		printError("Could not list views: %v", err)
 	}
 
-	// Display tables
 	if len(tables) > 0 {
 		fmt.Printf("- tables %s\n", styles.Faint.Render(fmt.Sprintf("(%d)", len(tables))))
 		a.formatTableList(tables)
 		fmt.Println()
 	}
 
-	// Display views
 	if len(views) > 0 {
 		fmt.Printf("- views %s\n", styles.Faint.Render(fmt.Sprintf("(%d)", len(views))))
 		a.formatTableList(views)
@@ -129,7 +127,6 @@ func (a *App) formatTableList(items []string) {
 	}
 	items = filtered
 
-	// Find max item length for column width
 	maxLen := 0
 	for _, item := range items {
 		if len(item) > maxLen {
@@ -143,13 +140,11 @@ func (a *App) formatTableList(items []string) {
 	// Simple terminal width detection (default to 120 if we can't detect)
 	termWidth := 120
 
-	// Calculate columns that fit
 	numColumns := termWidth / columnWidth
 	if numColumns < 1 {
 		numColumns = 1
 	}
 
-	// Print in rows, filling horizontally
 	for i, item := range items {
 		fmt.Printf("%-*s", columnWidth, item)
 
