@@ -185,3 +185,7 @@ func (s *SQLiteConnection) BuildDeleteStatement(
 		escapedPkValue,
 	)
 }
+
+func (s *SQLiteConnection) GetPlaceholder(paramIndex int) string {
+	return "?"
+}

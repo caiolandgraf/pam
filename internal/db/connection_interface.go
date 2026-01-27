@@ -20,6 +20,7 @@ type DatabaseConnection interface {
 	) string
 	BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string
 	ApplyRowLimit(sql string, limit int) string
+	GetPlaceholder(paramIndex int) string
 
 	GetName() string
 	GetDbType() string

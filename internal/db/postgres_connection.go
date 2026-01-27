@@ -411,3 +411,7 @@ func (c *PostgresConnection) BuildDeleteStatement(
 		pkValue,
 	)
 }
+
+func (p *PostgresConnection) GetPlaceholder(paramIndex int) string {
+	return fmt.Sprintf("$%d", paramIndex)
+}

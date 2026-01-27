@@ -59,3 +59,7 @@ func (oc *OracleConnection) ApplyRowLimit(sql string, limit int) string {
 func (oc *OracleConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string {
 	return "-- Oracle driver not available: binary built without CGO"
 }
+
+func (oc *OracleConnection) GetPlaceholder(paramIndex int) string {
+	return fmt.Sprintf(":%d", paramIndex)
+}

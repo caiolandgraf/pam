@@ -100,6 +100,10 @@ func (b *BaseConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkValue 
 	)
 }
 
+func (b *BaseConnection) GetPlaceholder(paramIndex int) string {
+	return "?"
+}
+
 func (b *BaseConnection) ApplyRowLimit(sql string, limit int) string {
 	trimmedSQL := strings.ToUpper(strings.TrimSpace(sql))
 	if !strings.HasPrefix(trimmedSQL, "SELECT") &&

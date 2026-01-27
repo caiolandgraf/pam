@@ -5,6 +5,8 @@ import (
 	"os"
 	"time"
 
+	stdlib "database/sql"
+
 	"github.com/eduardofuncao/pam/internal/config"
 	"github.com/eduardofuncao/pam/internal/db"
 	"github.com/eduardofuncao/pam/internal/parser"
@@ -23,6 +25,7 @@ type ExecutionParams struct {
 	Config       *config.Config
 	SaveCallback SaveQueryCallback
 	OnRerun      func(editedSQL string)
+	Args         []any // Arguments for parameterized queries
 }
 
 // ExecuteSelect executes SELECT queries and renders results
@@ -45,8 +48,14 @@ func ExecuteSelect(sql, queryName string, params ExecutionParams) {
 		sql = params.Connection.ApplyRowLimit(sql, params.Config.DefaultRowLimit)
 	}
 
-	// Execute the query
-	rows, err := params.Connection.ExecQuery(sql)
+	// Execute the query with or without parameters
+	var err error
+	var rows any
+	if params.Args != nil && len(params.Args) > 0 {
+		rows, err = params.Connection.ExecQuery(sql, params.Args...)
+	} else {
+		rows, err = params.Connection.ExecQuery(sql)
+	}
 	if err != nil {
 		done <- struct{}{}
 		printError("Could not execute query: %v", err)
@@ -54,7 +63,7 @@ func ExecuteSelect(sql, queryName string, params ExecutionParams) {
 	}
 
 	// Format the results
-	columns, data, err := db.FormatTableData(rows)
+	columns, data, err := db.FormatTableData(rows.(*stdlib.Rows))
 	if err != nil {
 		done <- struct{}{}
 		printError("Could not format table data: %v", err)
@@ -93,12 +102,17 @@ func ExecuteSelect(sql, queryName string, params ExecutionParams) {
 }
 
 // ExecuteNonSelect executes non-SELECT queries (INSERT, UPDATE, DELETE, etc.)
-func ExecuteNonSelect(query db.Query, conn db.DatabaseConnection) {
+func ExecuteNonSelect(params ExecutionParams) {
 	start := time.Now()
 	done := make(chan struct{})
 	go spinner.CircleWaitWithTimer(done)
 
-	err := conn.Exec(query.SQL)
+	var err error
+	if params.Args != nil && len(params.Args) > 0 {
+		err = params.Connection.Exec(params.Query.SQL, params.Args...)
+	} else {
+		err = params.Connection.Exec(params.Query.SQL)
+	}
 	done <- struct{}{}
 	elapsed := time.Since(start)
 
@@ -109,7 +123,7 @@ func ExecuteNonSelect(query db.Query, conn db.DatabaseConnection) {
 
 	fmt.Println(styles.Success.Render(fmt.Sprintf("✓ Command executed successfully in %.2fs", elapsed.Seconds())))
 	fmt.Println(styles.Faint.Render("\nExecuted SQL:"))
-	fmt.Println(parser.HighlightSQL(query.SQL))
+	fmt.Println(parser.HighlightSQL(params.Query.SQL))
 }
 
 // Execute routes to the appropriate executor based on query type
@@ -123,7 +137,7 @@ func Execute(params ExecutionParams) {
 	if IsSelectQuery(params.Query.SQL) {
 		ExecuteSelect(params.Query.SQL, params.Query.Name, params)
 	} else {
-		ExecuteNonSelect(params.Query, params.Connection)
+		ExecuteNonSelect(params)
 	}
 }
 

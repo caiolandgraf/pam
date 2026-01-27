@@ -236,6 +236,10 @@ WHERE %s = '%s';`,
 	)
 }
 
+func (c *ClickHouseConnection) GetPlaceholder(paramIndex int) string {
+	return "?"
+}
+
 func (c *ClickHouseConnection) ApplyRowLimit(sql string, limit int) string {
 	// ClickHouse uses standard SQL LIMIT syntax
 	trimmedSQL := strings.ToUpper(strings.TrimSpace(sql))

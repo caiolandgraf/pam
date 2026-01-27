@@ -231,6 +231,10 @@ func (s *SQLServerConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkV
 	)
 }
 
+func (s *SQLServerConnection) GetPlaceholder(paramIndex int) string {
+	return "@p" + fmt.Sprintf("%d", paramIndex)
+}
+
 func (s *SQLServerConnection) ApplyRowLimit(sql string, limit int) string {
 	trimmedSQL := strings.ToUpper(strings.TrimSpace(sql))
 

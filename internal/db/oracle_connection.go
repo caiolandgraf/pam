@@ -304,3 +304,7 @@ func (oc *OracleConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkVal
 		escapedPkValue,
 	)
 }
+
+func (oc *OracleConnection) GetPlaceholder(paramIndex int) string {
+	return fmt.Sprintf(":%d", paramIndex)
+}

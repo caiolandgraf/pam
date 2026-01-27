@@ -205,6 +205,10 @@ func (f *FirebirdConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkVa
 	return fmt.Sprintf("DELETE FROM %s WHERE %s = '%s'", tableName, primaryKeyCol, pkValue)
 }
 
+func (f *FirebirdConnection) GetPlaceholder(paramIndex int) string {
+	return "?"
+}
+
 func (f *FirebirdConnection) ApplyRowLimit(sqlStr string, limit int) string {
 	// Firebird uses FIRST/SKIP syntax
 	// Convert SELECT ... FROM to SELECT FIRST n ... FROM

@@ -201,3 +201,7 @@ func (m *MySQLConnection) BuildDeleteStatement(
 		escapedPkValue,
 	)
 }
+
+func (m *MySQLConnection) GetPlaceholder(paramIndex int) string {
+	return "?"
+}

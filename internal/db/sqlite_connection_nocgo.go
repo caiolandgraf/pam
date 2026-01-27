@@ -59,3 +59,7 @@ func (oc *SQLiteConnection) ApplyRowLimit(sql string, limit int) string {
 func (oc *SQLiteConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string {
 	return "-- SQLite driver not available: binary built without CGO"
 }
+
+func (oc *SQLiteConnection) GetPlaceholder(paramIndex int) string {
+	return "?"
+}
