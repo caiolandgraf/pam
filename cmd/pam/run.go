@@ -118,23 +118,35 @@ func parsePositionalArgs(selector string) []string {
 	var positionals []string
 	selectorSeen := false
 
-	for _, arg := range args {
+	i := 0
+	for i < len(args) {
+		arg := args[i]
+
 		// Skip flags and their values
 		if strings.HasPrefix(arg, "--") {
+			// Skip the flag itself
+			i++
+			// Skip the value if it exists and isn't another flag
+			if i < len(args) && !strings.HasPrefix(args[i], "--") {
+				i++
+			}
 			continue
 		}
 		if arg == "--edit" || arg == "-e" || arg == "--last" || arg == "-l" {
+			i++
 			continue
 		}
 
 		// First non-flag arg is the query selector
 		if !selectorSeen {
 			selectorSeen = true
+			i++
 			continue
 		}
 
 		// Remaining non-flag args are positional parameter values
 		positionals = append(positionals, arg)
+		i++
 	}
 
 	return positionals
@@ -204,7 +216,7 @@ func (a *App) executeQueryWithParams(query db.Query, conn db.DatabaseConnection,
 	originalQuery := query
 
 	// Process parameters
-	sql, args := a.processParameters(query.SQL, conn, paramFlags, positionalArgs)
+	sql, args, displaySQL := a.processParameters(query.SQL, conn, paramFlags, positionalArgs)
 
 	// Create a modified query with processed SQL for execution
 	processedQuery := db.Query{
@@ -222,15 +234,17 @@ func (a *App) executeQueryWithParams(query db.Query, conn db.DatabaseConnection,
 		Config:       a.config,
 		SaveCallback: a.saveQueryFromTable,
 		Args:         args,
+		DisplaySQL:   displaySQL,
 		OnRerun: func(editedSQL string) {
 			// Re-run callback - if SQL contains placeholders, re-process parameters
 			// Otherwise execute the edited SQL directly
 			finalSQL := editedSQL
 			finalArgs := []any{}
+			finalDisplaySQL := ""
 
 			if strings.Contains(editedSQL, ":") {
 				// User kept the parameter syntax, re-process with same params
-				finalSQL, finalArgs = a.processParameters(originalQuery.SQL, conn, paramFlags, positionalArgs)
+				finalSQL, finalArgs, finalDisplaySQL = a.processParameters(originalQuery.SQL, conn, paramFlags, positionalArgs)
 			}
 
 			editedQuery := db.Query{
@@ -250,19 +264,20 @@ func (a *App) executeQueryWithParams(query db.Query, conn db.DatabaseConnection,
 				Config:       a.config,
 				SaveCallback: a.saveQueryFromTable,
 				Args:         finalArgs,
+				DisplaySQL:   finalDisplaySQL,
 			})
 		},
 	})
 }
 
 // processParameters handles parameter extraction, validation, and substitution
-// Returns processed SQL and args for prepared statements
-func (a *App) processParameters(sql string, conn db.DatabaseConnection, cliValues, positionals map[string]string) (string, []any) {
+// Returns processed SQL (with placeholders), args for prepared statements, and display SQL (with values)
+func (a *App) processParameters(sql string, conn db.DatabaseConnection, cliValues, positionals map[string]string) (string, []any, string) {
 	// Extract parameter definitions from SQL
 	paramDefs := params.ExtractParameters(sql)
 
 	if len(paramDefs) == 0 {
-		return sql, []any{}
+		return sql, []any{}, ""
 	}
 
 	// Map positional args to parameter names
@@ -306,6 +321,9 @@ func (a *App) processParameters(sql string, conn db.DatabaseConnection, cliValue
 		printError("Error substituting parameters: %v", err)
 	}
 
+	// Generate display SQL with actual values for TUI
+	displaySQL := params.GenerateDisplaySQL(sql, paramValues)
+
 	// For Oracle, use literal substitution instead of prepared statements
 	// This is a workaround for godror prepared statement issues
 	if conn.GetDbType() == "oracle" && len(args) > 0 {
@@ -313,7 +331,7 @@ func (a *App) processParameters(sql string, conn db.DatabaseConnection, cliValue
 		args = []any{}
 	}
 
-	return finalSQL, args
+	return finalSQL, args, displaySQL
 }
 
 // substituteOracleLiterals replaces :1, :2 placeholders with actual values for Oracle

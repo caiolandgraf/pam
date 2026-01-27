@@ -75,3 +75,58 @@ func replaceParamPlaceholders(sql string, conn db.DatabaseConnection, paramIndex
 
 	return result
 }
+
+// GenerateDisplaySQL creates a human-readable SQL string with actual parameter values substituted
+// This is for display purposes only (e.g., in TUI), not for execution
+func GenerateDisplaySQL(sql string, paramValues map[string]string) string {
+	// Find all :param|default or :param patterns
+	re := regexp.MustCompile(`:(\w+)(?:\|('(?:[^'\\]|\\.)*'|(?:[^'\s\\]+)))?`)
+
+	result := re.ReplaceAllStringFunc(sql, func(match string) string {
+		// Extract param name
+		paramName := strings.TrimPrefix(match, ":")
+		if pipeIdx := strings.Index(paramName, "|"); pipeIdx != -1 {
+			paramName = paramName[:pipeIdx]
+		}
+
+		// Get value for this param
+		if value, ok := paramValues[paramName]; ok {
+			// Try to determine if it's a number (unquoted) or string (quoted)
+			// Simple heuristic: if it looks like a number, don't quote
+			if isNumeric(value) {
+				return value
+			}
+			// Quote strings and escape single quotes
+			return "'" + strings.ReplaceAll(value, "'", "''") + "'"
+		}
+
+		return match
+	})
+
+	return result
+}
+
+// isNumeric checks if a string looks like a number
+func isNumeric(s string) bool {
+	if s == "" {
+		return false
+	}
+
+	// Check for integer or float format
+	hasDigits := false
+	hasDot := false
+
+	for i, r := range s {
+		if r >= '0' && r <= '9' {
+			hasDigits = true
+		} else if r == '.' && !hasDot && i > 0 && i < len(s)-1 {
+			hasDot = true
+		} else if (r == '-' || r == '+') && i == 0 {
+			// Allow leading sign
+		} else {
+			return false
+		}
+	}
+
+	return hasDigits
+}

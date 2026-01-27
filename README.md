@@ -311,6 +311,19 @@ pam add daily_report "SELECT * FROM sales WHERE date = CURRENT_DATE"
 pam add user_count "SELECT COUNT(*) FROM users"
 pam add employees "SELECT TOP 10 * FROM employees ORDER BY last_name"
 
+# Add parameterized queries with :param|default syntax
+pam add emp_by_salary "SELECT * FROM employees WHERE salary > :min_sal|30000"
+pam add search_users "SELECT * FROM users WHERE name LIKE :name|P% AND status = :status|active"
+
+# When creating queries with params and not default, pam will prompt you for the param value every time you run the query
+pam add search_by_name "SELECT * FROM employees where first_name = :name"
+
+# Run parameterized queries with named parameters (order doesn't matter!)
+pam run emp_by_salary --min_sal 50000
+pam run search_users --name Michael --status active
+# Or use positional args (must match SQL order)
+pam run search_users Michael active
+
 # List all saved queries
 pam list queries
 
@@ -321,6 +334,9 @@ pam list queries employees --oneline # displays each query in one line
 # Run by name or ID
 pam run daily_report
 pam run 2
+
+# Edit query before running (great for testing parameter values)
+pam run emp_by_salary --edit
 ```
 
 <img width="1166" height="687" alt="image" src="https://github.com/user-attachments/assets/6f05c2dc-aa48-49ca-ab68-fdf3cfcc4eae" />
@@ -440,6 +456,7 @@ pam edit queries
 | `run` | Create and run a new query | `pam run` |
 | `run --edit` | Edit query before running | `pam run users --edit` |
 | `run --last`, `-l` | Re-run last executed query | `pam run --last` |
+| `run --param` | run with named params | `pam run --name Pam` |
 
 
 ### Database Exploration
@@ -552,9 +569,9 @@ Press `y` to copy the selection as plain text, or `x` to export the selected dat
 
 ### v0.2.0 - Kelly 👗
 - [ ] Program colors configuration option
-- [ ] Query parameter with prompt and defaults (e.g., `WHERE first_name = :name|Pam`)
+- [x] Query parameter with prompt and defaults (e.g., `WHERE first_name = :name|Pam`)
 - [ ] Encryption on connection username/password in config file
-- [X] CSV/JSON export for multiple cells
+- [x] CSV/JSON export for multiple cells
 - [ ] Display column types correctly for join queries
 
 ### v0.3.0 - Jim 👔

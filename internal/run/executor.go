@@ -26,6 +26,7 @@ type ExecutionParams struct {
 	SaveCallback SaveQueryCallback
 	OnRerun      func(editedSQL string)
 	Args         []any // Arguments for parameterized queries
+	DisplaySQL   string // Human-readable SQL with values substituted (for TUI display)
 }
 
 // ExecuteSelect executes SELECT queries and renders results
@@ -86,6 +87,11 @@ func ExecuteSelect(sql, queryName string, params ExecutionParams) {
 	}
 	if params.Query.Id != 0 {
 		q.Id = params.Query.Id
+	}
+
+	// Use DisplaySQL for TUI if available (shows actual values instead of placeholders)
+	if params.DisplaySQL != "" {
+		q.SQL = params.DisplaySQL
 	}
 
 	// Render the TUI
