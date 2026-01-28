@@ -9,7 +9,7 @@ import (
 	"github.com/eduardofuncao/pam/internal/styles"
 )
 
-const Version = "v0.1.1"
+const Version = "v0.2.0"
 
 type App struct {
 	config *config.Config
