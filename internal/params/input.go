@@ -104,23 +104,23 @@ func (m InputModel) View() string {
 		if i == m.cursorIndex {
 			// Focused field
 			prompt := lipgloss.NewStyle().
-				Foreground(lipgloss.Color(styles.ColorAccent)).
+				Foreground(lipgloss.Color(styles.ActiveScheme.Primary)).
 				Bold(true).
 				Render(param + " > ")
 
 			inputBox := lipgloss.NewStyle().
-				Foreground(lipgloss.Color(styles.ColorCellNormal)).
+				Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
 				Render(currentValue + "▏")
 
 			b.WriteString(prompt + inputBox + "\n")
 		} else {
 			// Unfocused field
 			prompt := lipgloss.NewStyle().
-				Foreground(lipgloss.Color(styles.ColorCellNormal)).
+				Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
 				Render(param + "   ")
 
 			inputBox := lipgloss.NewStyle().
-				Foreground(lipgloss.Color(styles.ColorCellNormal)).
+				Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
 				Render(currentValue)
 
 			b.WriteString(prompt + inputBox + "\n")

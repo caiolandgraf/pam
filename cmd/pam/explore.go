@@ -100,13 +100,13 @@ func (a *App) listTablesAndViews() {
 	}
 
 	if len(tables) > 0 {
-		fmt.Printf("- tables %s\n", styles.Faint.Render(fmt.Sprintf("(%d)", len(tables))))
+		fmt.Printf("%s tables %s\n", styles.Title.Render("◆"), styles.Faint.Render(fmt.Sprintf("(%d)", len(tables))))
 		a.formatTableList(tables)
 		fmt.Println()
 	}
 
 	if len(views) > 0 {
-		fmt.Printf("- views %s\n", styles.Faint.Render(fmt.Sprintf("(%d)", len(views))))
+		fmt.Printf("%s views %s\n", styles.Title.Render("◆"), styles.Faint.Render(fmt.Sprintf("(%d)", len(views))))
 		a.formatTableList(views)
 		fmt.Println()
 	}

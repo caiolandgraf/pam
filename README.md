@@ -224,6 +224,15 @@ All queries are automatically limited to prevent fetching massive result sets. C
 ### Column Width `default_column_width: 15`
 The width for all columns in the table TUI is fixed to a constant size, which can be configured through `default_column_width` in the config file. There are plans to make the column widths flexible in version v0.2.0.
 
+### Color Schemes `color_scheme: "default"`
+Customize the terminal UI colors with built-in schemes:
+
+**Available schemes:**
+`default`, `dracula`, `gruvbox`, `solarized`, `nord`, `monokai`
+`black-metal`, `black-metal-gorgoroth`, `vesper`, `catppuccin-mocha`, `tokyo-night`, `rose-pine`, `terracotta`
+
+Each scheme uses a 7-color palette: Primary (titles, headers), Success (success messages), Error (errors), Normal (table data), Muted (borders, help text), Highlight (selected backgrounds), Accent (keywords, strings).
+
 ---
 
 <h2>
@@ -568,16 +577,15 @@ Press `y` to copy the selection as plain text, or `x` to export the selected dat
 - [x] Info command, list all tables/views in current connection
 
 ### v0.2.0 - Kelly 👗
-- [ ] Program colors configuration option
+- [x] Program colors configuration option
 - [x] Query parameter with prompt and defaults (e.g., `WHERE first_name = :name|Pam`)
-- [ ] Encryption on connection username/password in config file
 - [x] CSV/JSON export for multiple cells
-- [ ] Display column types correctly for join queries
+- [x] Display column types correctly for join queries
+- [x] `pam explore` and `pam explain`
 
 ### v0.3.0 - Jim 👔
 - [ ] Shell autocomplete (bash, fish, zsh)
-- [ ] `pam info table <table>` - Show table metadata (columns, types, constraints)
-- [ ] `pam info connection` - Show connection/database overview
+- [ ] Encryption on connection username/password in config file
 - [ ] Dynamic column width
 
 ---
