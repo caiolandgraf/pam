@@ -43,7 +43,11 @@ func (m Model) View() string {
 	separatorWidth := 0
 	endCol := min(m.offsetX+m.visibleCols, m.numCols())
 	for j := m.offsetX; j < endCol; j++ {
-		separatorWidth += m.cellWidth
+		if j < len(m.columnWidths) {
+			separatorWidth += m.columnWidths[j]
+		} else {
+			separatorWidth += m.cellWidth
+		}
 		if j < endCol-1 {
 			separatorWidth += 1
 		}
@@ -99,7 +103,14 @@ func (m Model) renderHeader() string {
 		}
 
 		columnDisplay := pkIcon + typeIcon + m.columns[j] + sortIcon
-		content := formatCell(columnDisplay, m.cellWidth)
+
+		// Use dynamic column width if available, otherwise fall back to cellWidth
+		colWidth := m.cellWidth
+		if j < len(m.columnWidths) {
+			colWidth = m.columnWidths[j]
+		}
+
+		content := formatCell(columnDisplay, colWidth)
 		cells = append(cells, styles.TableHeader.Render(content))
 	}
 
@@ -111,7 +122,13 @@ func (m Model) renderDataRow(rowIndex int) string {
 	endCol := min(m.offsetX+m.visibleCols, m.numCols())
 
 	for j := m.offsetX; j < endCol; j++ {
-		content := formatCell(m.data[rowIndex][j], m.cellWidth)
+		// Use dynamic column width if available, otherwise fall back to cellWidth
+		colWidth := m.cellWidth
+		if j < len(m.columnWidths) {
+			colWidth = m.columnWidths[j]
+		}
+
+		content := formatCell(m.data[rowIndex][j], colWidth)
 		style := m.getCellStyle(rowIndex, j)
 		cells = append(cells, style.Render(content))
 	}

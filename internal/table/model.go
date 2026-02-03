@@ -41,6 +41,7 @@ type Model struct {
 	editedQuery       string
 	lastExecutedQuery string
 	cellWidth         int
+	columnWidths      []int // Dynamic width for each column
 	detailViewMode    bool
 	detailViewContent string
 	detailViewScroll  int
@@ -84,7 +85,7 @@ func New(
 	// Extract sort information from query if present
 	sortCol, sortDir := extractSortFromQuery(query.SQL)
 
-	return Model{
+	m := Model{
 		selectedRow:      0,
 		selectedCol:      0,
 		offsetX:          0,
@@ -105,6 +106,11 @@ func New(
 		sortColumn:       sortCol,
 		sortDirection:    sortDir,
 	}
+
+	// Initialize column widths (will be recalculated on first resize)
+	m.columnWidths = make([]int, len(columns))
+
+	return m
 }
 
 func (m Model) Init() tea.Cmd {
@@ -349,4 +355,179 @@ func extractSortFromQuery(sql string) (column string, direction string) {
 	}
 
 	return "", ""
+}
+
+// calculateColumnWidths computes dynamic widths for each column based on content and available space
+func (m *Model) calculateColumnWidths() {
+	if len(m.columns) == 0 {
+		return
+	}
+
+	const minWidth = 8    // Minimum column width
+	const maxWidth = 50   // Maximum column width for a single column
+	const borderWidth = 1 // Space for border between columns
+
+	// Calculate content-based widths
+	contentWidths := make([]int, len(m.columns))
+
+	for i, col := range m.columns {
+		// Start with header width (including icons)
+		typeIcon := ""
+		if i < len(m.columnTypes) && m.columnTypes[i] != "" {
+			typeIcon = "Α " // 2 chars for icon
+		}
+
+		pkIcon := ""
+		if m.primaryKeyCol != "" && m.columns[i] == m.primaryKeyCol {
+			pkIcon = "⚿ " // 2 chars for pk icon
+		}
+
+		sortIcon := ""
+		if m.sortColumn != "" && m.columns[i] == m.sortColumn {
+			sortIcon = " ↑" // 2 chars for sort icon
+		}
+
+		headerLen := len([]rune(pkIcon + typeIcon + col + sortIcon))
+		contentWidths[i] = headerLen
+
+		// Sample up to 100 rows to determine content width
+		sampleSize := 100
+		if len(m.data) < sampleSize {
+			sampleSize = len(m.data)
+		}
+
+		for j := 0; j < sampleSize; j++ {
+			if i < len(m.data[j]) {
+				cellLen := len([]rune(m.data[j][i]))
+				if cellLen > contentWidths[i] {
+					contentWidths[i] = cellLen
+				}
+			}
+		}
+
+		// Apply min/max constraints
+		if contentWidths[i] < minWidth {
+			contentWidths[i] = minWidth
+		}
+		if contentWidths[i] > maxWidth {
+			contentWidths[i] = maxWidth
+		}
+	}
+
+	// Calculate total width needed
+	totalContentWidth := 0
+	for _, w := range contentWidths {
+		totalContentWidth += w
+	}
+
+	// Add border widths (n-1 borders for n columns)
+	totalBordersWidth := (len(m.columns) - 1) * borderWidth
+	totalNeededWidth := totalContentWidth + totalBordersWidth
+
+	// Available width for table
+	availableWidth := m.width - 4 // Leave some margin
+	if availableWidth < 20 {
+		availableWidth = 20
+	}
+
+	// Adjust widths to fit available space
+	if totalNeededWidth > availableWidth {
+		// Need to shrink columns proportionally
+		scale := float64(
+			availableWidth-totalBordersWidth,
+		) / float64(
+			totalContentWidth,
+		)
+
+		// First pass: scale down while respecting minimum
+		scaledTotal := 0
+		for i := range contentWidths {
+			scaled := int(float64(contentWidths[i]) * scale)
+			if scaled < minWidth {
+				scaled = minWidth
+			}
+			contentWidths[i] = scaled
+			scaledTotal += scaled
+		}
+
+		// Second pass: if still too wide, trim larger columns
+		if scaledTotal+totalBordersWidth > availableWidth {
+			excess := (scaledTotal + totalBordersWidth) - availableWidth
+
+			// Sort columns by width (largest first) and trim
+			for excess > 0 {
+				largestIdx := 0
+				largestWidth := contentWidths[0]
+
+				for i := 1; i < len(contentWidths); i++ {
+					if contentWidths[i] > largestWidth {
+						largestWidth = contentWidths[i]
+						largestIdx = i
+					}
+				}
+
+				if contentWidths[largestIdx] > minWidth {
+					contentWidths[largestIdx]--
+					excess--
+				} else {
+					break // Can't shrink anymore
+				}
+			}
+		}
+	} else if totalNeededWidth < availableWidth {
+		// Have extra space - distribute among columns
+		extraSpace := availableWidth - totalNeededWidth
+		perColumn := extraSpace / len(contentWidths)
+		remainder := extraSpace % len(contentWidths)
+
+		for i := range contentWidths {
+			// Don't exceed max width when expanding
+			addition := perColumn
+			if i < remainder {
+				addition++
+			}
+
+			if contentWidths[i]+addition <= maxWidth {
+				contentWidths[i] += addition
+			}
+		}
+	}
+
+	m.columnWidths = contentWidths
+
+	// Recalculate visible columns based on new widths
+	m.calculateVisibleColumns()
+}
+
+// calculateVisibleColumns determines how many columns fit in the current view
+func (m *Model) calculateVisibleColumns() {
+	if len(m.columnWidths) == 0 {
+		m.visibleCols = 0
+		return
+	}
+
+	availableWidth := m.width - 4
+	usedWidth := 0
+	visibleCount := 0
+
+	for i := m.offsetX; i < len(m.columnWidths); i++ {
+		colWidth := m.columnWidths[i]
+		borderWidth := 0
+		if i > m.offsetX {
+			borderWidth = 1
+		}
+
+		if usedWidth+colWidth+borderWidth <= availableWidth {
+			usedWidth += colWidth + borderWidth
+			visibleCount++
+		} else {
+			break
+		}
+	}
+
+	if visibleCount == 0 && len(m.columnWidths) > 0 {
+		visibleCount = 1 // Always show at least one column
+	}
+
+	m.visibleCols = visibleCount
 }

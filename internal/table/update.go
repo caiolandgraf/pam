@@ -115,10 +115,8 @@ func (m Model) handleWindowResize(msg tea.WindowSizeMsg) Model {
 	m.width = msg.Width
 	m.height = msg.Height
 
-	m.visibleCols = (m.width - 2) / (m.cellWidth + 1)
-	if m.visibleCols > m.numCols() {
-		m.visibleCols = m.numCols()
-	}
+	// Calculate dynamic column widths based on content and available space
+	m.calculateColumnWidths()
 
 	// Calculate dynamic header height
 	headerLines := m.calculateHeaderLines()

@@ -225,7 +225,18 @@ Pam stores its configuration at `~/.config/pam/config.yaml`.
 All queries are automatically limited to prevent fetching massive result sets. Configure via `default_row_limit` in config or use explicit `LIMIT` in your SQL queries.
 
 ### Column Width `default_column_width: 15`
-The width for all columns in the table TUI is fixed to a constant size, which can be configured through `default_column_width` in the config file. There are plans to make the column widths flexible in version v0.2.0.
+Column widths in the table TUI are now **dynamic and responsive**. They automatically adapt to:
+- The content of your data (sampling up to 100 rows)
+- The available terminal width
+- Column headers and type indicators
+
+The table will:
+- Use the full available terminal width
+- Resize automatically when you change your terminal size
+- Apply intelligent min/max constraints (8-50 characters per column)
+- Distribute extra space proportionally among columns
+
+You can still configure a fallback `default_column_width` in the config file for edge cases, but the dynamic sizing will take precedence in most scenarios.
 
 ---
 
