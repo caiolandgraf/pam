@@ -1,0 +1,22 @@
+{
+  "name": "pam-website",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run copy-wasm && vite",
+    "copy-wasm": "cp node_modules/sql.js/dist/sql-wasm-browser.wasm public/sql-wasm-browser.wasm 2>/dev/null; cp node_modules/sql.js/dist/sql-wasm.wasm public/sql-wasm.wasm 2>/dev/null; true",
+    "prebuild": "npm run copy-wasm",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "sql.js": "^1.14.0",
+    "vue": "^3.5.29",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.4",
+    "vite": "^7.3.1"
+  }
+}

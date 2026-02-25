@@ -3,6 +3,7 @@
 !.github/
 !.github/workflows/
 !.github/workflows/release.yml
+!.github/workflows/pages.yml
 
 !go.mod
 !go.sum
@@ -19,3 +20,9 @@
 
 !cmd/
 !internal/
+
+!docs/
+docs/node_modules/
+docs/dist/
+docs/public/sql-wasm.wasm
+docs/public/sql-wasm-browser.wasm
