@@ -840,22 +840,43 @@ func (a *App) PrintCommandHelp() {
 		section("Command: completion")
 		fmt.Println(
 			styles.Faint.Render(
-				"Generate shell completion scripts for bash, zsh, or fish.",
+				"Generate and install shell completion scripts for bash, zsh, or fish.",
 			),
 		)
 		fmt.Println()
 		section("Usage")
-		fmt.Println("  pam completion <bash|zsh|fish>")
+		fmt.Println("  pam completion <bash|zsh|fish> [--install]")
+		fmt.Println()
+		section("Flags")
+		fmt.Println(
+			"  --install   " + styles.Faint.Render(
+				"Persist the completion script to the standard shell path",
+			),
+		)
 		fmt.Println()
 		section("Description")
 		fmt.Println(
-			"  Outputs a shell completion script to stdout. The script provides",
+			"  Without --install, prints the completion script to stdout (useful for",
 		)
 		fmt.Println(
-			"  tab-completion for commands, flags, table names, connection names,",
+			"  piping or manual placement).",
+		)
+		fmt.Println()
+		fmt.Println(
+			"  With --install, writes the script to the correct path so it loads",
 		)
 		fmt.Println(
-			"  and query names.",
+			"  automatically on every new shell session:",
+		)
+		fmt.Println()
+		fmt.Println(
+			"    bash  → ~/.local/share/bash-completion/completions/pam",
+		)
+		fmt.Println(
+			"    zsh   → ~/.zsh/completions/_pam",
+		)
+		fmt.Println(
+			"    fish  → ~/.config/fish/completions/pam.fish",
 		)
 		fmt.Println()
 		fmt.Println(
@@ -868,39 +889,47 @@ func (a *App) PrintCommandHelp() {
 			"  'pam query --table=<TAB>' will show real table names.",
 		)
 		fmt.Println()
-		section("Installation")
+		section("Quick Install")
 		fmt.Println(
-			"  " + styles.Title.Render("Bash") + " (add to ~/.bashrc):",
+			"  " + styles.Title.Render(
+				"Bash",
+			) + ":  pam completion bash --install",
 		)
 		fmt.Println(
-			"    eval \"$(pam completion bash)\"",
+			"  " + styles.Title.Render(
+				"Zsh",
+			) + ":   pam completion zsh --install",
+		)
+		fmt.Println(
+			"  " + styles.Title.Render(
+				"Fish",
+			) + ":  pam completion fish --install",
 		)
 		fmt.Println()
+		section("Manual alternatives")
 		fmt.Println(
-			"  " + styles.Title.Render("Zsh") + " (add to ~/.zshrc):",
+			"  eval \"$(pam completion bash)\"             " + styles.Faint.Render(
+				"# current session only",
+			),
 		)
 		fmt.Println(
-			"    eval \"$(pam completion zsh)\"",
-		)
-		fmt.Println()
-		fmt.Println(
-			"  " + styles.Title.Render("Fish") + ":",
+			"  eval \"$(pam completion zsh)\"              " + styles.Faint.Render(
+				"# current session only",
+			),
 		)
 		fmt.Println(
-			"    pam completion fish | source",
-		)
-		fmt.Println(
-			"    # Or persist it:",
-		)
-		fmt.Println(
-			"    pam completion fish > ~/.config/fish/completions/pam.fish",
+			"  pam completion fish | source              " + styles.Faint.Render(
+				"# current session only",
+			),
 		)
 		fmt.Println()
 		section("Examples")
-		fmt.Println("  pam completion bash")
-		fmt.Println("  pam completion zsh")
-		fmt.Println("  pam completion fish")
-		fmt.Println("  pam completion bash > /etc/bash_completion.d/pam")
+		fmt.Println("  pam completion fish --install")
+		fmt.Println("  pam completion bash --install")
+		fmt.Println("  pam completion zsh --install")
+		fmt.Println(
+			"  pam completion bash              # prints script to stdout",
+		)
 
 	default:
 		fmt.Printf("%s %q\n\n", styles.Error.Render("Unknown command"), cmd)

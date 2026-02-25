@@ -3,27 +3,125 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/eduardofuncao/pam/internal/config"
+	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 func (a *App) handleCompletion() {
 	args := os.Args[2:]
 	if len(args) == 0 {
-		printError("Usage: pam completion <bash|zsh|fish>")
+		printError("Usage: pam completion <bash|zsh|fish> [--install]")
 	}
 
-	shell := strings.ToLower(args[0])
+	install := false
+	shell := ""
+	for _, arg := range args {
+		switch strings.ToLower(arg) {
+		case "--install":
+			install = true
+		case "bash", "zsh", "fish":
+			shell = strings.ToLower(arg)
+		}
+	}
+
+	if shell == "" {
+		printError("Usage: pam completion <bash|zsh|fish> [--install]")
+	}
+
+	script := ""
 	switch shell {
 	case "bash":
-		fmt.Print(bashCompletionScript)
+		script = bashCompletionScript
 	case "zsh":
-		fmt.Print(zshCompletionScript)
+		script = zshCompletionScript
 	case "fish":
-		fmt.Print(fishCompletionScript)
+		script = fishCompletionScript
 	default:
 		printError("Unsupported shell: %s. Use bash, zsh, or fish.", shell)
+	}
+
+	if !install {
+		fmt.Print(script)
+		return
+	}
+
+	destPath := completionInstallPath(shell)
+	if destPath == "" {
+		printError("Could not determine completion install path for %s", shell)
+	}
+
+	// Ensure parent directory exists
+	dir := filepath.Dir(destPath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		printError("Could not create directory %s: %v", dir, err)
+	}
+
+	if err := os.WriteFile(destPath, []byte(script), 0644); err != nil {
+		printError("Could not write completion file: %v", err)
+	}
+
+	fmt.Println(styles.Success.Render("✓ Completion installed successfully"))
+	fmt.Println(styles.Faint.Render("  File: " + destPath))
+	fmt.Println()
+
+	switch shell {
+	case "bash":
+		fmt.Println(styles.Faint.Render("  Reload with: source " + destPath))
+		fmt.Println(styles.Faint.Render("  Or restart your terminal."))
+	case "zsh":
+		zshDir := filepath.Dir(destPath)
+		fmt.Println(styles.Faint.Render("  Make sure your ~/.zshrc contains:"))
+		fmt.Println()
+		fmt.Println("    fpath+=(" + zshDir + ")")
+		fmt.Println("    autoload -Uz compinit && compinit")
+		fmt.Println()
+		fmt.Println(styles.Faint.Render("  Then restart your terminal or run:"))
+		fmt.Println(
+			styles.Faint.Render("    rm -f ~/.zcompdump; source ~/.zshrc"),
+		)
+	case "fish":
+		fmt.Println(
+			styles.Faint.Render(
+				"  Fish loads completions automatically from this path.",
+			),
+		)
+		fmt.Println(
+			styles.Faint.Render(
+				"  Open a new terminal or run: source " + destPath,
+			),
+		)
+	}
+}
+
+// completionInstallPath returns the standard persistent path for shell completion scripts.
+func completionInstallPath(shell string) string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+
+	switch shell {
+	case "bash":
+		// ~/.local/share/bash-completion/completions/pam
+		return filepath.Join(
+			home,
+			".local",
+			"share",
+			"bash-completion",
+			"completions",
+			"pam",
+		)
+	case "zsh":
+		// ~/.zsh/completions/_pam  (user adds fpath+=~/.zsh/completions to .zshrc)
+		return filepath.Join(home, ".zsh", "completions", "_pam")
+	case "fish":
+		// ~/.config/fish/completions/pam.fish
+		return filepath.Join(home, ".config", "fish", "completions", "pam.fish")
+	default:
+		return ""
 	}
 }
 
@@ -85,9 +183,9 @@ func (a *App) fetchTableNames() []string {
 }
 
 const bashCompletionScript = `# pam bash completion
-# Install: eval "$(pam completion bash)"
-#   or:    pam completion bash > /etc/bash_completion.d/pam
-#          pam completion bash > ~/.local/share/bash-completion/completions/pam
+# Install: pam completion bash --install
+#   or:    eval "$(pam completion bash)"
+#   or:    pam completion bash > ~/.local/share/bash-completion/completions/pam
 
 _pam_completions() {
     local cur prev words cword
@@ -233,7 +331,8 @@ complete -F _pam_completions pam
 
 const zshCompletionScript = `#compdef pam
 # pam zsh completion
-# Install: eval "$(pam completion zsh)"
+# Install: pam completion zsh --install
+#   or:    eval "$(pam completion zsh)"
 #   or:    pam completion zsh > "${fpath[1]}/_pam"
 
 _pam_tables() {
@@ -383,7 +482,8 @@ _pam "$@"
 `
 
 const fishCompletionScript = `# pam fish completion
-# Install: pam completion fish | source
+# Install: pam completion fish --install
+#   or:    pam completion fish | source
 #   or:    pam completion fish > ~/.config/fish/completions/pam.fish
 
 # Disable file completions for pam
