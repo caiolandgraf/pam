@@ -58,6 +58,8 @@ func (a *App) Run() {
 		a.handleHistory()
 	case "tables", "t", "explore":
 		a.handleTables()
+	case "table-view", "tv":
+		a.handleTableView()
 	case "disconnect", "clear", "unset":
 		a.handleDisconnect()
 	case "help":
@@ -98,6 +100,11 @@ func (a *App) printUsage() {
 	fmt.Println(
 		"  pam tables <table>   " + styles.Faint.Render(
 			"Query a table directly",
+		),
+	)
+	fmt.Println(
+		"  pam tv <table>       " + styles.Faint.Render(
+			"View and edit table structure",
 		),
 	)
 	fmt.Println(

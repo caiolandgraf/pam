@@ -13,6 +13,17 @@ type TableMetadata struct {
 	Columns     []string
 }
 
+// ColumnInfo holds detailed metadata about a single column
+type ColumnInfo struct {
+	Name         string
+	DataType     string
+	Nullable     string // "YES" or "NO"
+	DefaultValue string // default value or "NULL"
+	IsPrimaryKey bool
+	OrdinalPos   int
+	Extra        string // e.g. "auto_increment", "GENERATED", etc.
+}
+
 func ExtractTableNameFromSQL(sqlQuery string) string {
 	normalized := strings.Join(strings.Fields(strings.ToLower(sqlQuery)), " ")
 
@@ -34,35 +45,42 @@ func ExtractTableNameFromSQL(sqlQuery string) string {
 }
 
 // InferTableMetadata attempts to infer table metadata from a query
-func InferTableMetadata(conn DatabaseConnection, query Query) (*TableMetadata, error) {
+func InferTableMetadata(
+	conn DatabaseConnection,
+	query Query,
+) (*TableMetadata, error) {
 	if HasJoinClause(query.SQL) {
-		return nil, fmt.Errorf("update/delete operations are not supported for JOIN queries")
+		return nil, fmt.Errorf(
+			"update/delete operations are not supported for JOIN queries",
+		)
 	}
-	
+
 	if query.TableName != "" {
 		metadata := &TableMetadata{
-			TableName:  query. TableName,
+			TableName:  query.TableName,
 			PrimaryKey: query.PrimaryKey,
 		}
-		
+
 		if metadata.PrimaryKey == "" && conn != nil {
-			if dbMeta, err := conn.GetTableMetadata(query.TableName); err == nil {
-				metadata. PrimaryKey = dbMeta. PrimaryKey
+			if dbMeta, err := conn.GetTableMetadata(
+				query.TableName,
+			); err == nil {
+				metadata.PrimaryKey = dbMeta.PrimaryKey
 			}
 		}
-		
+
 		return metadata, nil
 	}
-	
+
 	tableName := ExtractTableNameFromSQL(query.SQL)
 	if tableName == "" {
 		return nil, fmt.Errorf("could not extract table name from query")
 	}
-	
+
 	if conn != nil {
 		return conn.GetTableMetadata(tableName)
 	}
-	
+
 	return &TableMetadata{
 		TableName: tableName,
 	}, nil

@@ -14,7 +14,9 @@ type ClickHouseConnection struct {
 	db *sql.DB
 }
 
-func NewClickHouseConnection(name, connStr string) (*ClickHouseConnection, error) {
+func NewClickHouseConnection(
+	name, connStr string,
+) (*ClickHouseConnection, error) {
 	bc := &BaseConnection{
 		Name:       name,
 		DbType:     "clickhouse",
@@ -47,7 +49,11 @@ func (c *ClickHouseConnection) Open() error {
 		_, err = c.db.Exec(setDatabaseSQL)
 		if err != nil {
 			c.db.Close()
-			return fmt.Errorf("failed to set database to '%s': %w", c.Schema, err)
+			return fmt.Errorf(
+				"failed to set database to '%s': %w",
+				c.Schema,
+				err,
+			)
 		}
 	}
 
@@ -68,7 +74,10 @@ func (c *ClickHouseConnection) Close() error {
 	return nil
 }
 
-func (c *ClickHouseConnection) Query(queryName string, args ...any) (any, error) {
+func (c *ClickHouseConnection) Query(
+	queryName string,
+	args ...any,
+) (any, error) {
 	query, exists := c.Queries[queryName]
 	if !exists {
 		return nil, fmt.Errorf("query not found: %s", queryName)
@@ -76,7 +85,10 @@ func (c *ClickHouseConnection) Query(queryName string, args ...any) (any, error)
 	return c.db.Query(query.SQL, args...)
 }
 
-func (c *ClickHouseConnection) ExecQuery(sql string, args ...any) (*sql.Rows, error) {
+func (c *ClickHouseConnection) ExecQuery(
+	sql string,
+	args ...any,
+) (*sql.Rows, error) {
 	return c.db.Query(sql, args...)
 }
 
@@ -85,7 +97,9 @@ func (c *ClickHouseConnection) Exec(sql string, args ...any) error {
 	return err
 }
 
-func (c *ClickHouseConnection) GetTableMetadata(tableName string) (*TableMetadata, error) {
+func (c *ClickHouseConnection) GetTableMetadata(
+	tableName string,
+) (*TableMetadata, error) {
 	if c.db == nil {
 		return nil, fmt.Errorf("database is not open")
 	}
@@ -127,7 +141,10 @@ func (c *ClickHouseConnection) GetTableMetadata(tableName string) (*TableMetadat
 
 	colRows, err := c.db.Query(colQuery, tableName)
 	if err != nil {
-		return metadata, fmt.Errorf("failed to query clickhouse column metadata: %w", err)
+		return metadata, fmt.Errorf(
+			"failed to query clickhouse column metadata: %w",
+			err,
+		)
 	}
 	defer colRows.Close()
 
@@ -141,6 +158,73 @@ func (c *ClickHouseConnection) GetTableMetadata(tableName string) (*TableMetadat
 	}
 
 	return metadata, nil
+}
+
+func (c *ClickHouseConnection) GetColumnDetails(
+	tableName string,
+) ([]ColumnInfo, error) {
+	if c.db == nil {
+		return nil, fmt.Errorf("database is not open")
+	}
+
+	// Get primary key columns
+	pkCols := map[string]bool{}
+	pkQuery := `
+		SELECT primary_key
+		FROM system.tables
+		WHERE name = ?
+		  AND database = currentDatabase()
+		LIMIT 1
+	`
+	row := c.db.QueryRow(pkQuery, tableName)
+	var primaryKey string
+	if err := row.Scan(&primaryKey); err == nil && primaryKey != "" {
+		for _, k := range strings.Split(primaryKey, ",") {
+			pk := strings.TrimSpace(k)
+			pk = strings.Trim(pk, "`\"'")
+			pkCols[pk] = true
+		}
+	}
+
+	// Get detailed column info
+	colQuery := `
+		SELECT
+			name,
+			type,
+			CASE WHEN is_in_primary_key THEN 'NO' ELSE 'YES' END as nullable,
+			COALESCE(default_expression, 'NULL') as default_value,
+			position,
+			default_kind
+		FROM system.columns
+		WHERE table = ?
+		  AND database = currentDatabase()
+		ORDER BY position
+	`
+
+	rows, err := c.db.Query(colQuery, tableName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query column details: %w", err)
+	}
+	defer rows.Close()
+
+	var columns []ColumnInfo
+	for rows.Next() {
+		var ci ColumnInfo
+		if err := rows.Scan(
+			&ci.Name,
+			&ci.DataType,
+			&ci.Nullable,
+			&ci.DefaultValue,
+			&ci.OrdinalPos,
+			&ci.Extra,
+		); err != nil {
+			continue
+		}
+		ci.IsPrimaryKey = pkCols[ci.Name]
+		columns = append(columns, ci)
+	}
+
+	return columns, nil
 }
 
 func (c *ClickHouseConnection) GetInfoSQL(infoType string) string {
@@ -173,7 +257,9 @@ func (c *ClickHouseConnection) GetInfoSQL(infoType string) string {
 	}
 }
 
-func (c *ClickHouseConnection) BuildUpdateStatement(tableName, columnName, currentValue, pkColumn, pkValue string) string {
+func (c *ClickHouseConnection) BuildUpdateStatement(
+	tableName, columnName, currentValue, pkColumn, pkValue string,
+) string {
 	escapedValue := strings.ReplaceAll(currentValue, "'", "''")
 
 	if pkColumn != "" && pkValue != "" {
@@ -203,7 +289,9 @@ WHERE <condition>;`,
 	)
 }
 
-func (c *ClickHouseConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string {
+func (c *ClickHouseConnection) BuildDeleteStatement(
+	tableName, primaryKeyCol, pkValue string,
+) string {
 	escapedPkValue := strings.ReplaceAll(pkValue, "'", "''")
 
 	return fmt.Sprintf(`-- ClickHouse DELETE statement

@@ -73,6 +73,11 @@ func (a *App) PrintGeneralHelp() {
 		),
 	)
 	fmt.Println(
+		"  table-view  " + styles.Faint.Render(
+			"View and edit table structure/columns (alias: tv)",
+		),
+	)
+	fmt.Println(
 		"  list        " + styles.Faint.Render(
 			"List connections or queries (alias: ls for connections)",
 		),
@@ -112,6 +117,7 @@ func (a *App) PrintGeneralHelp() {
 	fmt.Println("  query            → run")
 	fmt.Println("  ls               → list connections")
 	fmt.Println("  t, explore       → tables")
+	fmt.Println("  tv               → table-view")
 	fmt.Println("  test             → status")
 	fmt.Println("  clear, unset     → disconnect")
 	fmt.Println()
@@ -471,6 +477,88 @@ func (a *App) PrintCommandHelp() {
 		fmt.Println("  pam tables              # list all tables")
 		fmt.Println("  pam tables users        # query the users table")
 		fmt.Println("  pam tables --oneline    # list tables in oneline format")
+
+	case "table-view", "tv":
+		section("Command: table-view")
+		fmt.Println(
+			styles.Faint.Render(
+				"View the structure of a table, edit columns, add new columns, rename or drop them.",
+			),
+		)
+		fmt.Println()
+		section("Aliases")
+		fmt.Println("  tv")
+		fmt.Println()
+		section("Usage")
+		fmt.Println("  pam table-view <table-name>")
+		fmt.Println("  pam tv <table-name>")
+		fmt.Println()
+		section("Description")
+		fmt.Println(
+			"  Shows an interactive view of all columns in the specified table,",
+		)
+		fmt.Println(
+			"  including name, type, nullable, default value, primary key, and extra info.",
+		)
+		fmt.Println()
+		fmt.Println(
+			"  From the interactive view you can:",
+		)
+		fmt.Println(
+			"    - Add a new column (a)",
+		)
+		fmt.Println(
+			"    - Edit/alter a column type or constraints (e)",
+		)
+		fmt.Println(
+			"    - Rename a column (r)",
+		)
+		fmt.Println(
+			"    - Drop a column (D)",
+		)
+		fmt.Println()
+		fmt.Println(
+			"  Each action opens your $EDITOR with a pre-filled SQL statement.",
+		)
+		fmt.Println(
+			"  Save and close the editor to execute, or clear the content to cancel.",
+		)
+		fmt.Println()
+		section("Interactive keys")
+		fmt.Println(
+			"  j/k or ↑↓         " + styles.Faint.Render(
+				"Navigate columns",
+			),
+		)
+		fmt.Println(
+			"  a                  " + styles.Faint.Render(
+				"Add a new column",
+			),
+		)
+		fmt.Println(
+			"  e                  " + styles.Faint.Render(
+				"Edit/alter selected column",
+			),
+		)
+		fmt.Println(
+			"  r                  " + styles.Faint.Render(
+				"Rename selected column",
+			),
+		)
+		fmt.Println(
+			"  D                  " + styles.Faint.Render(
+				"Drop selected column",
+			),
+		)
+		fmt.Println(
+			"  q / Ctrl+c         " + styles.Faint.Render(
+				"Quit",
+			),
+		)
+		fmt.Println()
+		section("Examples")
+		fmt.Println("  pam table-view users")
+		fmt.Println("  pam tv employees")
 
 	case "disconnect", "clear", "unset":
 		section("Command: disconnect")

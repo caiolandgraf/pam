@@ -137,6 +137,139 @@ func (m *MySQLConnection) GetTableMetadata(
 	return metadata, nil
 }
 
+func (m *MySQLConnection) GetColumnDetails(
+	tableName string,
+) ([]ColumnInfo, error) {
+	if m.db == nil {
+		return nil, fmt.Errorf("database is not open")
+	}
+
+	// Get primary key columns
+	pkCols := map[string]bool{}
+	pkQuery := `
+		SELECT COLUMN_NAME
+		FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+		WHERE TABLE_NAME = ?
+		AND CONSTRAINT_NAME = 'PRIMARY'
+		AND TABLE_SCHEMA = DATABASE()
+	`
+	pkRows, err := m.db.Query(pkQuery, tableName)
+	if err == nil {
+		defer pkRows.Close()
+		for pkRows.Next() {
+			var col string
+			if pkRows.Scan(&col) == nil {
+				pkCols[col] = true
+			}
+		}
+	}
+
+	// Get detailed column info
+	colQuery := `
+		SELECT
+			COLUMN_NAME,
+			COLUMN_TYPE,
+			IS_NULLABLE,
+			COALESCE(COLUMN_DEFAULT, 'NULL'),
+			ORDINAL_POSITION,
+			COALESCE(EXTRA, '')
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_NAME = ?
+		AND TABLE_SCHEMA = DATABASE()
+		ORDER BY ORDINAL_POSITION
+	`
+
+	rows, err := m.db.Query(colQuery, tableName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query column details: %w", err)
+	}
+	defer rows.Close()
+
+	var columns []ColumnInfo
+	for rows.Next() {
+		var ci ColumnInfo
+		if err := rows.Scan(
+			&ci.Name,
+			&ci.DataType,
+			&ci.Nullable,
+			&ci.DefaultValue,
+			&ci.OrdinalPos,
+			&ci.Extra,
+		); err != nil {
+			continue
+		}
+		ci.IsPrimaryKey = pkCols[ci.Name]
+		columns = append(columns, ci)
+	}
+
+	return columns, nil
+}
+
+func (m *MySQLConnection) BuildAddColumnSQL(
+	tableName, columnName, dataType string,
+	nullable bool,
+	defaultValue string,
+) string {
+	nullStr := "NOT NULL"
+	if nullable {
+		nullStr = "NULL"
+	}
+	stmt := fmt.Sprintf(
+		"ALTER TABLE `%s` ADD COLUMN `%s` %s %s",
+		tableName,
+		columnName,
+		dataType,
+		nullStr,
+	)
+	if defaultValue != "" {
+		stmt += fmt.Sprintf(" DEFAULT %s", defaultValue)
+	}
+	return stmt + ";"
+}
+
+func (m *MySQLConnection) BuildAlterColumnSQL(
+	tableName, columnName, newDataType string,
+	nullable bool,
+	newDefault string,
+) string {
+	nullStr := "NOT NULL"
+	if nullable {
+		nullStr = "NULL"
+	}
+	stmt := fmt.Sprintf(
+		"ALTER TABLE `%s` MODIFY COLUMN `%s` %s %s",
+		tableName,
+		columnName,
+		newDataType,
+		nullStr,
+	)
+	if newDefault != "" {
+		stmt += fmt.Sprintf(" DEFAULT %s", newDefault)
+	}
+	return stmt + ";"
+}
+
+func (m *MySQLConnection) BuildRenameColumnSQL(
+	tableName, oldName, newName string,
+) string {
+	return fmt.Sprintf(
+		"ALTER TABLE `%s` RENAME COLUMN `%s` TO `%s`;",
+		tableName,
+		oldName,
+		newName,
+	)
+}
+
+func (m *MySQLConnection) BuildDropColumnSQL(
+	tableName, columnName string,
+) string {
+	return fmt.Sprintf(
+		"ALTER TABLE `%s` DROP COLUMN `%s`;",
+		tableName,
+		columnName,
+	)
+}
+
 func (m *MySQLConnection) GetInfoSQL(infoType string) string {
 	switch infoType {
 	case "tables":

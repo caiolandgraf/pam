@@ -1,4 +1,3 @@
-
 package db
 
 import (
@@ -14,7 +13,9 @@ type SQLServerConnection struct {
 	db *sql.DB
 }
 
-func NewSQLServerConnection(name, connStr string) (*SQLServerConnection, error) {
+func NewSQLServerConnection(
+	name, connStr string,
+) (*SQLServerConnection, error) {
 	bc := &BaseConnection{
 		Name:       name,
 		DbType:     "sqlserver",
@@ -47,7 +48,10 @@ func (s *SQLServerConnection) Close() error {
 	return nil
 }
 
-func (s *SQLServerConnection) Query(queryName string, args ...any) (any, error) {
+func (s *SQLServerConnection) Query(
+	queryName string,
+	args ...any,
+) (any, error) {
 	query, exists := s.Queries[queryName]
 	if !exists {
 		return nil, fmt.Errorf("query not found: %s", queryName)
@@ -55,7 +59,10 @@ func (s *SQLServerConnection) Query(queryName string, args ...any) (any, error) 
 	return s.db.Query(query.SQL, args...)
 }
 
-func (s *SQLServerConnection) ExecQuery(sql string, args ...any) (*sql.Rows, error) {
+func (s *SQLServerConnection) ExecQuery(
+	sql string,
+	args ...any,
+) (*sql.Rows, error) {
 	return s.db.Query(sql, args...)
 }
 
@@ -64,7 +71,9 @@ func (s *SQLServerConnection) Exec(sql string, args ...any) error {
 	return err
 }
 
-func (s *SQLServerConnection) GetTableMetadata(tableName string) (*TableMetadata, error) {
+func (s *SQLServerConnection) GetTableMetadata(
+	tableName string,
+) (*TableMetadata, error) {
 	if s.db == nil {
 		return nil, fmt.Errorf("database is not open")
 	}
@@ -144,6 +153,168 @@ func (s *SQLServerConnection) GetTableMetadata(tableName string) (*TableMetadata
 	return metadata, nil
 }
 
+func (s *SQLServerConnection) GetColumnDetails(
+	tableName string,
+) ([]ColumnInfo, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("database is not open")
+	}
+
+	var currentSchema string
+	schemaQuery := `SELECT SCHEMA_NAME()`
+	row := s.db.QueryRow(schemaQuery)
+	if err := row.Scan(&currentSchema); err != nil {
+		if s.Schema != "" {
+			currentSchema = s.Schema
+		} else {
+			currentSchema = "dbo"
+		}
+	}
+
+	// Get primary key columns
+	pkCols := map[string]bool{}
+	pkQuery := `
+		SELECT kcu.COLUMN_NAME
+		FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+		JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+			ON kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+			AND kcu.TABLE_SCHEMA = tc.TABLE_SCHEMA
+			AND kcu.TABLE_NAME = tc.TABLE_NAME
+		WHERE kcu.TABLE_NAME = @p1
+			AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
+			AND kcu.TABLE_SCHEMA = @p2
+	`
+	pkRows, err := s.db.Query(pkQuery, tableName, currentSchema)
+	if err == nil {
+		defer pkRows.Close()
+		for pkRows.Next() {
+			var col string
+			if pkRows.Scan(&col) == nil {
+				pkCols[col] = true
+			}
+		}
+	}
+
+	// Get detailed column info
+	colQuery := `
+		SELECT
+			c.COLUMN_NAME,
+			c.DATA_TYPE +
+			CASE
+				WHEN c.CHARACTER_MAXIMUM_LENGTH IS NOT NULL
+				THEN '(' + CAST(c.CHARACTER_MAXIMUM_LENGTH AS VARCHAR) + ')'
+				WHEN c.NUMERIC_PRECISION IS NOT NULL AND c.NUMERIC_SCALE IS NOT NULL
+				THEN '(' + CAST(c.NUMERIC_PRECISION AS VARCHAR) + ',' + CAST(c.NUMERIC_SCALE AS VARCHAR) + ')'
+				WHEN c.NUMERIC_PRECISION IS NOT NULL
+				THEN '(' + CAST(c.NUMERIC_PRECISION AS VARCHAR) + ')'
+				ELSE ''
+			END as FULL_TYPE,
+			c.IS_NULLABLE,
+			ISNULL(CAST(c.COLUMN_DEFAULT AS VARCHAR(MAX)), 'NULL'),
+			c.ORDINAL_POSITION,
+			CASE
+				WHEN COLUMNPROPERTY(OBJECT_ID(c.TABLE_SCHEMA + '.' + c.TABLE_NAME), c.COLUMN_NAME, 'IsIdentity') = 1 THEN 'IDENTITY'
+				WHEN COLUMNPROPERTY(OBJECT_ID(c.TABLE_SCHEMA + '.' + c.TABLE_NAME), c.COLUMN_NAME, 'IsComputed') = 1 THEN 'COMPUTED'
+				ELSE ''
+			END as EXTRA
+		FROM INFORMATION_SCHEMA.COLUMNS c
+		WHERE c.TABLE_NAME = @p1
+		AND c.TABLE_SCHEMA = @p2
+		ORDER BY c.ORDINAL_POSITION
+	`
+
+	rows, err := s.db.Query(colQuery, tableName, currentSchema)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query column details: %w", err)
+	}
+	defer rows.Close()
+
+	var columns []ColumnInfo
+	for rows.Next() {
+		var ci ColumnInfo
+		if err := rows.Scan(
+			&ci.Name,
+			&ci.DataType,
+			&ci.Nullable,
+			&ci.DefaultValue,
+			&ci.OrdinalPos,
+			&ci.Extra,
+		); err != nil {
+			continue
+		}
+		ci.IsPrimaryKey = pkCols[ci.Name]
+		columns = append(columns, ci)
+	}
+
+	return columns, nil
+}
+
+func (s *SQLServerConnection) BuildAddColumnSQL(
+	tableName, columnName, dataType string,
+	nullable bool,
+	defaultValue string,
+) string {
+	nullStr := "NOT NULL"
+	if nullable {
+		nullStr = "NULL"
+	}
+	stmt := fmt.Sprintf(
+		"ALTER TABLE %s ADD %s %s %s",
+		tableName,
+		columnName,
+		dataType,
+		nullStr,
+	)
+	if defaultValue != "" {
+		stmt += fmt.Sprintf(" DEFAULT %s", defaultValue)
+	}
+	return stmt + ";"
+}
+
+func (s *SQLServerConnection) BuildAlterColumnSQL(
+	tableName, columnName, newDataType string,
+	nullable bool,
+	newDefault string,
+) string {
+	nullStr := "NOT NULL"
+	if nullable {
+		nullStr = "NULL"
+	}
+	stmt := fmt.Sprintf(
+		"ALTER TABLE %s ALTER COLUMN %s %s %s;",
+		tableName,
+		columnName,
+		newDataType,
+		nullStr,
+	)
+	if newDefault != "" {
+		stmt += fmt.Sprintf(
+			"\nALTER TABLE %s ADD DEFAULT %s FOR %s;",
+			tableName,
+			newDefault,
+			columnName,
+		)
+	}
+	return stmt
+}
+
+func (s *SQLServerConnection) BuildRenameColumnSQL(
+	tableName, oldName, newName string,
+) string {
+	return fmt.Sprintf(
+		"EXEC sp_rename '%s.%s', '%s', 'COLUMN';",
+		tableName,
+		oldName,
+		newName,
+	)
+}
+
+func (s *SQLServerConnection) BuildDropColumnSQL(
+	tableName, columnName string,
+) string {
+	return fmt.Sprintf("ALTER TABLE %s DROP COLUMN %s;", tableName, columnName)
+}
+
 func (s *SQLServerConnection) GetInfoSQL(infoType string) string {
 	schema := s.Schema
 	if schema == "" {
@@ -175,7 +346,9 @@ func (s *SQLServerConnection) GetInfoSQL(infoType string) string {
 	}
 }
 
-func (s *SQLServerConnection) BuildUpdateStatement(tableName, columnName, currentValue, pkColumn, pkValue string) string {
+func (s *SQLServerConnection) BuildUpdateStatement(
+	tableName, columnName, currentValue, pkColumn, pkValue string,
+) string {
 	quotedTableName := fmt.Sprintf("%s", tableName)
 	quotedColumnName := fmt.Sprintf("%s", columnName)
 
@@ -202,7 +375,9 @@ func (s *SQLServerConnection) BuildUpdateStatement(tableName, columnName, curren
 	)
 }
 
-func (s *SQLServerConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string {
+func (s *SQLServerConnection) BuildDeleteStatement(
+	tableName, primaryKeyCol, pkValue string,
+) string {
 	quotedTableName := fmt.Sprintf("%s", tableName)
 	quotedPkColumn := fmt.Sprintf("%s", primaryKeyCol)
 	escapedPkValue := strings.ReplaceAll(pkValue, "'", "''")
@@ -218,7 +393,8 @@ func (s *SQLServerConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkV
 func (s *SQLServerConnection) ApplyRowLimit(sql string, limit int) string {
 	trimmedSQL := strings.ToUpper(strings.TrimSpace(sql))
 
-	if !strings.HasPrefix(trimmedSQL, "SELECT") && !strings.HasPrefix(trimmedSQL, "WITH") {
+	if !strings.HasPrefix(trimmedSQL, "SELECT") &&
+		!strings.HasPrefix(trimmedSQL, "WITH") {
 		return sql
 	}
 
@@ -228,7 +404,8 @@ func (s *SQLServerConnection) ApplyRowLimit(sql string, limit int) string {
 		return sql
 	}
 
-	if strings.Contains(upperSQL, "OFFSET") && strings.Contains(upperSQL, "FETCH") {
+	if strings.Contains(upperSQL, "OFFSET") &&
+		strings.Contains(upperSQL, "FETCH") {
 		return sql
 	}
 
@@ -239,7 +416,10 @@ func (s *SQLServerConnection) ApplyRowLimit(sql string, limit int) string {
 
 		if strings.HasPrefix(upperTrimmed, "SELECT") {
 			restOfSQL := trimmed[6:] // Remove "SELECT" (6 characters)
-			restOfSQL = strings.TrimLeft(restOfSQL, " \t") // Remove any remaining whitespace after SELECT
+			restOfSQL = strings.TrimLeft(
+				restOfSQL,
+				" \t",
+			) // Remove any remaining whitespace after SELECT
 
 			return fmt.Sprintf("SELECT TOP %d %s", limit, restOfSQL)
 		}

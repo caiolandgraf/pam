@@ -32,11 +32,18 @@ func (oc *OracleConnection) Open() error {
 	oc.db = db
 
 	if oc.Schema != "" {
-		alterSessionSQL := fmt.Sprintf("ALTER SESSION SET CURRENT_SCHEMA = %s", oc.Schema)
+		alterSessionSQL := fmt.Sprintf(
+			"ALTER SESSION SET CURRENT_SCHEMA = %s",
+			oc.Schema,
+		)
 		_, err = oc.db.Exec(alterSessionSQL)
 		if err != nil {
 			oc.db.Close()
-			return fmt.Errorf("failed to set schema to '%s': %w", oc.Schema, err)
+			return fmt.Errorf(
+				"failed to set schema to '%s': %w",
+				oc.Schema,
+				err,
+			)
 		}
 	}
 	return nil
@@ -64,7 +71,10 @@ func (oc *OracleConnection) Query(queryName string, args ...any) (any, error) {
 	return oc.db.Query(query.SQL, args...)
 }
 
-func (oc *OracleConnection) ExecQuery(sql string, args ...any) (*sql.Rows, error) {
+func (oc *OracleConnection) ExecQuery(
+	sql string,
+	args ...any,
+) (*sql.Rows, error) {
 	return oc.db.Query(sql, args...)
 }
 
@@ -73,7 +83,9 @@ func (oc *OracleConnection) Exec(sql string, args ...any) error {
 	return err
 }
 
-func (oc *OracleConnection) GetTableMetadata(tableName string) (*TableMetadata, error) {
+func (oc *OracleConnection) GetTableMetadata(
+	tableName string,
+) (*TableMetadata, error) {
 	if oc.db == nil {
 		return nil, fmt.Errorf("database is not open")
 	}
@@ -180,7 +192,13 @@ func (oc *OracleConnection) GetTableMetadata(tableName string) (*TableMetadata, 
 		var colName, dataType string
 		var dataLength, dataPrecision, dataScale sql.NullInt64
 
-		if err := colRows.Scan(&colName, &dataType, &dataLength, &dataPrecision, &dataScale); err != nil {
+		if err := colRows.Scan(
+			&colName,
+			&dataType,
+			&dataLength,
+			&dataPrecision,
+			&dataScale,
+		); err != nil {
 			continue
 		}
 
@@ -195,7 +213,12 @@ func (oc *OracleConnection) GetTableMetadata(tableName string) (*TableMetadata, 
 			}
 		case "NUMBER":
 			if dataPrecision.Valid && dataScale.Valid {
-				fullType = fmt.Sprintf("%s(%d,%d)", dataType, dataPrecision.Int64, dataScale.Int64)
+				fullType = fmt.Sprintf(
+					"%s(%d,%d)",
+					dataType,
+					dataPrecision.Int64,
+					dataScale.Int64,
+				)
 			} else if dataPrecision.Valid {
 				fullType = fmt.Sprintf("%s(%d)", dataType, dataPrecision.Int64)
 			} else {
@@ -212,6 +235,161 @@ func (oc *OracleConnection) GetTableMetadata(tableName string) (*TableMetadata, 
 	}
 
 	return metadata, nil
+}
+
+func (oc *OracleConnection) GetColumnDetails(
+	tableName string,
+) ([]ColumnInfo, error) {
+	if oc.db == nil {
+		return nil, fmt.Errorf("database is not open")
+	}
+
+	upperTableName := strings.ToUpper(tableName)
+
+	// Get the current schema
+	var currentOwner string
+	ownerQuery := `SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') FROM DUAL`
+	row := oc.db.QueryRow(ownerQuery)
+	if err := row.Scan(&currentOwner); err != nil {
+		if oc.Schema != "" {
+			currentOwner = strings.ToUpper(oc.Schema)
+		} else {
+			currentOwner = ""
+		}
+	}
+
+	// Get primary key columns
+	pkCols := map[string]bool{}
+	pkQuery := `
+		SELECT cols.column_name
+		FROM all_constraints cons
+		JOIN all_cons_columns cols ON cons.constraint_name = cols.constraint_name
+			AND cons.owner = cols.owner
+		WHERE cons.constraint_type = 'P'
+		AND cons.table_name = :1
+	`
+	if currentOwner != "" {
+		pkQuery += ` AND cons.owner = :2`
+	}
+	pkQuery += ` ORDER BY cols.position`
+
+	var pkRows *sql.Rows
+	var pkErr error
+	if currentOwner != "" {
+		pkRows, pkErr = oc.db.Query(pkQuery, upperTableName, currentOwner)
+	} else {
+		pkRows, pkErr = oc.db.Query(pkQuery, upperTableName)
+	}
+	if pkErr == nil {
+		defer pkRows.Close()
+		for pkRows.Next() {
+			var col string
+			if pkRows.Scan(&col) == nil {
+				pkCols[col] = true
+			}
+		}
+	}
+
+	// Get detailed column info
+	colQuery := `
+		SELECT
+			column_name,
+			data_type,
+			data_length,
+			data_precision,
+			data_scale,
+			nullable,
+			data_default,
+			column_id
+		FROM all_tab_columns
+		WHERE table_name = :1
+	`
+	if currentOwner != "" {
+		colQuery += ` AND owner = :2`
+	}
+	colQuery += ` ORDER BY column_id`
+
+	var colRows *sql.Rows
+	var err error
+	if currentOwner != "" {
+		colRows, err = oc.db.Query(colQuery, upperTableName, currentOwner)
+	} else {
+		colRows, err = oc.db.Query(colQuery, upperTableName)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to query column details: %w", err)
+	}
+	defer colRows.Close()
+
+	var columns []ColumnInfo
+	for colRows.Next() {
+		var colName, dataType, nullable string
+		var dataLength, dataPrecision, dataScale sql.NullInt64
+		var dataDefault sql.NullString
+		var columnId int
+
+		if err := colRows.Scan(
+			&colName,
+			&dataType,
+			&dataLength,
+			&dataPrecision,
+			&dataScale,
+			&nullable,
+			&dataDefault,
+			&columnId,
+		); err != nil {
+			continue
+		}
+
+		// Build type string
+		var fullType string
+		switch dataType {
+		case "CHAR", "VARCHAR2", "NVARCHAR2", "NCHAR":
+			if dataLength.Valid {
+				fullType = fmt.Sprintf("%s(%d)", dataType, dataLength.Int64)
+			} else {
+				fullType = dataType
+			}
+		case "NUMBER":
+			if dataPrecision.Valid && dataScale.Valid {
+				fullType = fmt.Sprintf(
+					"%s(%d,%d)",
+					dataType,
+					dataPrecision.Int64,
+					dataScale.Int64,
+				)
+			} else if dataPrecision.Valid {
+				fullType = fmt.Sprintf("%s(%d)", dataType, dataPrecision.Int64)
+			} else {
+				fullType = dataType
+			}
+		default:
+			fullType = dataType
+		}
+
+		nullableStr := "YES"
+		if nullable == "N" {
+			nullableStr = "NO"
+		}
+
+		defaultVal := "NULL"
+		if dataDefault.Valid {
+			defaultVal = strings.TrimSpace(dataDefault.String)
+		}
+
+		ci := ColumnInfo{
+			Name:         colName,
+			DataType:     fullType,
+			Nullable:     nullableStr,
+			DefaultValue: defaultVal,
+			IsPrimaryKey: pkCols[colName],
+			OrdinalPos:   columnId,
+			Extra:        "",
+		}
+		columns = append(columns, ci)
+	}
+
+	return columns, nil
 }
 
 func (oc *OracleConnection) GetInfoSQL(infoType string) string {
@@ -240,8 +418,9 @@ func (oc *OracleConnection) GetInfoSQL(infoType string) string {
 	}
 }
 
-
-func (oc *OracleConnection) BuildUpdateStatement(tableName, columnName, currentValue, pkColumn, pkValue string) string {
+func (oc *OracleConnection) BuildUpdateStatement(
+	tableName, columnName, currentValue, pkColumn, pkValue string,
+) string {
 	escapedValue := strings.ReplaceAll(currentValue, "'", "''")
 
 	if pkColumn != "" && pkValue != "" {
@@ -266,19 +445,27 @@ func (oc *OracleConnection) BuildUpdateStatement(tableName, columnName, currentV
 
 func (oc *OracleConnection) ApplyRowLimit(sql string, limit int) string {
 	trimmedSQL := strings.ToUpper(strings.TrimSpace(sql))
-	if !strings.HasPrefix(trimmedSQL, "SELECT") && !strings.HasPrefix(trimmedSQL, "WITH") {
+	if !strings.HasPrefix(trimmedSQL, "SELECT") &&
+		!strings.HasPrefix(trimmedSQL, "WITH") {
 		return sql
 	}
 
 	upperSQL := strings.ToUpper(sql)
-	if strings.Contains(upperSQL, "FETCH FIRST") || strings.Contains(upperSQL, "ROWNUM") {
+	if strings.Contains(upperSQL, "FETCH FIRST") ||
+		strings.Contains(upperSQL, "ROWNUM") {
 		return sql
 	}
 
-	return fmt.Sprintf("%s\nFETCH FIRST %d ROWS ONLY", strings.TrimRight(sql, ";"), limit)
+	return fmt.Sprintf(
+		"%s\nFETCH FIRST %d ROWS ONLY",
+		strings.TrimRight(sql, ";"),
+		limit,
+	)
 }
 
-func (oc *OracleConnection) BuildDeleteStatement(tableName, primaryKeyCol, pkValue string) string {
+func (oc *OracleConnection) BuildDeleteStatement(
+	tableName, primaryKeyCol, pkValue string,
+) string {
 	escapedPkValue := strings.ReplaceAll(pkValue, "'", "''")
 
 	return fmt.Sprintf(

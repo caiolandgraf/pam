@@ -114,6 +114,68 @@ func (s *SQLiteConnection) GetTableMetadata(
 	return metadata, nil
 }
 
+func (s *SQLiteConnection) GetColumnDetails(
+	tableName string,
+) ([]ColumnInfo, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("database is not open")
+	}
+
+	pragmaQuery := fmt.Sprintf("PRAGMA table_info(%s)", tableName)
+	rows, err := s.db.Query(pragmaQuery)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query sqlite table info: %w", err)
+	}
+	defer rows.Close()
+
+	var columns []ColumnInfo
+	for rows.Next() {
+		var cid int
+		var name, colType string
+		var notNull, pk int
+		var dfltValue sql.NullString
+
+		if err := rows.Scan(
+			&cid,
+			&name,
+			&colType,
+			&notNull,
+			&dfltValue,
+			&pk,
+		); err != nil {
+			continue
+		}
+
+		nullable := "YES"
+		if notNull == 1 {
+			nullable = "NO"
+		}
+
+		defaultVal := "NULL"
+		if dfltValue.Valid {
+			defaultVal = dfltValue.String
+		}
+
+		extra := ""
+		if pk == 1 && strings.ToUpper(colType) == "INTEGER" {
+			extra = "AUTOINCREMENT"
+		}
+
+		ci := ColumnInfo{
+			Name:         name,
+			DataType:     colType,
+			Nullable:     nullable,
+			DefaultValue: defaultVal,
+			IsPrimaryKey: pk == 1,
+			OrdinalPos:   cid + 1,
+			Extra:        extra,
+		}
+		columns = append(columns, ci)
+	}
+
+	return columns, nil
+}
+
 func (s *SQLiteConnection) GetInfoSQL(infoType string) string {
 	switch infoType {
 	case "tables":

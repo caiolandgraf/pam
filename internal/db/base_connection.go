@@ -44,6 +44,85 @@ func (b *BaseConnection) GetTableMetadata(
 	)
 }
 
+func (b *BaseConnection) GetColumnDetails(
+	tableName string,
+) ([]ColumnInfo, error) {
+	return nil, errors.New(
+		"GetColumnDetails() not implemented for base connection",
+	)
+}
+
+func (b *BaseConnection) BuildAddColumnSQL(
+	tableName, columnName, dataType string,
+	nullable bool,
+	defaultValue string,
+) string {
+	nullStr := "NOT NULL"
+	if nullable {
+		nullStr = "NULL"
+	}
+	stmt := fmt.Sprintf(
+		"ALTER TABLE %s ADD COLUMN %s %s %s",
+		tableName,
+		columnName,
+		dataType,
+		nullStr,
+	)
+	if defaultValue != "" {
+		stmt += fmt.Sprintf(" DEFAULT %s", defaultValue)
+	}
+	return stmt + ";"
+}
+
+func (b *BaseConnection) BuildAlterColumnSQL(
+	tableName, columnName, newDataType string,
+	nullable bool,
+	newDefault string,
+) string {
+	nullStr := "NOT NULL"
+	if nullable {
+		nullStr = "NULL"
+	}
+	stmt := fmt.Sprintf(
+		"ALTER TABLE %s ALTER COLUMN %s TYPE %s;\n",
+		tableName,
+		columnName,
+		newDataType,
+	)
+	stmt += fmt.Sprintf(
+		"ALTER TABLE %s ALTER COLUMN %s SET %s;",
+		tableName,
+		columnName,
+		nullStr,
+	)
+	if newDefault != "" {
+		stmt += fmt.Sprintf(
+			"\nALTER TABLE %s ALTER COLUMN %s SET DEFAULT %s;",
+			tableName,
+			columnName,
+			newDefault,
+		)
+	}
+	return stmt
+}
+
+func (b *BaseConnection) BuildRenameColumnSQL(
+	tableName, oldName, newName string,
+) string {
+	return fmt.Sprintf(
+		"ALTER TABLE %s RENAME COLUMN %s TO %s;",
+		tableName,
+		oldName,
+		newName,
+	)
+}
+
+func (b *BaseConnection) BuildDropColumnSQL(
+	tableName, columnName string,
+) string {
+	return fmt.Sprintf("ALTER TABLE %s DROP COLUMN %s;", tableName, columnName)
+}
+
 func (b *BaseConnection) BuildUpdateStatement(
 	tableName, columnName, currentValue, pkColumn, pkValue string,
 ) string {

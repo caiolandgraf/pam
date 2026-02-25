@@ -154,6 +154,99 @@ func (p *PostgresConnection) GetTableMetadata(
 	return metadata, nil
 }
 
+func (p *PostgresConnection) GetColumnDetails(
+	tableName string,
+) ([]ColumnInfo, error) {
+	if p.db == nil {
+		return nil, fmt.Errorf("database is not open")
+	}
+
+	var currentSchema string
+	schemaQuery := `SELECT current_schema()`
+	row := p.db.QueryRow(schemaQuery)
+	if err := row.Scan(&currentSchema); err != nil {
+		if p.Schema != "" {
+			currentSchema = p.Schema
+		} else {
+			currentSchema = "public"
+		}
+	}
+
+	// Get primary key columns
+	pkCols := map[string]bool{}
+	pkQuery := `
+		SELECT a.attname
+		FROM pg_index i
+		JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+		JOIN pg_class c ON c.oid = i.indrelid
+		JOIN pg_namespace n ON n.oid = c.relnamespace
+		WHERE c.relname = $1
+		AND n.nspname = $2
+		AND i.indisprimary
+	`
+	pkRows, err := p.db.Query(pkQuery, tableName, currentSchema)
+	if err == nil {
+		defer pkRows.Close()
+		for pkRows.Next() {
+			var col string
+			if pkRows.Scan(&col) == nil {
+				pkCols[col] = true
+			}
+		}
+	}
+
+	// Get detailed column info
+	colQuery := `
+		SELECT
+			c.column_name,
+			CASE
+				WHEN c.character_maximum_length IS NOT NULL
+				THEN c.data_type || '(' || c.character_maximum_length || ')'
+				WHEN c.numeric_precision IS NOT NULL
+				THEN c.data_type || '(' || c.numeric_precision || ',' || c.numeric_scale || ')'
+				ELSE c.data_type
+			END as full_type,
+			c.is_nullable,
+			COALESCE(c.column_default, 'NULL'),
+			c.ordinal_position,
+			CASE
+				WHEN c.is_identity = 'YES' THEN 'IDENTITY'
+				WHEN c.generation_expression IS NOT NULL AND c.generation_expression != '' THEN 'GENERATED'
+				WHEN c.column_default LIKE 'nextval%%' THEN 'SERIAL'
+				ELSE ''
+			END as extra
+		FROM information_schema.columns c
+		WHERE c.table_name = $1
+		AND c.table_schema = $2
+		ORDER BY c.ordinal_position
+	`
+
+	rows, err := p.db.Query(colQuery, tableName, currentSchema)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query column details: %w", err)
+	}
+	defer rows.Close()
+
+	var columns []ColumnInfo
+	for rows.Next() {
+		var ci ColumnInfo
+		if err := rows.Scan(
+			&ci.Name,
+			&ci.DataType,
+			&ci.Nullable,
+			&ci.DefaultValue,
+			&ci.OrdinalPos,
+			&ci.Extra,
+		); err != nil {
+			continue
+		}
+		ci.IsPrimaryKey = pkCols[ci.Name]
+		columns = append(columns, ci)
+	}
+
+	return columns, nil
+}
+
 func (p *PostgresConnection) GetInfoSQL(infoType string) string {
 	schema := p.Schema
 	if schema == "" {
