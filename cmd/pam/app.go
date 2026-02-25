@@ -42,7 +42,9 @@ func (a *App) Run() {
 		a.handleAdd()
 	case "remove", "delete":
 		a.handleRemove()
-	case "query", "run":
+	case "query":
+		a.handleQuery()
+	case "run":
 		a.handleRun()
 	case "list":
 		a.handleList()
@@ -66,6 +68,14 @@ func (a *App) Run() {
 		a.handleExplain()
 	case "help":
 		a.handleHelp()
+	case "completion":
+		a.handleCompletion()
+	case "__complete_tables":
+		a.handleCompleteTables()
+	case "__complete_connections":
+		a.handleCompleteConnections()
+	case "__complete_queries":
+		a.handleCompleteQueries()
 	default:
 		log.Fatalf("Unknown command: %s", command)
 	}
@@ -92,8 +102,13 @@ func (a *App) printUsage() {
 
 	fmt.Println(styles.Title.Render("Common Commands"))
 	fmt.Println(
-		"  pam run <run>      " + styles.Faint.Render(
+		"  pam run <run>        " + styles.Faint.Render(
 			"Execute a saved query",
+		),
+	)
+	fmt.Println(
+		"  pam query --table=<table> [sql]  " + styles.Faint.Render(
+			"Run a SQL query against a table",
 		),
 	)
 	fmt.Println(

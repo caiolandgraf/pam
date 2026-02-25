@@ -64,7 +64,12 @@ func (a *App) PrintGeneralHelp() {
 	)
 	fmt.Println(
 		"  run         " + styles.Faint.Render(
-			"Run a saved query by name or id (alias: query)",
+			"Run a saved query by name or id",
+		),
+	)
+	fmt.Println(
+		"  query       " + styles.Faint.Render(
+			"Run a SQL query against a table",
 		),
 	)
 	fmt.Println(
@@ -107,6 +112,11 @@ func (a *App) PrintGeneralHelp() {
 		),
 	)
 	fmt.Println(
+		"  completion  " + styles.Faint.Render(
+			"Generate shell completion script (bash, zsh, fish)",
+		),
+	)
+	fmt.Println(
 		"  tv               → table-view",
 	)
 	fmt.Println(
@@ -140,6 +150,10 @@ func (a *App) PrintGeneralHelp() {
 	fmt.Println("  pam add list_users \"SELECT * FROM users\"")
 	fmt.Println("  pam run list_users")
 	fmt.Println("  pam run \"select * from users\"")
+	fmt.Println(
+		"  pam query --table=users \"SELECT * FROM users WHERE active = 1\"",
+	)
+	fmt.Println("  pam query --table=users")
 	fmt.Println("  pam list connections")
 	fmt.Println("  pam list queries")
 	fmt.Println("  pam edit config")
@@ -281,7 +295,66 @@ func (a *App) PrintCommandHelp() {
 		fmt.Println("  pam remove list_users")
 		fmt.Println("  pam remove 3")
 
-	case "run", "query":
+	case "query":
+		section("Command: query")
+		fmt.Println(
+			styles.Faint.Render(
+				"Run a SQL query against a specific table, with automatic metadata and primary key inference.",
+			),
+		)
+		fmt.Println()
+		section("Usage")
+		fmt.Println("  pam query --table=<table> [sql]")
+		fmt.Println("  pam query --table=<table> --edit")
+		fmt.Println()
+		section("Flags")
+		fmt.Println(
+			"  --table, -t <name>  " + styles.Faint.Render(
+				"Target table name (used for metadata and as default for SELECT *)",
+			),
+		)
+		fmt.Println(
+			"  --edit, -e          " + styles.Faint.Render(
+				"Open the SQL in your $EDITOR before executing",
+			),
+		)
+		fmt.Println()
+		section("Description")
+		fmt.Println(
+			"  - If no SQL is provided, defaults to 'SELECT * FROM <table>'.",
+		)
+		fmt.Println(
+			"  - The --table flag is used to infer primary keys and table metadata,",
+		)
+		fmt.Println(
+			"    enabling features like row editing and deletion in the interactive view.",
+		)
+		fmt.Println(
+			"  - With '--edit' or '-e', pam opens your $EDITOR so you can refine the SQL",
+		)
+		fmt.Println(
+			"    before executing it.",
+		)
+		fmt.Println(
+			"  - If neither --table nor SQL is provided, falls back to 'pam run' behavior.",
+		)
+		fmt.Println()
+		section("Examples")
+		fmt.Println(
+			"  pam query --table=users                              # SELECT * FROM users",
+		)
+		fmt.Println(
+			"  pam query --table=users \"SELECT * FROM users WHERE active = 1\"",
+		)
+		fmt.Println("  pam query -t orders \"SELECT id, total FROM orders\"")
+		fmt.Println(
+			"  pam query --table=users --edit                       # edit SQL in $EDITOR",
+		)
+		fmt.Println(
+			"  pam query --table=users \"DELETE FROM users WHERE id = 5\"",
+		)
+
+	case "run":
 		section("Command: run")
 		fmt.Println(
 			styles.Faint.Render(
@@ -405,7 +478,6 @@ func (a *App) PrintCommandHelp() {
 		fmt.Println("  pam run \"select * from orders\"")
 		fmt.Println("  pam run 2 --edit")
 		fmt.Println("  pam run --last")
-		fmt.Println("  pam query list_users")
 
 	case "list":
 		section("Command: list")
@@ -763,6 +835,72 @@ func (a *App) PrintCommandHelp() {
 		section("Examples")
 		fmt.Println("  pam table-view users")
 		fmt.Println("  pam tv employees")
+
+	case "completion":
+		section("Command: completion")
+		fmt.Println(
+			styles.Faint.Render(
+				"Generate shell completion scripts for bash, zsh, or fish.",
+			),
+		)
+		fmt.Println()
+		section("Usage")
+		fmt.Println("  pam completion <bash|zsh|fish>")
+		fmt.Println()
+		section("Description")
+		fmt.Println(
+			"  Outputs a shell completion script to stdout. The script provides",
+		)
+		fmt.Println(
+			"  tab-completion for commands, flags, table names, connection names,",
+		)
+		fmt.Println(
+			"  and query names.",
+		)
+		fmt.Println()
+		fmt.Println(
+			"  Table names are fetched dynamically from the active database connection,",
+		)
+		fmt.Println(
+			"  so completions for 'pam tables <TAB>', 'pam tv <TAB>', and",
+		)
+		fmt.Println(
+			"  'pam query --table=<TAB>' will show real table names.",
+		)
+		fmt.Println()
+		section("Installation")
+		fmt.Println(
+			"  " + styles.Title.Render("Bash") + " (add to ~/.bashrc):",
+		)
+		fmt.Println(
+			"    eval \"$(pam completion bash)\"",
+		)
+		fmt.Println()
+		fmt.Println(
+			"  " + styles.Title.Render("Zsh") + " (add to ~/.zshrc):",
+		)
+		fmt.Println(
+			"    eval \"$(pam completion zsh)\"",
+		)
+		fmt.Println()
+		fmt.Println(
+			"  " + styles.Title.Render("Fish") + ":",
+		)
+		fmt.Println(
+			"    pam completion fish | source",
+		)
+		fmt.Println(
+			"    # Or persist it:",
+		)
+		fmt.Println(
+			"    pam completion fish > ~/.config/fish/completions/pam.fish",
+		)
+		fmt.Println()
+		section("Examples")
+		fmt.Println("  pam completion bash")
+		fmt.Println("  pam completion zsh")
+		fmt.Println("  pam completion fish")
+		fmt.Println("  pam completion bash > /etc/bash_completion.d/pam")
 
 	default:
 		fmt.Printf("%s %q\n\n", styles.Error.Render("Unknown command"), cmd)
