@@ -31,21 +31,13 @@
           <h2>Installation</h2>
 
           <h3 id="go-install">Go Install</h3>
-          <CodeBlock title="bash"
-            >go install github.com/caiolandgraf/pam/cmd/pam@latest</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.goInstall }}</CodeBlock>
 
           <h3 id="build-manually">Build Manually</h3>
-          <CodeBlock title="bash"
-            >git clone https://github.com/caiolandgraf/pam go build -o pam
-            ./cmd/pam</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.buildManually }}</CodeBlock>
 
           <h3 id="nix">Nix / NixOS</h3>
-          <CodeBlock title="bash"
-            ># Run directly nix run github:caiolandgraf/pam # Install to profile
-            nix profile install github:caiolandgraf/pam</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.nix }}</CodeBlock>
 
           <h3 id="releases">Binary Releases</h3>
           <p>
@@ -69,29 +61,19 @@
             connection. The database type is auto-inferred from the connection
             string.
           </p>
-          <CodeBlock title="bash"
-            ># Auto-inferred type pam init mydb
-            "postgres://user:pass@localhost:5432/mydb" # Explicit type pam init
-            mydb postgres "postgres://user:pass@localhost:5432/mydb" # With
-            schema pam init mydb oracle "user/pass@localhost:1521/XEPDB1"
-            my_schema</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.init }}</CodeBlock>
 
           <h3 id="switch">Switching connections</h3>
-          <CodeBlock title="bash"
-            >pam switch production pam use dev # alias</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.switchConn }}</CodeBlock>
 
           <h3 id="status">Connection status</h3>
-          <CodeBlock title="bash">pam status</CodeBlock>
+          <CodeBlock title="bash">{{ snippets.status }}</CodeBlock>
 
           <h3 id="list-connections">Listing connections</h3>
-          <CodeBlock title="bash"
-            >pam list connections pam ls # alias</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.listConnections }}</CodeBlock>
 
           <h3 id="disconnect">Disconnecting</h3>
-          <CodeBlock title="bash">pam disconnect</CodeBlock>
+          <CodeBlock title="bash">{{ snippets.disconnect }}</CodeBlock>
         </section>
 
         <!-- Database Support -->
@@ -114,37 +96,19 @@
           <h2>Query Management</h2>
 
           <h3 id="add-query">Adding queries</h3>
-          <CodeBlock title="bash"
-            ># Inline pam add list_users "SELECT * FROM users" # With parameters
-            and defaults pam add emp_by_salary "SELECT * FROM employees WHERE
-            salary > :min_sal|30000" # Opens $EDITOR pam add my_query</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.addQuery }}</CodeBlock>
 
           <h3 id="run-query">Running queries</h3>
-          <CodeBlock title="bash"
-            ># By name or ID pam run list_users pam run 2 # Inline SQL pam run
-            "SELECT * FROM products WHERE price > 100" # Edit before running pam
-            run list_users --edit # Re-run last query pam run --last # With
-            named parameters pam run emp_by_salary --min_sal 50000 # With
-            positional parameters pam run search_users Michael active</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.runQuery }}</CodeBlock>
 
           <h3 id="query-table">Query a table</h3>
-          <CodeBlock title="bash"
-            ># Default SELECT * FROM table pam query --table=users # Custom SQL
-            with table context pam query --table=users "SELECT * FROM users
-            WHERE active = 1" # Open editor pam query --table=orders
-            --edit</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.queryTable }}</CodeBlock>
 
           <h3 id="list-queries">Listing queries</h3>
-          <CodeBlock title="bash"
-            >pam list queries pam list queries emp # search pam list queries
-            --oneline # compact</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.listQueries }}</CodeBlock>
 
           <h3 id="remove-query">Removing queries</h3>
-          <CodeBlock title="bash">pam remove list_users pam remove 3</CodeBlock>
+          <CodeBlock title="bash">{{ snippets.removeQuery }}</CodeBlock>
         </section>
 
         <!-- Tables -->
@@ -152,33 +116,24 @@
           <h2>Database Exploration</h2>
 
           <h3 id="tables-list">Tables</h3>
-          <CodeBlock title="bash"
-            ># List all tables pam tables # Query a table directly pam tables
-            users # One per line pam tables --oneline</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.tablesList }}</CodeBlock>
 
           <h3 id="table-view">Table View</h3>
           <p>
             View and edit the structure (columns, types, constraints) of a
             table.
           </p>
-          <CodeBlock title="bash"
-            >pam table-view users pam tv users # alias</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.tableView }}</CodeBlock>
 
           <h3 id="explore">Explore</h3>
-          <CodeBlock title="bash"
-            >pam explore pam explore employees --limit 100</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.explore }}</CodeBlock>
 
           <h3 id="explain">Explain</h3>
           <p>Visualize foreign key relationships between tables.</p>
-          <CodeBlock title="bash"
-            >pam explain employees pam explain employees --depth 2</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.explain }}</CodeBlock>
 
           <h3 id="info">Info</h3>
-          <CodeBlock title="bash">pam info tables pam info views</CodeBlock>
+          <CodeBlock title="bash">{{ snippets.info }}</CodeBlock>
         </section>
 
         <!-- Configuration -->
@@ -217,12 +172,10 @@
             Pam uses your <code>$EDITOR</code> environment variable for all
             editing operations (defaults to <code>vim</code>).
           </p>
-          <CodeBlock title="bash"
-            >export EDITOR=vim export EDITOR=nano export EDITOR=code</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.editor }}</CodeBlock>
 
           <h3 id="edit-config">Editing config</h3>
-          <CodeBlock title="bash">pam edit config pam edit queries</CodeBlock>
+          <CodeBlock title="bash">{{ snippets.editConfig }}</CodeBlock>
         </section>
 
         <!-- Shell Completion -->
@@ -232,12 +185,7 @@
             Pam supports tab-completion for bash, zsh and fish. Table names are
             fetched <strong>dynamically</strong> from the active database.
           </p>
-          <CodeBlock title="bash"
-            ># Persist completions (recommended) pam completion bash --install
-            pam completion zsh --install pam completion fish --install # Or load
-            for current session only eval "$(pam completion bash)" eval "$(pam
-            completion zsh)" pam completion fish | source</CodeBlock
-          >
+          <CodeBlock title="bash">{{ snippets.completion }}</CodeBlock>
         </section>
 
         <!-- Commands Reference -->
@@ -359,6 +307,127 @@ onMounted(() => {
 })
 onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
+// ---------------------------------------------------------------------------
+// Code snippets — kept here as template literals so newlines are preserved
+// ---------------------------------------------------------------------------
+const snippets = {
+  goInstall: `go install github.com/caiolandgraf/pam/cmd/pam@latest`,
+
+  buildManually: `git clone https://github.com/caiolandgraf/pam
+cd pam
+go build -o pam ./cmd/pam`,
+
+  nix: `# Run directly
+nix run github:caiolandgraf/pam
+
+# Install to profile
+nix profile install github:caiolandgraf/pam`,
+
+  init: `# Auto-inferred type
+pam init mydb "postgres://user:pass@localhost:5432/mydb"
+
+# Explicit type
+pam init mydb postgres "postgres://user:pass@localhost:5432/mydb"
+
+# With schema
+pam init mydb oracle "user/pass@localhost:1521/XEPDB1" my_schema`,
+
+  switchConn: `pam switch production
+pam use dev          # alias`,
+
+  status: `pam status`,
+
+  listConnections: `pam list connections
+pam ls               # alias`,
+
+  disconnect: `pam disconnect`,
+
+  addQuery: `# Inline
+pam add list_users "SELECT * FROM users"
+
+# With parameters and defaults
+pam add emp_by_salary "SELECT * FROM employees WHERE salary > :min_sal|30000"
+
+# Opens $EDITOR
+pam add my_query`,
+
+  runQuery: `# By name or ID
+pam run list_users
+pam run 2
+
+# Inline SQL
+pam run "SELECT * FROM products WHERE price > 100"
+
+# Edit before running
+pam run list_users --edit
+
+# Re-run last query
+pam run --last
+
+# With named parameters
+pam run emp_by_salary --min_sal 50000
+
+# With positional parameters
+pam run search_users Michael active`,
+
+  queryTable: `# Default SELECT * FROM table
+pam query --table=users
+
+# Custom SQL with table context
+pam query --table=users "SELECT * FROM users WHERE active = 1"
+
+# Open editor
+pam query --table=orders --edit`,
+
+  listQueries: `pam list queries
+pam list queries emp          # search
+pam list queries --oneline    # compact`,
+
+  removeQuery: `pam remove list_users
+pam remove 3`,
+
+  tablesList: `# List all tables
+pam tables
+
+# Query a table directly
+pam tables users
+
+# One per line
+pam tables --oneline`,
+
+  tableView: `pam table-view users
+pam tv users         # alias`,
+
+  explore: `pam explore
+pam explore employees --limit 100`,
+
+  explain: `pam explain employees
+pam explain employees --depth 2`,
+
+  info: `pam info tables
+pam info views`,
+
+  editor: `export EDITOR=vim
+export EDITOR=nano
+export EDITOR=code`,
+
+  editConfig: `pam edit config
+pam edit queries`,
+
+  completion: `# Persist completions (recommended)
+pam completion bash --install
+pam completion zsh --install
+pam completion fish --install
+
+# Or load for current session only
+eval "$(pam completion bash)"
+eval "$(pam completion zsh)"
+pam completion fish | source`
+}
+
+// ---------------------------------------------------------------------------
+// Data
+// ---------------------------------------------------------------------------
 const dbExamples = [
   {
     name: 'PostgreSQL',
@@ -431,7 +500,11 @@ const commands = [
   },
   { cmd: 'list', alias: '', desc: 'List connections or queries' },
   { cmd: 'ls', alias: '', desc: 'Shortcut for list connections' },
-  { cmd: 'tables', alias: 't, explore', desc: 'List or query database tables' },
+  {
+    cmd: 'tables',
+    alias: 't, explore',
+    desc: 'List or query database tables'
+  },
   { cmd: 'table-view', alias: 'tv', desc: 'View and edit table structure' },
   {
     cmd: 'info',
