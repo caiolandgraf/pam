@@ -45,6 +45,7 @@
 - **Table view TUI** - Keyboard focused navigation with vim-style bindings
 - **In-Place Editing** - Update cells, delete rows and edit your SQL directly from the results table
 - **Export your data** - Export your data as CSV, JSON, SQL, Markdown or HTML tables
+- **SQL Dump Import/Export** - Full SQL dumps (schema + data) and import from file or stdin
 
 ---
 
@@ -454,6 +455,57 @@ pam edit queries
 
 ---
 
+### Data Import & Export
+
+Export tables as portable SQL dumps with `CREATE TABLE` + `INSERT` statements, and import them back into any compatible database.
+
+```bash
+# ── Export ─────────────────────────────────────────────────────
+
+# Dump all tables to a file (schema + data)
+pam export --output=backup.sql
+
+# Dump a single table
+pam export --table=users --output=users.sql
+pam export users                              # shorthand
+
+# Pipe to stdout (status messages go to stderr, so this is clean)
+pam export --table=orders > orders.sql
+
+# Schema only — CREATE TABLE statements, no INSERT
+pam export --no-data --output=schema.sql
+
+# Data only — INSERT statements, no CREATE TABLE
+pam export --data-only > inserts.sql
+
+# Add DROP TABLE IF EXISTS before each CREATE TABLE
+pam export --drop --output=full.sql
+
+# ── Import ─────────────────────────────────────────────────────
+
+# Import from a file
+pam import dump.sql
+
+# Read from stdin (pipe-friendly)
+cat dump.sql | pam import
+
+# Don't stop on the first error — collect and report all failures
+pam import dump.sql --continue-on-error
+
+# Dry run — parse and list every statement without executing
+pam import dump.sql --dry-run
+
+# Full migration pipeline between two connections
+pam switch staging
+pam export --table=users > users.sql
+pam switch production
+pam import users.sql
+```
+
+> SQL output is always written to **stdout** and status/progress messages to **stderr**, so redirects like `pam export > dump.sql` work cleanly without mixing output.
+
+---
+
 <h2>
     <img width="auto" height="24" alt="image" style="vertical-align:middle;" src="https://github.com/user-attachments/assets/4b1425ae-7918-4a3f-b37c-41c3e443929e" />
     All Commands
@@ -515,6 +567,22 @@ pam edit queries
 | `edit config` | Edit main configuration file | `pam edit config` |
 | `edit queries` | Edit all queries for current connection | `pam edit queries` |
 | `help [command]` | Show help information | `pam help run` |
+
+### Import & Export
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `export` | Dump all tables (schema + data) to stdout | `pam export > backup.sql` |
+| `export --table=<t>` | Dump a single table | `pam export --table=users` |
+| `export --output=<f>` | Write dump to a file | `pam export --output=dump.sql` |
+| `export --no-create` | Skip `CREATE TABLE` statements | `pam export --no-create` |
+| `export --drop` | Prepend `DROP TABLE IF EXISTS` | `pam export --drop --output=full.sql` |
+| `export --no-data` | Schema only, no `INSERT` statements | `pam export --no-data --output=schema.sql` |
+| `export --data-only` | Data only, no `CREATE TABLE` | `pam export --data-only > inserts.sql` |
+| `import <file>` | Import a SQL dump from a file | `pam import dump.sql` |
+| `import --file=<f>` | Import with explicit flag | `pam import --file=dump.sql` |
+| `import --continue-on-error` | Keep going after failed statements | `pam import dump.sql --continue-on-error` |
+| `import --dry-run` | Parse statements without executing | `pam import dump.sql --dry-run` |
 
 ### Command Aliases
 
@@ -625,9 +693,11 @@ Press `y` to copy the selection as plain text, or `x` to export the selected dat
 - [x] `pam explore` and `pam explain`
 
 ### v0.3.0 - Jim 👔
-- [ ] Shell autocomplete (bash, fish, zsh)
+- [x] Shell autocomplete (bash, fish, zsh)
 - [ ] Encryption on connection username/password in config file
-- [ ] Dynamic column width
+- [x] Dynamic column width
+- [x] SQL dump export — `pam export [--table=<t>] [--output=<file>] [--drop] [--no-data] [--data-only]`
+- [x] SQL dump import — `pam import [<file>] [--continue-on-error] [--dry-run]`
 
 ---
 

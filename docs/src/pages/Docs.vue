@@ -136,6 +136,34 @@
           <CodeBlock title="bash">{{ snippets.info }}</CodeBlock>
         </section>
 
+        <!-- Import & Export -->
+        <section id="export-import">
+          <h2>Import &amp; Export</h2>
+
+          <h3 id="export">Export</h3>
+          <p>
+            Export one or all tables as a SQL dump — generates
+            <code>CREATE TABLE</code> and <code>INSERT</code> statements. SQL is
+            written to <strong>stdout</strong> by default; use
+            <code>--output</code> to write to a file. Status messages always go
+            to <strong>stderr</strong>, so redirects like
+            <code>pam export &gt; dump.sql</code> work cleanly.
+          </p>
+          <CodeBlock title="bash">{{ snippets.export }}</CodeBlock>
+
+          <h3 id="import">Import</h3>
+          <p>
+            Execute a SQL dump against the active connection. Reads from a file
+            or <strong>stdin</strong>. Statements are split on <code>;</code>,
+            correctly handling single-quoted strings, <code>--</code> line
+            comments and <code>/* */</code> block comments. By default the
+            import stops on the first error; use
+            <code>--continue-on-error</code> to collect all failures and report
+            them at the end.
+          </p>
+          <CodeBlock title="bash">{{ snippets.import }}</CodeBlock>
+        </section>
+
         <!-- Configuration -->
         <section id="config">
           <h2>Configuration</h2>
@@ -261,7 +289,8 @@ const toc = [
     title: 'Usage',
     items: [
       { id: 'queries', label: 'Query Management' },
-      { id: 'tables', label: 'Database Exploration' }
+      { id: 'tables', label: 'Database Exploration' },
+      { id: 'export-import', label: 'Import & Export' }
     ]
   },
   {
@@ -422,7 +451,45 @@ pam completion fish --install
 # Or load for current session only
 eval "$(pam completion bash)"
 eval "$(pam completion zsh)"
-pam completion fish | source`
+pam completion fish | source`,
+
+  export: `# Dump all tables to a file (schema + data)
+pam export --output=backup.sql
+
+# Dump a single table
+pam export --table=users --output=users.sql
+pam export users                              # shorthand
+
+# Pipe to stdout (status messages go to stderr — clean redirect)
+pam export --table=orders > orders.sql
+
+# Schema only — CREATE TABLE statements, no INSERT
+pam export --no-data --output=schema.sql
+
+# Data only — INSERT statements, no CREATE TABLE
+pam export --data-only > inserts.sql
+
+# Add DROP TABLE IF EXISTS before each CREATE TABLE
+pam export --drop --output=full.sql`,
+
+  import: `# Import from a file
+pam import dump.sql
+pam import --file=dump.sql                    # same with explicit flag
+
+# Read from stdin (pipe-friendly)
+cat dump.sql | pam import
+
+# Don't stop on the first error — collect and report all failures
+pam import dump.sql --continue-on-error
+
+# Dry run — parse and list every statement without executing
+pam import dump.sql --dry-run
+
+# Full migration pipeline between two connections
+pam switch staging
+pam export --table=users > users.sql
+pam switch production
+pam import users.sql`
 }
 
 // ---------------------------------------------------------------------------
@@ -512,6 +579,16 @@ const commands = [
     desc: 'Show tables or views in current connection'
   },
   { cmd: 'explain', alias: '', desc: 'Visualize foreign key relationships' },
+  {
+    cmd: 'export',
+    alias: '',
+    desc: 'Export tables as a SQL dump (CREATE TABLE + INSERTs)'
+  },
+  {
+    cmd: 'import',
+    alias: '',
+    desc: 'Import a SQL dump file or stdin into the active connection'
+  },
   { cmd: 'edit', alias: '', desc: 'Open config or queries in editor' },
   { cmd: 'status', alias: 'test', desc: 'Show current active connection' },
   {
