@@ -86,6 +86,7 @@ func TestModel_BuildUpdateStatement(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			model := New(
 				tt.columns,
+				nil,
 				tt.data,
 				0,
 				nil,
@@ -152,6 +153,7 @@ func TestModel_BuildUpdateStatement_EdgeCases(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			model := New(
 				tt.columns,
+				nil,
 				tt.data,
 				0,
 				nil,
@@ -189,6 +191,7 @@ func TestModel_BuildUpdateStatement_EdgeCases(t *testing.T) {
 func TestModel_UpdateCell_Bounds(t *testing.T) {
 	model := New(
 		[]string{"id", "name"},
+		nil,
 		[][]string{{"1", "Alice"}},
 		0,
 		nil,
@@ -282,6 +285,7 @@ func TestModel_NumRows(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			model := New(
 				[]string{"id", "name"},
+				nil,
 				tt.data,
 				0,
 				nil,
@@ -324,6 +328,7 @@ func TestModel_NumCols(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			model := New(
 				tt.columns,
+				nil,
 				[][]string{},
 				0,
 				nil,
@@ -395,6 +400,7 @@ func TestModel_GetPrimaryKeyValue(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			model := New(
 				tt.columns,
+				nil,
 				tt.data,
 				0,
 				nil,
@@ -450,6 +456,7 @@ func TestModel_UpdateCell_WithoutTableName(t *testing.T) {
 	// Model without table name should not allow updates
 	model := New(
 		[]string{"id", "name"},
+		nil,
 		[][]string{{"1", "Alice"}},
 		0,
 		nil,
@@ -477,6 +484,7 @@ func TestModel_UpdateCell_WithoutPrimaryKey(t *testing.T) {
 	// Model without primary key should not allow updates
 	model := New(
 		[]string{"id", "name"},
+		nil,
 		[][]string{{"1", "Alice"}},
 		0,
 		nil,

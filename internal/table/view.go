@@ -103,7 +103,20 @@ func (m Model) renderHeader() string {
 			fkIcon = "⚭ "
 		}
 
-		columnDisplay := pkIcon + fkIcon + typeIcon + m.columns[j]
+		sortIcon := ""
+		if m.sortColumn != "" && j < len(m.columns) &&
+			m.columns[j] == m.sortColumn {
+			if m.sortDirection == "ASC" {
+				sortIcon = " ↑"
+			} else if m.sortDirection == "DESC" {
+				sortIcon = " ↓"
+			} else {
+				// No direction specified (default sort)
+				sortIcon = " •"
+			}
+		}
+
+		columnDisplay := pkIcon + fkIcon + typeIcon + m.columns[j] + sortIcon
 		content := formatCell(columnDisplay, m.cellWidth)
 		cells = append(cells, styles.TableHeader.Render(content))
 	}
@@ -126,18 +139,18 @@ func (m Model) renderDataRow(rowIndex int) string {
 
 func (m Model) renderFooter() string {
 	// Show export format prompt if active
-  if m.exportWaiting.active {
-      promptText := fmt.Sprintf(
-          "Export as %sSV %sSON %sSV %sTML %sQL %sarkdown",
-          styles.TableHeader.Render("[C]"),
-          styles.TableHeader.Render("[J]"),
-          styles.TableHeader.Render("[T]"),
-          styles.TableHeader.Render("[H]"),
-          styles.TableHeader.Render("[S]"),
-          styles.TableHeader.Render("[M]"),
-      )
-      return "\n" + promptText
-  }
+	if m.exportWaiting.active {
+		promptText := fmt.Sprintf(
+			"Export as %sSV %sSON %sSV %sTML %sQL %sarkdown",
+			styles.TableHeader.Render("[C]"),
+			styles.TableHeader.Render("[J]"),
+			styles.TableHeader.Render("[T]"),
+			styles.TableHeader.Render("[H]"),
+			styles.TableHeader.Render("[S]"),
+			styles.TableHeader.Render("[M]"),
+		)
+		return "\n" + promptText
+	}
 
 	// Show export status if available
 	if m.exportStatus != "" {
@@ -157,7 +170,8 @@ func (m Model) renderFooter() string {
 		columnType = m.columnTypes[m.selectedCol]
 	}
 
-	if m.selectedCol >= 0 && m.selectedCol < len(m.columnFKs) && m.columnFKs[m.selectedCol] != "" {
+	if m.selectedCol >= 0 && m.selectedCol < len(m.columnFKs) &&
+		m.columnFKs[m.selectedCol] != "" {
 		fkRef = fmt.Sprintf(" FK → %s", m.columnFKs[m.selectedCol])
 	}
 
@@ -209,20 +223,30 @@ func (m Model) renderFooter() string {
 	edit := styles.TableHeader.Render("e") + styles.Faint.Render("ditSQL")
 	save := styles.TableHeader.Render("s") + styles.Faint.Render("ave")
 	yank := styles.TableHeader.Render("y") + styles.Faint.Render("ank")
-	exportKey := styles.Faint.Render("e") + styles.TableHeader.Render("x") + styles.Faint.Render("port")
+	sort := styles.TableHeader.Render("f") + styles.Faint.Render("sort")
+	exportKey := styles.Faint.Render(
+		"e",
+	) + styles.TableHeader.Render(
+		"x",
+	) + styles.Faint.Render(
+		"port",
+	)
 	quit := styles.TableHeader.Render("q") + styles.Faint.Render("uit")
 	hjkl := styles.TableHeader.Render("hjkl") + styles.Faint.Render("←↓↑→")
 
 	var footer string
 	if m.isTablesList {
 		footer = fmt.Sprintf(
-			"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s",
+			"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s",
 			cellPreview,
 			styles.Faint.Render(fmt.Sprintf("%dx%d", m.numRows(), m.numCols())),
 			styles.Faint.Render(fmt.Sprintf("In %.2fs", m.elapsed.Seconds())),
-			styles.Faint.Render(fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1)),
+			styles.Faint.Render(
+				fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1),
+			),
 			enterInfo,
 			yank,
+			sort,
 			edit,
 			save,
 			quit,
@@ -231,16 +255,21 @@ func (m Model) renderFooter() string {
 	} else {
 		if m.visualMode {
 			footer = fmt.Sprintf(
-				"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s",
+				"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s  %s",
 				cellPreview,
-				styles.Faint.Render(fmt.Sprintf("%dx%d", m.numRows(), m.numCols())),
-				styles.Faint.Render(fmt.Sprintf("In %.2fs", m.elapsed.Seconds())),
+				styles.Faint.Render(
+					fmt.Sprintf("%dx%d", m.numRows(), m.numCols()),
+				),
+				styles.Faint.Render(
+					fmt.Sprintf("In %.2fs", m.elapsed.Seconds()),
+				),
 				styles.Faint.Render(
 					fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1),
 				),
 				yank,
 				exportKey,
 				sel,
+				sort,
 				edit,
 				save,
 				quit,
@@ -248,10 +277,14 @@ func (m Model) renderFooter() string {
 			)
 		} else {
 			footer = fmt.Sprintf(
-				"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s  %s  %s",
+				"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s  %s  %s  %s",
 				cellPreview,
-				styles.Faint.Render(fmt.Sprintf("%dx%d", m.numRows(), m.numCols())),
-				styles.Faint.Render(fmt.Sprintf("In %.2fs", m.elapsed.Seconds())),
+				styles.Faint.Render(
+					fmt.Sprintf("%dx%d", m.numRows(), m.numCols()),
+				),
+				styles.Faint.Render(
+					fmt.Sprintf("In %.2fs", m.elapsed.Seconds()),
+				),
 				styles.Faint.Render(
 					fmt.Sprintf("[%d/%d]", m.selectedRow+1, m.selectedCol+1),
 				),
@@ -259,6 +292,7 @@ func (m Model) renderFooter() string {
 				delInfo,
 				yank,
 				sel,
+				sort,
 				edit,
 				save,
 				exportKey,
@@ -325,7 +359,8 @@ func getTypeIcon(typeName string) string {
 	}
 
 	// Decimal/Float types
-	if strings.Contains(upper, "DECIMAL") || strings.Contains(upper, "NUMERIC") ||
+	if strings.Contains(upper, "DECIMAL") ||
+		strings.Contains(upper, "NUMERIC") ||
 		strings.Contains(upper, "FLOAT") ||
 		strings.Contains(upper, "DOUBLE") ||
 		strings.Contains(upper, "REAL") ||
@@ -512,7 +547,14 @@ func (m Model) renderDetailView() string {
 		" close",
 	)
 
-	footer := fmt.Sprintf("\n%s  %s  %s  %s  %s", scrollInfo, hjkl, edit, yank, quit)
+	footer := fmt.Sprintf(
+		"\n%s  %s  %s  %s  %s",
+		scrollInfo,
+		hjkl,
+		edit,
+		yank,
+		quit,
+	)
 	b.WriteString(footer)
 
 	return b.String()

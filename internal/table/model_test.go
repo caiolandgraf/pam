@@ -20,7 +20,7 @@ func TestNew(t *testing.T) {
 		Id:   1,
 	}
 
-	model := New(columns, data, elapsed, nil, "", "", query, 15)
+	model := New(columns, nil, data, elapsed, nil, "", "", query, 15)
 
 	// Verify initial state
 	if model.selectedRow != 0 {
@@ -140,7 +140,17 @@ func TestModel_GetEditedQuery(t *testing.T) {
 		SQL:  "SELECT * FROM users",
 		Id:   1,
 	}
-	model := New([]string{"id"}, [][]string{{"1"}}, 0, nil, "", "", query, 15)
+	model := New(
+		[]string{"id"},
+		nil,
+		[][]string{{"1"}},
+		0,
+		nil,
+		"",
+		"",
+		query,
+		15,
+	)
 
 	// Initially should return current query
 	editedQuery := model.GetEditedQuery()
@@ -167,6 +177,7 @@ func TestModel_GetEditedQuery(t *testing.T) {
 func TestModel_ShouldRerunQuery(t *testing.T) {
 	model := New(
 		[]string{"id"},
+		nil,
 		[][]string{{"1"}},
 		0,
 		nil,
@@ -191,6 +202,7 @@ func TestModel_ShouldRerunQuery(t *testing.T) {
 func TestModel_GetSelectedTableName(t *testing.T) {
 	model := New(
 		[]string{"name"},
+		nil,
 		[][]string{{"users"}},
 		0,
 		nil,
@@ -221,6 +233,7 @@ func TestModel_GetSelectedTableName(t *testing.T) {
 func TestModel_ExtractNewValue(t *testing.T) {
 	model := New(
 		[]string{"id", "name", "email"},
+		nil,
 		[][]string{},
 		0,
 		nil,
@@ -287,6 +300,7 @@ func TestModel_ExtractNewValue(t *testing.T) {
 func TestModel_BlinkCmd(t *testing.T) {
 	model := New(
 		[]string{"id"},
+		nil,
 		[][]string{{"1"}},
 		0,
 		nil,
@@ -316,6 +330,7 @@ func TestModel_NavigationBounds(t *testing.T) {
 	}
 	model := New(
 		[]string{"id", "name", "email"},
+		nil,
 		data,
 		0,
 		nil,
@@ -353,6 +368,7 @@ func TestModel_NavigationBounds(t *testing.T) {
 func TestModel_VisualModeToggle(t *testing.T) {
 	model := New(
 		[]string{"id"},
+		nil,
 		[][]string{{"1"}},
 		0,
 		nil,
@@ -386,6 +402,7 @@ func TestModel_VisualModeToggle(t *testing.T) {
 func TestModel_DetailViewToggle(t *testing.T) {
 	model := New(
 		[]string{"id"},
+		nil,
 		[][]string{{"1"}},
 		0,
 		nil,
@@ -446,6 +463,7 @@ func TestModel_CellWidth(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			model := New(
 				[]string{"id"},
+				nil,
 				[][]string{{"1"}},
 				0,
 				nil,
@@ -505,6 +523,7 @@ func TestModel_SortDirection(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			model := New(
 				[]string{"id", "name"},
+				nil,
 				[][]string{},
 				0,
 				nil,
@@ -535,6 +554,7 @@ func TestModel_EmptyData(t *testing.T) {
 	// Test with empty data
 	model := New(
 		[]string{"id", "name"},
+		nil,
 		[][]string{},
 		0,
 		nil,
@@ -558,7 +578,17 @@ func TestModel_EmptyData(t *testing.T) {
 func TestModel_SingleRow(t *testing.T) {
 	// Test with single row
 	data := [][]string{{"1", "Alice"}}
-	model := New([]string{"id", "name"}, data, 0, nil, "", "", db.Query{}, 15)
+	model := New(
+		[]string{"id", "name"},
+		nil,
+		data,
+		0,
+		nil,
+		"",
+		"",
+		db.Query{},
+		15,
+	)
 
 	if len(model.data) != 1 {
 		t.Errorf("data length = %d, want 1", len(model.data))
@@ -577,6 +607,7 @@ func TestModel_LargeDataset(t *testing.T) {
 
 	model := New(
 		[]string{"id", "name", "email"},
+		nil,
 		data,
 		0,
 		nil,
@@ -597,6 +628,7 @@ func TestModel_LargeDataset(t *testing.T) {
 func TestModel_BlinkStates(t *testing.T) {
 	model := New(
 		[]string{"id"},
+		nil,
 		[][]string{{"1"}},
 		0,
 		nil,
@@ -640,5 +672,238 @@ func TestModel_BlinkStates(t *testing.T) {
 	}
 	if model.deletedRow != 3 {
 		t.Error("deletedRow should be set correctly")
+	}
+}
+
+func TestToggleSort_Cycle(t *testing.T) {
+	// Test the 3-state cycle: no sort → ASC → DESC → no sort
+	// for both regular tables and tables list
+	for _, isTablesList := range []bool{false, true} {
+		t.Run(func() string {
+			if isTablesList {
+				return "tables_list"
+			}
+			return "regular_table"
+		}(), func(t *testing.T) {
+			model := New(
+				[]string{"id", "name"},
+				nil,
+				[][]string{{"1", "Alice"}, {"2", "Bob"}},
+				0,
+				nil,
+				"",
+				"",
+				db.Query{SQL: "SELECT id, name FROM users"},
+				15,
+			)
+			model.isTablesList = isTablesList
+			model.selectedCol = 1 // "name" column
+
+			// State 0: no sort
+			if model.sortColumn != "" || model.sortDirection != "" {
+				t.Fatalf("initial state: want no sort, got col=%q dir=%q",
+					model.sortColumn, model.sortDirection)
+			}
+
+			// F press 1: no sort → ASC on "name"
+			model, _ = model.toggleSort()
+			if model.sortColumn != "name" || model.sortDirection != "ASC" {
+				t.Errorf(
+					"after 1st F: want col=name dir=ASC, got col=%q dir=%q",
+					model.sortColumn,
+					model.sortDirection,
+				)
+			}
+			if model.editedQuery == "" {
+				t.Error("after 1st F: editedQuery should not be empty")
+			}
+			if !model.shouldRerunQuery {
+				t.Error("after 1st F: shouldRerunQuery should be true")
+			}
+
+			// Simulate re-run: new model with sorted SQL, same col selected
+			model = New(
+				[]string{"id", "name"},
+				nil,
+				[][]string{{"1", "Alice"}, {"2", "Bob"}},
+				0,
+				nil,
+				"",
+				"",
+				db.Query{SQL: model.editedQuery},
+				15,
+			)
+			model.isTablesList = isTablesList
+			model.selectedCol = 1
+
+			// F press 2: ASC → DESC
+			model, _ = model.toggleSort()
+			if model.sortColumn != "name" || model.sortDirection != "DESC" {
+				t.Errorf(
+					"after 2nd F: want col=name dir=DESC, got col=%q dir=%q",
+					model.sortColumn,
+					model.sortDirection,
+				)
+			}
+
+			// Simulate re-run again
+			model = New(
+				[]string{"id", "name"},
+				nil,
+				[][]string{{"1", "Alice"}, {"2", "Bob"}},
+				0,
+				nil,
+				"",
+				"",
+				db.Query{SQL: model.editedQuery},
+				15,
+			)
+			model.isTablesList = isTablesList
+			model.selectedCol = 1
+
+			// F press 3: DESC → no sort (clear both)
+			model, _ = model.toggleSort()
+			if model.sortColumn != "" || model.sortDirection != "" {
+				t.Errorf("after 3rd F: want no sort, got col=%q dir=%q",
+					model.sortColumn, model.sortDirection)
+			}
+
+			// Simulate re-run again
+			model = New(
+				[]string{"id", "name"},
+				nil,
+				[][]string{{"1", "Alice"}, {"2", "Bob"}},
+				0,
+				nil,
+				"",
+				"",
+				db.Query{SQL: model.editedQuery},
+				15,
+			)
+			model.isTablesList = isTablesList
+			model.selectedCol = 1
+
+			// After re-run with no ORDER BY, sort state should be empty
+			if model.sortColumn != "" || model.sortDirection != "" {
+				t.Errorf("after 3rd F re-run: want no sort, got col=%q dir=%q",
+					model.sortColumn, model.sortDirection)
+			}
+
+			// F press 4: back to ASC (cycle restarts cleanly)
+			model, _ = model.toggleSort()
+			if model.sortColumn != "name" || model.sortDirection != "ASC" {
+				t.Errorf(
+					"after 4th F: want col=name dir=ASC, got col=%q dir=%q",
+					model.sortColumn,
+					model.sortDirection,
+				)
+			}
+		})
+	}
+}
+
+func TestToggleSort_TablesListInitialASC(t *testing.T) {
+	// Simulates the tables list scenario: initial query already has ORDER BY name ASC
+	// (built into nameOnlyQuery). Pressing F should cycle DESC → no sort → ASC, not loop.
+	initialSQL := "SELECT name FROM (SELECT TABLE_NAME as name FROM information_schema.TABLES) AS t ORDER BY name ASC"
+
+	model := New(
+		[]string{"name"},
+		nil,
+		[][]string{{"users"}, {"orders"}},
+		0,
+		nil,
+		"",
+		"",
+		db.Query{SQL: initialSQL},
+		15,
+	)
+	model.isTablesList = true
+	model.selectedCol = 0 // "name"
+
+	// Initial state parsed from query: should be ASC
+	if model.sortColumn != "name" || model.sortDirection != "ASC" {
+		t.Fatalf("initial parse: want col=name dir=ASC, got col=%q dir=%q",
+			model.sortColumn, model.sortDirection)
+	}
+
+	// F press 1: ASC → DESC (not a loop back to ASC)
+	model, _ = model.toggleSort()
+	if model.sortDirection != "DESC" {
+		t.Errorf("after 1st F: want DESC, got %q", model.sortDirection)
+	}
+	if !contains(model.editedQuery, "ORDER BY name DESC") {
+		t.Errorf(
+			"after 1st F: editedQuery should contain ORDER BY name DESC, got: %s",
+			model.editedQuery,
+		)
+	}
+
+	// Simulate re-run with DESC query
+	model = New(
+		[]string{"name"},
+		nil,
+		[][]string{{"users"}, {"orders"}},
+		0,
+		nil,
+		"",
+		"",
+		db.Query{SQL: model.editedQuery},
+		15,
+	)
+	model.isTablesList = true
+	model.selectedCol = 0
+
+	// F press 2: DESC → no sort (not back to ASC — this was the bug)
+	model, _ = model.toggleSort()
+	if model.sortColumn != "" || model.sortDirection != "" {
+		t.Errorf(
+			"after 2nd F: want no sort (clear), got col=%q dir=%q — infinite loop bug?",
+			model.sortColumn,
+			model.sortDirection,
+		)
+	}
+	// The SQL should NOT contain an ORDER BY at the outer level
+	if contains(model.editedQuery, "ORDER BY name") {
+		t.Errorf(
+			"after 2nd F: editedQuery should not contain outer ORDER BY name, got: %s",
+			model.editedQuery,
+		)
+	}
+}
+
+func TestToggleSort_DifferentColumn(t *testing.T) {
+	// Switching to a different column should restart the cycle at ASC
+	model := New(
+		[]string{"id", "name", "email"},
+		nil,
+		[][]string{{"1", "Alice", "a@b.com"}},
+		0,
+		nil,
+		"",
+		"",
+		db.Query{SQL: "SELECT id, name, email FROM users ORDER BY name ASC"},
+		15,
+	)
+	model.selectedCol = 1 // "name" — already sorted
+
+	if model.sortColumn != "name" || model.sortDirection != "ASC" {
+		t.Fatalf("setup: want col=name dir=ASC, got col=%q dir=%q",
+			model.sortColumn, model.sortDirection)
+	}
+
+	// Move to a different column and press F
+	model.selectedCol = 2 // "email"
+	model, _ = model.toggleSort()
+
+	if model.sortColumn != "email" || model.sortDirection != "ASC" {
+		t.Errorf("switching column: want col=email dir=ASC, got col=%q dir=%q",
+			model.sortColumn, model.sortDirection)
+	}
+	if !contains(model.editedQuery, "ORDER BY email ASC") {
+		t.Errorf(
+			"switching column: editedQuery should contain ORDER BY email ASC, got: %s",
+			model.editedQuery,
+		)
 	}
 }

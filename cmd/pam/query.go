@@ -135,6 +135,26 @@ func (a *App) handleQuery() {
 	}
 
 	if run.IsSelectQuery(sql) {
+		var onRerun func(editedSQL string)
+		onRerun = func(editedSQL string) {
+			editedQuery := db.Query{
+				Name:      queryName,
+				SQL:       editedSQL,
+				TableName: flags.tableName,
+				Id:        -1,
+			}
+			run.ExecuteSelect(
+				editedSQL,
+				queryName,
+				run.ExecutionParams{
+					Query:        editedQuery,
+					Connection:   conn,
+					Config:       a.config,
+					SaveCallback: a.saveQueryFromTable,
+					OnRerun:      onRerun,
+				},
+			)
+		}
 		run.ExecuteSelect(
 			sql,
 			queryName,
@@ -143,23 +163,7 @@ func (a *App) handleQuery() {
 				Connection:   conn,
 				Config:       a.config,
 				SaveCallback: a.saveQueryFromTable,
-				OnRerun: func(editedSQL string) {
-					editedQuery := db.Query{
-						Name:      queryName,
-						SQL:       editedSQL,
-						TableName: flags.tableName,
-						Id:        -1,
-					}
-					run.ExecuteSelect(
-						editedSQL,
-						queryName,
-						run.ExecutionParams{
-							Query:      editedQuery,
-							Connection: conn,
-							Config:     a.config,
-						},
-					)
-				},
+				OnRerun:      onRerun,
 			},
 		)
 	} else {

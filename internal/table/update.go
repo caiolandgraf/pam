@@ -122,6 +122,8 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.editAndRerunQuery()
 	case "s":
 		return m.saveQuery()
+	case "f":
+		return m.toggleSort()
 	}
 
 	return m, nil
