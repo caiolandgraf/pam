@@ -64,6 +64,10 @@ func (a *App) Run() {
 		a.handleTableView()
 	case "disconnect", "clear", "unset":
 		a.handleDisconnect()
+	case "export":
+		a.handleExport()
+	case "import":
+		a.handleImport()
 	case "explain":
 		a.handleExplain()
 	case "help":
@@ -135,6 +139,16 @@ func (a *App) printUsage() {
 	fmt.Println(
 		"  pam disconnect       " + styles.Faint.Render(
 			"Disconnect from current database",
+		),
+	)
+	fmt.Println(
+		"  pam export           " + styles.Faint.Render(
+			"Export tables as SQL dump (--table=<table> for single table)",
+		),
+	)
+	fmt.Println(
+		"  pam import           " + styles.Faint.Render(
+			"Import a SQL dump file into the active connection",
 		),
 	)
 	fmt.Println()

@@ -112,6 +112,16 @@ func (a *App) PrintGeneralHelp() {
 		),
 	)
 	fmt.Println(
+		"  export      " + styles.Faint.Render(
+			"Export tables as a SQL dump",
+		),
+	)
+	fmt.Println(
+		"  import      " + styles.Faint.Render(
+			"Import a SQL dump into the active connection",
+		),
+	)
+	fmt.Println(
 		"  completion  " + styles.Faint.Render(
 			"Generate shell completion script (bash, zsh, fish)",
 		),
@@ -158,6 +168,12 @@ func (a *App) PrintGeneralHelp() {
 	fmt.Println("  pam list queries")
 	fmt.Println("  pam edit config")
 	fmt.Println("  pam edit queries")
+	fmt.Println("  pam export --table=users")
+	fmt.Println("  pam export --output=dump.sql")
+	fmt.Println("  pam export --table=orders --output=orders.sql")
+	fmt.Println("  pam import dump.sql")
+	fmt.Println("  pam import --file=dump.sql --continue-on-error")
+	fmt.Println("  cat dump.sql | pam import")
 }
 
 func (a *App) PrintCommandHelp() {
@@ -929,6 +945,181 @@ func (a *App) PrintCommandHelp() {
 		fmt.Println("  pam completion zsh --install")
 		fmt.Println(
 			"  pam completion bash              # prints script to stdout",
+		)
+
+	case "export":
+		section("Command: export")
+		fmt.Println(
+			styles.Faint.Render(
+				"Export one or all tables from the active connection as a SQL dump.",
+			),
+		)
+		fmt.Println()
+		section("Usage")
+		fmt.Println("  pam export [flags]")
+		fmt.Println(
+			"  pam export <table>              " + styles.Faint.Render(
+				"shorthand for --table=<table>",
+			),
+		)
+		fmt.Println()
+		section("Flags")
+		fmt.Println(
+			"  --table, -t <table>     " + styles.Faint.Render(
+				"Export only the specified table",
+			),
+		)
+		fmt.Println(
+			"  --output, -o <file>     " + styles.Faint.Render(
+				"Write dump to a file instead of stdout",
+			),
+		)
+		fmt.Println(
+			"  --no-create             " + styles.Faint.Render(
+				"Skip CREATE TABLE statements",
+			),
+		)
+		fmt.Println(
+			"  --drop                  " + styles.Faint.Render(
+				"Prepend DROP TABLE IF EXISTS before each CREATE TABLE",
+			),
+		)
+		fmt.Println(
+			"  --no-data               " + styles.Faint.Render(
+				"Export schema only — skip INSERT statements (alias: --schema-only)",
+			),
+		)
+		fmt.Println(
+			"  --data-only             " + styles.Faint.Render(
+				"Export data only — skip CREATE TABLE (alias: --no-create)",
+			),
+		)
+		fmt.Println()
+		section("Description")
+		fmt.Println(
+			"  - Without --table, all tables in the current database are exported.",
+		)
+		fmt.Println(
+			"  - By default both CREATE TABLE and INSERT statements are generated.",
+		)
+		fmt.Println(
+			"  - SQL is written to stdout unless --output is specified.",
+		)
+		fmt.Println(
+			"  - Progress messages are always written to stderr.",
+		)
+		fmt.Println(
+			"  - Pipe-friendly: pam export > dump.sql works correctly.",
+		)
+		fmt.Println()
+		section("Examples")
+		fmt.Println(
+			"  pam export                                    # dump all tables to stdout",
+		)
+		fmt.Println(
+			"  pam export --table=users                      # dump only the users table",
+		)
+		fmt.Println(
+			"  pam export users                              # same as above",
+		)
+		fmt.Println(
+			"  pam export --output=dump.sql                  # all tables to a file",
+		)
+		fmt.Println(
+			"  pam export --table=orders --output=orders.sql # single table to file",
+		)
+		fmt.Println(
+			"  pam export --drop --output=full.sql           # with DROP TABLE IF EXISTS",
+		)
+		fmt.Println(
+			"  pam export --no-data --output=schema.sql      # schema only",
+		)
+		fmt.Println(
+			"  pam export --data-only > inserts.sql          # data only, piped",
+		)
+
+	case "import":
+		section("Command: import")
+		fmt.Println(
+			styles.Faint.Render(
+				"Import a SQL dump file into the active connection.",
+			),
+		)
+		fmt.Println()
+		section("Usage")
+		fmt.Println("  pam import [flags]")
+		fmt.Println(
+			"  pam import <file>               " + styles.Faint.Render(
+				"shorthand for --file=<file>",
+			),
+		)
+		fmt.Println(
+			"  cat dump.sql | pam import       " + styles.Faint.Render(
+				"read from stdin",
+			),
+		)
+		fmt.Println()
+		section("Flags")
+		fmt.Println(
+			"  --file, -f <file>       " + styles.Faint.Render(
+				"SQL file to import",
+			),
+		)
+		fmt.Println(
+			"  --continue-on-error     " + styles.Faint.Render(
+				"Keep going after a failed statement (alias: --continue)",
+			),
+		)
+		fmt.Println(
+			"  --dry-run               " + styles.Faint.Render(
+				"Parse and list statements without executing them",
+			),
+		)
+		fmt.Println()
+		section("Description")
+		fmt.Println(
+			"  - Reads SQL from a file or stdin and executes each statement.",
+		)
+		fmt.Println(
+			"  - Statements are split on ';', correctly handling quoted strings",
+		)
+		fmt.Println(
+			"    and both -- line comments and /* */ block comments.",
+		)
+		fmt.Println(
+			"  - By default, import stops on the first error.",
+		)
+		fmt.Println(
+			"  - Use --continue-on-error to collect all errors and report them",
+		)
+		fmt.Println(
+			"    at the end without aborting.",
+		)
+		fmt.Println(
+			"  - Works with dumps generated by 'pam export'.",
+		)
+		fmt.Println(
+			"  - Pipe-friendly: cat dump.sql | pam import works correctly.",
+		)
+		fmt.Println()
+		section("Examples")
+		fmt.Println(
+			"  pam import dump.sql                       # import from file",
+		)
+		fmt.Println(
+			"  pam import --file=dump.sql                # same with explicit flag",
+		)
+		fmt.Println(
+			"  pam import dump.sql --continue-on-error   # don't stop on errors",
+		)
+		fmt.Println(
+			"  pam import dump.sql --dry-run             # preview only",
+		)
+		fmt.Println(
+			"  cat dump.sql | pam import                 # read from stdin",
+		)
+		fmt.Println(
+			"  pam export --table=users | pam import     # pipe export into import",
 		)
 
 	default:
