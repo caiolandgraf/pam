@@ -77,6 +77,14 @@
 
           <h3 id="disconnect">Disconnecting</h3>
           <CodeBlock title="bash">{{ snippets.disconnect }}</CodeBlock>
+
+          <h3 id="remove-conn">Removing a connection</h3>
+          <p>
+            Use <code>pam remove --conn &lt;name&gt;</code> to permanently
+            delete a saved connection. If it is the currently active connection,
+            it will be cleared automatically.
+          </p>
+          <CodeBlock title="bash">{{ snippets.removeConn }}</CodeBlock>
         </section>
 
         <!-- Database Support -->
@@ -112,14 +120,6 @@
 
           <h3 id="remove-query">Removing queries</h3>
           <CodeBlock title="bash">{{ snippets.removeQuery }}</CodeBlock>
-
-          <h3 id="remove-conn">Removing a connection</h3>
-          <p>
-            Use <code>pam remove --conn &lt;name&gt;</code> to permanently
-            delete a saved connection. If it is the currently active connection,
-            it will be cleared automatically.
-          </p>
-          <CodeBlock title="bash">{{ snippets.removeConn }}</CodeBlock>
         </section>
 
         <!-- Tables -->
@@ -293,6 +293,10 @@ const toc = [
     items: [
       { id: 'installation', label: 'Installation' },
       { id: 'connections', label: 'Connections' },
+      { id: 'init', label: '↳ Creating a connection' },
+      { id: 'switch', label: '↳ Switching connections' },
+      { id: 'disconnect', label: '↳ Disconnecting' },
+      { id: 'remove-conn', label: '↳ Removing a connection' },
       { id: 'databases', label: 'Database Support' }
     ]
   },
@@ -300,7 +304,6 @@ const toc = [
     title: 'Usage',
     items: [
       { id: 'queries', label: 'Query Management' },
-      { id: 'remove-conn', label: 'Removing a connection' },
       { id: 'tables', label: 'Database Exploration' },
       { id: 'export-import', label: 'Import & Export' }
     ]
@@ -367,14 +370,20 @@ nix profile install github:caiolandgraf/pam`,
   init: `# Interactive TUI — recommended, guides you field by field
 pam init
 
-# Auto-inferred type from connection string
+# Flag mode (type auto-inferred from connection string)
+pam init --name mydb --conn "postgres://user:pass@localhost:5432/mydb"
+
+# Short flags
+pam init -n mydb -t postgres -c "postgres://user:pass@localhost:5432/mydb"
+
+# 2-arg positional (type auto-inferred)
 pam init mydb "postgres://user:pass@localhost:5432/mydb"
 
-# Explicit type
+# 3-arg positional (explicit type)
 pam init mydb postgres "postgres://user:pass@localhost:5432/mydb"
 
 # With schema
-pam init mydb oracle "user/pass@localhost:1521/XEPDB1" my_schema`,
+pam init mydb oracle "user/pass@localhost:1521/XEPDB1" --schema my_schema`,
 
   initTUI: `  Connection name  › mydb
   Database type    › postgres  ◀ ▶
@@ -389,14 +398,17 @@ pam init mydb oracle "user/pass@localhost:1521/XEPDB1" my_schema`,
   ↑/↓ Tab: navigate  Ctrl+P: show/hide password  Enter: confirm  Esc: cancel`,
 
   switchConn: `pam switch production
-pam use dev          # alias`,
+pam use dev              # alias`,
 
-  status: `pam status`,
+  status: `pam status
+pam test                 # alias`,
 
   listConnections: `pam list connections
-pam ls               # alias`,
+pam ls                   # alias`,
 
-  disconnect: `pam disconnect`,
+  disconnect: `pam disconnect
+pam clear                # alias
+pam unset                # alias`,
 
   addQuery: `# Inline
 pam add list_users "SELECT * FROM users"
@@ -440,7 +452,8 @@ pam list queries emp          # search
 pam list queries --oneline    # compact`,
 
   removeQuery: `pam remove list_users
-pam remove 3`,
+pam remove 3
+pam delete list_users    # alias`,
 
   removeConn: `# Remove by name
 pam remove --conn mydb
@@ -574,48 +587,70 @@ const colorSchemes = [
 ]
 
 const commands = [
+  // Connections
   {
     cmd: 'init',
     alias: '',
-    desc: 'Create and validate a new database connection'
+    desc: 'Create a new connection — interactive TUI if no args given'
   },
   { cmd: 'switch', alias: 'use', desc: 'Switch the active connection' },
+  { cmd: 'status', alias: 'test', desc: 'Show the current active connection' },
+  {
+    cmd: 'ls',
+    alias: 'list connections',
+    desc: 'List all configured connections'
+  },
   {
     cmd: 'disconnect',
     alias: 'clear, unset',
-    desc: 'Disconnect from current database'
+    desc: 'Clear the active connection'
   },
+  {
+    cmd: 'remove --conn <name>',
+    alias: 'delete --conn',
+    desc: 'Remove a saved connection (clears active if it matches)'
+  },
+  // Queries
   { cmd: 'add', alias: 'save', desc: 'Save a new named query' },
+  { cmd: 'run', alias: '', desc: 'Execute a saved query or inline SQL' },
   {
     cmd: 'remove',
     alias: 'delete',
     desc: 'Remove a saved query by name or ID'
   },
   {
-    cmd: 'remove --conn <name>',
-    alias: 'delete --conn',
-    desc: 'Remove a saved connection'
+    cmd: 'list queries',
+    alias: '',
+    desc: 'List saved queries for the current connection'
   },
-  { cmd: 'run', alias: '', desc: 'Execute a saved query or inline SQL' },
+  { cmd: 'history', alias: '', desc: 'Show query execution history' },
+  // Database
   {
     cmd: 'query --table=<t>',
     alias: '',
-    desc: 'Run SQL against a specific table'
+    desc: 'Run SQL against a specific table with pk inference'
   },
-  { cmd: 'list', alias: '', desc: 'List connections or queries' },
-  { cmd: 'ls', alias: '', desc: 'Shortcut for list connections' },
   {
     cmd: 'tables',
     alias: 't, explore',
-    desc: 'List or query database tables'
+    desc: 'List all tables or query one directly'
   },
-  { cmd: 'table-view', alias: 'tv', desc: 'View and edit table structure' },
   {
-    cmd: 'info',
-    alias: '',
-    desc: 'Show tables or views in current connection'
+    cmd: 'table-view',
+    alias: 'tv',
+    desc: 'Inspect and edit table structure (columns, types, constraints)'
   },
-  { cmd: 'explain', alias: '', desc: 'Visualize foreign key relationships' },
+  {
+    cmd: 'info <tables|views>',
+    alias: '',
+    desc: 'Show all tables or views in the current connection'
+  },
+  {
+    cmd: 'explain',
+    alias: '',
+    desc: 'Visualize foreign key relationships between tables'
+  },
+  // Import / Export
   {
     cmd: 'export',
     alias: '',
@@ -624,16 +659,21 @@ const commands = [
   {
     cmd: 'import',
     alias: '',
-    desc: 'Import a SQL dump file or stdin into the active connection'
+    desc: 'Import a SQL dump from a file or stdin'
   },
-  { cmd: 'edit', alias: '', desc: 'Open config or queries in editor' },
-  { cmd: 'status', alias: 'test', desc: 'Show current active connection' },
+  // Configuration
+  { cmd: 'edit config', alias: '', desc: 'Edit the config file in $EDITOR' },
+  {
+    cmd: 'edit queries',
+    alias: '',
+    desc: 'Edit saved queries for current connection in $EDITOR'
+  },
   {
     cmd: 'completion',
     alias: '',
-    desc: 'Generate shell completion (bash, zsh, fish)'
+    desc: 'Generate shell completion script (bash, zsh, fish)'
   },
-  { cmd: 'help', alias: '', desc: 'Show help for a command' }
+  { cmd: 'help', alias: '', desc: 'Show help for pam or a specific command' }
 ]
 
 const tuiKeys = [
