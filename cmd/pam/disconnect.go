@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 func (a *App) handleDisconnect() {

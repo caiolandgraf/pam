@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 func (a *App) handleHelp() {

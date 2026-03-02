@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/styles"
 	"gopkg.in/yaml.v2"
 )
 
@@ -13,13 +13,13 @@ var CfgPath = os.ExpandEnv("$HOME/.config/pam/")
 var CfgFile = filepath.Join(CfgPath, "config.yaml")
 
 type Config struct {
-	CurrentConnection     string                      `yaml:"current_connection"`
-	Connections           map[string]*ConnectionYAML `yaml:"connections"`
-	ColorScheme           string                      `yaml:"color_scheme"`
-	CustomColorScheme     *styles.ColorScheme         `yaml:"custom_colors,omitempty"`
-	History               History                     `yaml:"history"`
-	DefaultRowLimit       int                         `yaml:"default_row_limit"`
-	DefaultColumnWidth    int                         `yaml:"default_column_width"`
+	CurrentConnection  string                     `yaml:"current_connection"`
+	Connections        map[string]*ConnectionYAML `yaml:"connections"`
+	ColorScheme        string                     `yaml:"color_scheme"`
+	CustomColorScheme  *styles.ColorScheme        `yaml:"custom_colors,omitempty"`
+	History            History                    `yaml:"history"`
+	DefaultRowLimit    int                        `yaml:"default_row_limit"`
+	DefaultColumnWidth int                        `yaml:"default_column_width"`
 }
 
 type History struct {

@@ -3,8 +3,8 @@ package run
 import (
 	"fmt"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/db"
 )
 
 // ResolveQuery determines which query to run based on flags and config
@@ -13,7 +13,12 @@ import (
 //  2. Inline SQL (if selector looks like SQL)
 //  3. Saved query by name/ID
 //  4. Create new in editor (default)
-func ResolveQuery(flags Flags, cfg *config.Config, currentConn string, conn db.DatabaseConnection) (ResolvedQuery, error) {
+func ResolveQuery(
+	flags Flags,
+	cfg *config.Config,
+	currentConn string,
+	conn db.DatabaseConnection,
+) (ResolvedQuery, error) {
 	// Priority 1: Last query with --last/-l flag
 	if flags.LastQuery {
 		if currentConn == "" {
@@ -21,7 +26,9 @@ func ResolveQuery(flags Flags, cfg *config.Config, currentConn string, conn db.D
 		}
 		lastQuery := cfg.Connections[currentConn].LastQuery
 		if lastQuery.Name == "" {
-			return ResolvedQuery{}, fmt.Errorf("no last query found. Run a query first, then use pam run --last")
+			return ResolvedQuery{}, fmt.Errorf(
+				"no last query found. Run a query first, then use pam run --last",
+			)
 		}
 		return ResolvedQuery{
 			Query:    lastQuery,
@@ -41,7 +48,10 @@ func ResolveQuery(flags Flags, cfg *config.Config, currentConn string, conn db.D
 	if flags.Selector != "" {
 		q, found := db.FindQueryWithSelector(conn.GetQueries(), flags.Selector)
 		if !found {
-			return ResolvedQuery{}, fmt.Errorf("could not find query with name/id: %v", flags.Selector)
+			return ResolvedQuery{}, fmt.Errorf(
+				"could not find query with name/id: %v",
+				flags.Selector,
+			)
 		}
 		return ResolvedQuery{
 			Query:    q,

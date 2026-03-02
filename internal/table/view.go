@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/caiolandgraf/pam/internal/parser"
+	"github.com/caiolandgraf/pam/internal/styles"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/eduardofuncao/pam/internal/parser"
-	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 func (m Model) View() string {

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caiolandgraf/pam/internal/styles"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 func (m Model) updateCell() (tea.Model, tea.Cmd) {
@@ -45,7 +45,12 @@ func (m Model) updateCell() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	cmd := buildEditorCommand(editorCmd, tmpPath, updateStmt, CursorAtUpdateValue)
+	cmd := buildEditorCommand(
+		editorCmd,
+		tmpPath,
+		updateStmt,
+		CursorAtUpdateValue,
+	)
 
 	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
 		// Check if file was modified
@@ -56,7 +61,8 @@ func (m Model) updateCell() (tea.Model, tea.Cmd) {
 		}
 
 		// If file wasn't modified, user cancelled (exited without saving)
-		if afterModTime.ModTime().Equal(beforeModTime.ModTime()) || afterModTime.ModTime().Before(beforeModTime.ModTime()) {
+		if afterModTime.ModTime().Equal(beforeModTime.ModTime()) ||
+			afterModTime.ModTime().Before(beforeModTime.ModTime()) {
 			os.Remove(tmpPath)
 			// Return a message that will show "cancelled" status
 			return editorCompleteMsg{
@@ -86,7 +92,9 @@ type editorCompleteMsg struct {
 	cancelled bool
 }
 
-func (m Model) handleEditorComplete(msg editorCompleteMsg) (tea.Model, tea.Cmd) {
+func (m Model) handleEditorComplete(
+	msg editorCompleteMsg,
+) (tea.Model, tea.Cmd) {
 	// If user cancelled (exited without saving)
 	if msg.cancelled {
 		m.statusMessage = styles.Error.Render("✗ Update canceled")
@@ -157,7 +165,10 @@ func (m Model) buildUpdateStatement() string {
 	)
 
 	if multipleMatches && pkValue != "" {
-		stmt = fmt.Sprintf("-- Warning: Multiple rows matched the WHERE clause, using PK from first match\n%s", stmt)
+		stmt = fmt.Sprintf(
+			"-- Warning: Multiple rows matched the WHERE clause, using PK from first match\n%s",
+			stmt,
+		)
 	}
 
 	return stmt
@@ -172,7 +183,10 @@ func (m Model) fetchPrimaryKeyValue() (string, bool) {
 	var whereConditions []string
 	for i, col := range m.columns {
 		val := m.data[m.selectedRow][i]
-		whereConditions = append(whereConditions, fmt.Sprintf("%s = '%s'", col, escapeSQLValue(val)))
+		whereConditions = append(
+			whereConditions,
+			fmt.Sprintf("%s = '%s'", col, escapeSQLValue(val)),
+		)
 	}
 
 	if len(whereConditions) == 0 {
@@ -182,7 +196,12 @@ func (m Model) fetchPrimaryKeyValue() (string, bool) {
 	whereClause := strings.Join(whereConditions, " AND ")
 
 	// Query for PK value
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s", m.primaryKeyCol, m.tableName, whereClause)
+	query := fmt.Sprintf(
+		"SELECT %s FROM %s WHERE %s",
+		m.primaryKeyCol,
+		m.tableName,
+		whereClause,
+	)
 
 	rows, err := m.dbConnection.ExecQuery(query)
 	if err != nil {
@@ -253,11 +272,14 @@ func validateUpdateStatement(sql string) error {
 	upperSQL := strings.ToUpper(cleanSQL)
 
 	// Check for ClickHouse ALTER TABLE UPDATE or standard UPDATE
-	isClickHouse := strings.Contains(upperSQL, "ALTER TABLE") && strings.Contains(upperSQL, "UPDATE")
+	isClickHouse := strings.Contains(upperSQL, "ALTER TABLE") &&
+		strings.Contains(upperSQL, "UPDATE")
 	isStandardUpdate := strings.HasPrefix(upperSQL, "UPDATE")
 
 	if !isClickHouse && !isStandardUpdate {
-		return fmt.Errorf("not a valid UPDATE statement (expected UPDATE or ALTER TABLE UPDATE)")
+		return fmt.Errorf(
+			"not a valid UPDATE statement (expected UPDATE or ALTER TABLE UPDATE)",
+		)
 	}
 
 	// For ClickHouse: ALTER TABLE ... UPDATE ... WHERE ...
@@ -265,7 +287,9 @@ func validateUpdateStatement(sql string) error {
 		// Check for UPDATE keyword after ALTER TABLE
 		updateRegex := regexp.MustCompile(`(?i)ALTER\s+TABLE\s+\S+\s+UPDATE\s+`)
 		if !updateRegex.MatchString(cleanSQL) {
-			return fmt.Errorf("ClickHouse ALTER TABLE UPDATE must include UPDATE clause")
+			return fmt.Errorf(
+				"ClickHouse ALTER TABLE UPDATE must include UPDATE clause",
+			)
 		}
 	} else {
 		// For standard SQL: UPDATE ... SET ...
@@ -278,7 +302,9 @@ func validateUpdateStatement(sql string) error {
 	// Both syntaxes require WHERE clause
 	whereRegex := regexp.MustCompile(`(?i)\bWHERE\b`)
 	if !whereRegex.MatchString(cleanSQL) {
-		return fmt.Errorf("UPDATE statement must include a WHERE clause for safety")
+		return fmt.Errorf(
+			"UPDATE statement must include a WHERE clause for safety",
+		)
 	}
 
 	return nil
@@ -310,7 +336,10 @@ func (m Model) extractNewValue(sql string, columnName string) string {
 	cleanSQL := strings.TrimSpace(result.String())
 
 	// First try standard SQL: SET column_name = 'value'
-	setPattern := fmt.Sprintf(`SET\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`, regexp.QuoteMeta(columnName))
+	setPattern := fmt.Sprintf(
+		`SET\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`,
+		regexp.QuoteMeta(columnName),
+	)
 	setRe := regexp.MustCompile(`(?i)` + setPattern)
 
 	matches := setRe.FindStringSubmatch(cleanSQL)
@@ -325,8 +354,10 @@ func (m Model) extractNewValue(sql string, columnName string) string {
 	}
 
 	// Try ClickHouse: UPDATE column_name = 'value' (no SET keyword)
-	updatePattern := fmt.Sprintf(`UPDATE\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`,
-		regexp.QuoteMeta(columnName))
+	updatePattern := fmt.Sprintf(
+		`UPDATE\s+%s\s*=\s*('([^']*)'|"([^"]*)"|([^,\s;]+))`,
+		regexp.QuoteMeta(columnName),
+	)
 	updateRe := regexp.MustCompile(`(?i)` + updatePattern)
 
 	matches = updateRe.FindStringSubmatch(cleanSQL)

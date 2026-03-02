@@ -5,22 +5,31 @@ import (
 	"os"
 	"strings"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/editor"
-	"github.com/eduardofuncao/pam/internal/params"
-	"github.com/eduardofuncao/pam/internal/run"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/editor"
+	"github.com/caiolandgraf/pam/internal/params"
+	"github.com/caiolandgraf/pam/internal/run"
 )
 
 func (a *App) handleRun() {
 	if a.config.CurrentConnection == "" {
-		printError("No active connection.   Use 'pam switch <connection>' or 'pam init' first")
+		printError(
+			"No active connection.   Use 'pam switch <connection>' or 'pam init' first",
+		)
 	}
 
 	flags := parseRunFlags()
-	conn := config.FromConnectionYaml(a.config.Connections[a.config.CurrentConnection])
+	conn := config.FromConnectionYaml(
+		a.config.Connections[a.config.CurrentConnection],
+	)
 
-	resolved, err := run.ResolveQuery(flags, a.config, a.config.CurrentConnection, conn)
+	resolved, err := run.ResolveQuery(
+		flags,
+		a.config,
+		a.config.CurrentConnection,
+		conn,
+	)
 	if err != nil {
 		printError("%v", err)
 	}
@@ -41,7 +50,10 @@ func (a *App) handleRun() {
 	paramFlags := parseParameterFlags()
 	positionalArgsSlice := parsePositionalArgs(flags.Selector)
 
-	positionalArgs := params.MapPositionalArgs(resolved.Query.SQL, positionalArgsSlice)
+	positionalArgs := params.MapPositionalArgs(
+		resolved.Query.SQL,
+		positionalArgsSlice,
+	)
 
 	a.executeQueryWithParams(resolved.Query, conn, paramFlags, positionalArgs)
 }
@@ -52,7 +64,9 @@ func parseRunFlags() run.Flags {
 
 	for i, arg := range args {
 		// Skip parameter flags and their values
-		if strings.HasPrefix(arg, "--") && arg != "--edit" && arg != "-e" && arg != "--last" && arg != "-l" {
+		if strings.HasPrefix(arg, "--") && arg != "--edit" && arg != "-e" &&
+			arg != "--last" &&
+			arg != "-l" {
 			// This is a parameter flag, skip it and its value
 			if i+1 < len(args) && !strings.HasPrefix(args[i+1], "--") {
 				continue
@@ -180,7 +194,11 @@ func (a *App) saveIfNeeded(resolved run.ResolvedQuery) {
 	}
 
 	// Save the query and update last query
-	if err := a.config.SaveQueryAndLast(a.config.CurrentConnection, resolved.Query, true); err != nil {
+	if err := a.config.SaveQueryAndLast(
+		a.config.CurrentConnection,
+		resolved.Query,
+		true,
+	); err != nil {
 		printError("Failed to save query: %v", err)
 	}
 }
@@ -212,11 +230,20 @@ func (a *App) executeQuery(query db.Query, conn db.DatabaseConnection) {
 	})
 }
 
-func (a *App) executeQueryWithParams(query db.Query, conn db.DatabaseConnection, paramFlags, positionalArgs map[string]string) {
+func (a *App) executeQueryWithParams(
+	query db.Query,
+	conn db.DatabaseConnection,
+	paramFlags, positionalArgs map[string]string,
+) {
 	originalQuery := query
 
 	// Process parameters
-	sql, args, displaySQL := a.processParameters(query.SQL, conn, paramFlags, positionalArgs)
+	sql, args, displaySQL := a.processParameters(
+		query.SQL,
+		conn,
+		paramFlags,
+		positionalArgs,
+	)
 
 	// Create a modified query with processed SQL for execution
 	processedQuery := db.Query{
@@ -244,7 +271,12 @@ func (a *App) executeQueryWithParams(query db.Query, conn db.DatabaseConnection,
 
 			if strings.Contains(editedSQL, ":") {
 				// User kept the parameter syntax, re-process with same params
-				finalSQL, finalArgs, finalDisplaySQL = a.processParameters(originalQuery.SQL, conn, paramFlags, positionalArgs)
+				finalSQL, finalArgs, finalDisplaySQL = a.processParameters(
+					originalQuery.SQL,
+					conn,
+					paramFlags,
+					positionalArgs,
+				)
 			}
 
 			editedQuery := db.Query{
@@ -266,7 +298,12 @@ func (a *App) executeQueryWithParams(query db.Query, conn db.DatabaseConnection,
 				Args:         finalArgs,
 				DisplaySQL:   finalDisplaySQL,
 				OnRerun: func(sql string) {
-					a.executeQueryWithParams(originalQuery, conn, paramFlags, positionalArgs)
+					a.executeQueryWithParams(
+						originalQuery,
+						conn,
+						paramFlags,
+						positionalArgs,
+					)
 				},
 			})
 		},
@@ -274,7 +311,11 @@ func (a *App) executeQueryWithParams(query db.Query, conn db.DatabaseConnection,
 }
 
 // processParameters handles parameter extraction, validation, and substitution
-func (a *App) processParameters(sql string, conn db.DatabaseConnection, cliValues, positionals map[string]string) (string, []any, string) {
+func (a *App) processParameters(
+	sql string,
+	conn db.DatabaseConnection,
+	cliValues, positionals map[string]string,
+) (string, []any, string) {
 	// Extract parameter definitions from SQL
 	paramDefs := params.ExtractParameters(sql)
 
@@ -304,7 +345,11 @@ func (a *App) processParameters(sql string, conn db.DatabaseConnection, cliValue
 	missing := params.GetMissingRequired(paramDefs, paramValues)
 	if len(missing) > 0 {
 		// Launch interactive TUI
-		collectedValues, err := params.CollectParameters(sql, missing, paramDefs)
+		collectedValues, err := params.CollectParameters(
+			sql,
+			missing,
+			paramDefs,
+		)
 		if err != nil {
 			if err == params.ErrAborted {
 				os.Exit(0)

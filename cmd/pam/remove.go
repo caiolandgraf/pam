@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 func (a *App) handleRemove() {
@@ -28,5 +28,7 @@ func (a *App) handleRemove() {
 		printError("Could not save configuration file: %v", err)
 	}
 
-	fmt.Println(styles.Success.Render(fmt.Sprintf("✓ Removed run '%s'", query.Name)))
+	fmt.Println(
+		styles.Success.Render(fmt.Sprintf("✓ Removed run '%s'", query.Name)),
+	)
 }

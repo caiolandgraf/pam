@@ -5,10 +5,14 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/eduardofuncao/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/db"
 )
 
-func SubstituteParameters(sql string, paramValues map[string]string, conn db.DatabaseConnection) (string, []any, error) {
+func SubstituteParameters(
+	sql string,
+	paramValues map[string]string,
+	conn db.DatabaseConnection,
+) (string, []any, error) {
 	if len(paramValues) == 0 {
 		return sql, []any{}, nil
 	}
@@ -39,7 +43,10 @@ func SubstituteParameters(sql string, paramValues map[string]string, conn db.Dat
 				orderedValues = append(orderedValues, value)
 				currentIndex++
 			} else {
-				return "", nil, fmt.Errorf("missing value for parameter: %s", paramName)
+				return "", nil, fmt.Errorf(
+					"missing value for parameter: %s",
+					paramName,
+				)
 			}
 		}
 	}
@@ -51,7 +58,11 @@ func SubstituteParameters(sql string, paramValues map[string]string, conn db.Dat
 }
 
 // replaceParamPlaceholders replaces all :param|default or :param with DB-specific placeholders
-func replaceParamPlaceholders(sql string, conn db.DatabaseConnection, paramIndex map[string]int) string {
+func replaceParamPlaceholders(
+	sql string,
+	conn db.DatabaseConnection,
+	paramIndex map[string]int,
+) string {
 	// Use same regex as initial extraction to handle quoted strings
 	re := regexp.MustCompile(`:(\w+)(?:\|('(?:[^'\\]|\\.)*'|(?:[^'\s\\]+)))?`)
 

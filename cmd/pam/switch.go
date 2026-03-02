@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 func (a *App) handleSwitch() {
@@ -24,5 +24,8 @@ func (a *App) handleSwitch() {
 		printError("Could not save configuration file: %v", err)
 	}
 
-	fmt. Println(styles.Success.Render("⇄ Switched to: "), styles.Title.Render(fmt.Sprintf("%s/%s", conn.DBType, connName)))
+	fmt.Println(
+		styles.Success.Render("⇄ Switched to: "),
+		styles.Title.Render(fmt.Sprintf("%s/%s", conn.DBType, connName)),
+	)
 }

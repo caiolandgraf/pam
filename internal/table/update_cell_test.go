@@ -3,7 +3,7 @@ package table
 import (
 	"testing"
 
-	"github.com/eduardofuncao/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/db"
 )
 
 func TestModel_BuildUpdateStatement(t *testing.T) {

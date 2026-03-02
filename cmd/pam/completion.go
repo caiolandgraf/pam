@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 func (a *App) handleCompletion() {

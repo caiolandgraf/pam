@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/styles"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 // TableViewModel is the bubbletea model for the table structure view

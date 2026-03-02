@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 const Version = "v0.2.0"

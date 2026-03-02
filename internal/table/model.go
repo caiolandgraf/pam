@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/parser"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/parser"
 )
 
 type Model struct {

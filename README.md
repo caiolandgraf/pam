@@ -55,7 +55,7 @@
 </h2>
 
 ### Installation
-Go to [the releases page](https://github.com/eduardofuncao/pam/releases) and find the correct version for your system. Download it and make sure the file is executable and moved to a directory in your $PATH.
+Go to [the releases page](https://github.com/caiolandgraf/pam/releases) and find the correct version for your system. Download it and make sure the file is executable and moved to a directory in your $PATH.
 
 
 <details>
@@ -63,7 +63,7 @@ Go to [the releases page](https://github.com/eduardofuncao/pam/releases) and fin
 
 Use go to install `pam` directly
 ```bash
-go install github.com/eduardofuncao/pam/cmd/pam@latest
+go install github.com/caiolandgraf/pam/cmd/pam@latest
 ```
 this will put the binary `pam` in your $GOBIN path (usually `~/go/bin`)
 </details>
@@ -73,7 +73,7 @@ this will put the binary `pam` in your $GOBIN path (usually `~/go/bin`)
 
 Follow these instructions to build the project locally
 ```bash
-git clone https://github.com/eduardofuncao/pam
+git clone https://github.com/caiolandgraf/pam
 
 go build -o pam ./cmd/pam
 ```
@@ -89,17 +89,17 @@ Nix.
 
 #### Run directly without installing
 ```bash
-nix run github:eduardofuncao/pam
+nix run github:caiolandgraf/pam
 ```
 
 #### Install to user profile
 ```bash
-nix profile install github:eduardofuncao/pam
+nix profile install github:caiolandgraf/pam
 ```
 
 #### Enter development shell
 ```bash
-nix develop github:eduardofuncao/pam
+nix develop github:caiolandgraf/pam
 ```
 
 #### NixOS System-wide
@@ -112,7 +112,7 @@ description = "My NixOS config";
 
 inputs = {
   nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  pam.url = "github:eduardofuncao/pam";
+  pam.url = "github:caiolandgraf/pam";
 };
 
 outputs = { self, nixpkgs, pam, ... }: {
@@ -141,7 +141,7 @@ Add to your home.nix or flake config:
 {
 inputs = {
   nixpkgs.url = "github:NixOS/nixpkgs/nix-unstable";
-  pam.url = "github:eduardofuncao/pam";
+  pam.url = "github:caiolandgraf/pam";
 };
 
 outputs = { self, nixpkgs, pam, ... }: {
@@ -735,7 +735,7 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 <div align="center">
 
-**Made with 👚 by [@eduardofuncao](https://github.com/eduardofuncao)**
+**Made with 👚 by [@caiolandgraf](https://github.com/caiolandgraf)**
 
 > *"I don't think it would be the worst thing if it didn't work out...  Wait, can I say that?"* - Pam Beesly (definitely NOT about Pam's Database Drawer)
 

@@ -6,9 +6,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/parser"
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/parser"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 type listFlags struct {
@@ -62,12 +62,19 @@ func (a *App) handleList() {
 			} else {
 				marker = styles.Faint.Render("◆")
 			}
-			fmt.Printf("%s %s %s\n", marker, styles.Title.Render(name), styles.Faint.Render(fmt.Sprintf("(%s)", connection.DBType)))
+			fmt.Printf(
+				"%s %s %s\n",
+				marker,
+				styles.Title.Render(name),
+				styles.Faint.Render(fmt.Sprintf("(%s)", connection.DBType)),
+			)
 		}
 
 	case "queries":
 		if a.config.CurrentConnection == "" {
-			printError("No active connection.  Use 'pam switch <connection>' or 'pam init' first")
+			printError(
+				"No active connection.  Use 'pam switch <connection>' or 'pam init' first",
+			)
 		}
 		conn := a.config.Connections[a.config.CurrentConnection]
 		if len(conn.Queries) == 0 {
@@ -85,8 +92,14 @@ func (a *App) handleList() {
 			}
 
 			searchLower := strings.ToLower(flags.searchTerm)
-			nameMatch := strings.Contains(strings.ToLower(query.Name), searchLower)
-			sqlMatch := strings.Contains(strings.ToLower(query.SQL), searchLower)
+			nameMatch := strings.Contains(
+				strings.ToLower(query.Name),
+				searchLower,
+			)
+			sqlMatch := strings.Contains(
+				strings.ToLower(query.SQL),
+				searchLower,
+			)
 
 			if nameMatch || sqlMatch {
 				queryList = append(queryList, query)
@@ -98,7 +111,10 @@ func (a *App) handleList() {
 		})
 
 		if flags.searchTerm != "" && len(queryList) == 0 {
-			fmt.Printf(styles.Faint.Render("No queries found matching '%s'\n"), flags.searchTerm)
+			fmt.Printf(
+				styles.Faint.Render("No queries found matching '%s'\n"),
+				flags.searchTerm,
+			)
 			return
 		}
 
@@ -123,20 +139,30 @@ func (a *App) handleList() {
 				tableName = tableName + " <join>"
 			}
 
-			formatedItem := fmt.Sprintf("◆ %d/%s (%s)", query.Id, displayName, tableName)
+			formatedItem := fmt.Sprintf(
+				"◆ %d/%s (%s)",
+				query.Id,
+				displayName,
+				tableName,
+			)
 			fmt.Println(styles.Title.Render(formatedItem))
 
 			displaySQL := query.SQL
 			if flags.searchTerm != "" {
 				displaySQL = highlightMatches(query.SQL, flags.searchTerm)
 			}
-			fmt.Print(parser.HighlightSQL(parser.FormatSQLWithLineBreaks(displaySQL)))
+			fmt.Print(
+				parser.HighlightSQL(parser.FormatSQLWithLineBreaks(displaySQL)),
+			)
 			fmt.Println()
 			fmt.Println()
 		}
 
 	default:
-		printError("Unknown list type: %s.  Use 'queries' or 'connections'", objectType)
+		printError(
+			"Unknown list type: %s.  Use 'queries' or 'connections'",
+			objectType,
+		)
 	}
 }
 

@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/editor"
+	"github.com/caiolandgraf/pam/internal/styles"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/editor"
-	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 type saveQueryCompleteMsg struct {
@@ -38,9 +38,13 @@ func (m Model) saveQuery() (tea.Model, tea.Cmd) {
 		if m.saveQueryCallback != nil {
 			savedQuery, err := m.saveQueryCallback(queryToSave)
 			if err != nil {
-				m.statusMessage = styles.Error.Render("✗ Save failed: " + err.Error())
+				m.statusMessage = styles.Error.Render(
+					"✗ Save failed: " + err.Error(),
+				)
 			} else {
-				m.statusMessage = styles.Success.Render("✓ Saved: " + m.currentQuery.Name)
+				m.statusMessage = styles.Success.Render(
+					"✓ Saved: " + m.currentQuery.Name,
+				)
 				// Update the model with the saved query info (in case ID changed)
 				m.currentQuery = savedQuery
 			}
@@ -56,7 +60,9 @@ func (m Model) saveQuery() (tea.Model, tea.Cmd) {
 
 	tmpFile, err := editor.CreateTempFile("pam-query-name-", instructions)
 	if err != nil {
-		m.statusMessage = lipgloss.NewStyle().Foreground(lipgloss.Color("red")).Render("Error creating temp file")
+		m.statusMessage = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("red")).
+			Render("Error creating temp file")
 		return m, nil
 	}
 	tmpPath := tmpFile.Name()
@@ -114,7 +120,9 @@ func (m Model) saveQuery() (tea.Model, tea.Cmd) {
 	})
 }
 
-func (m Model) handleSaveQueryComplete(msg saveQueryCompleteMsg) (tea.Model, tea.Cmd) {
+func (m Model) handleSaveQueryComplete(
+	msg saveQueryCompleteMsg,
+) (tea.Model, tea.Cmd) {
 	if msg.success {
 		m.statusMessage = styles.Success.Render("✓ Saved as: " + msg.query.Name)
 		// Update the model with the saved query info

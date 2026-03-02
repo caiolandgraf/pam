@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/styles"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 type explainFlags struct {
@@ -53,7 +53,9 @@ func (a *App) handleExplain() {
 	flags, args := parseExplainFlags()
 
 	if len(args) == 0 {
-		fmt.Println("Usage: pam explain [--depth|-d N] [--verbose|-v] <table-name>")
+		fmt.Println(
+			"Usage: pam explain [--depth|-d N] [--verbose|-v] <table-name>",
+		)
 		os.Exit(1)
 	}
 
@@ -76,7 +78,15 @@ func (a *App) handleExplain() {
 	fkCache := make(map[string][]db.ForeignKey)
 	visited := make(map[string]bool)
 
-	tree := a.buildRelationshipTree(conn, tableName, flags.depth, 0, visited, fkCache, flags.verbose)
+	tree := a.buildRelationshipTree(
+		conn,
+		tableName,
+		flags.depth,
+		0,
+		visited,
+		fkCache,
+		flags.verbose,
+	)
 
 	fmt.Println(tree)
 }
@@ -91,14 +101,21 @@ const (
 )
 
 type relationship struct {
-	relType           relationshipType
-	column            string
-	referencedTable   string
-	referencedColumn  string
-	junctionTable     string // For N:N relationships
+	relType          relationshipType
+	column           string
+	referencedTable  string
+	referencedColumn string
+	junctionTable    string // For N:N relationships
 }
 
-func (a *App) buildRelationshipTree(conn db.DatabaseConnection, tableName string, maxDepth, currentDepth int, visited map[string]bool, fkCache map[string][]db.ForeignKey, verbose bool) string {
+func (a *App) buildRelationshipTree(
+	conn db.DatabaseConnection,
+	tableName string,
+	maxDepth, currentDepth int,
+	visited map[string]bool,
+	fkCache map[string][]db.ForeignKey,
+	verbose bool,
+) string {
 	if currentDepth >= maxDepth {
 		return ""
 	}
@@ -118,7 +135,12 @@ func (a *App) buildRelationshipTree(conn db.DatabaseConnection, tableName string
 	if err == nil {
 		for _, fk := range belongsToFKs {
 			// Create a unique key for deduplication
-			key := fmt.Sprintf("%s:%s:%s", fk.ReferencedTable, fk.Column, fk.ReferencedColumn)
+			key := fmt.Sprintf(
+				"%s:%s:%s",
+				fk.ReferencedTable,
+				fk.Column,
+				fk.ReferencedColumn,
+			)
 			if seenTables[key] {
 				continue
 			}
@@ -131,10 +153,10 @@ func (a *App) buildRelationshipTree(conn db.DatabaseConnection, tableName string
 			}
 
 			relationships = append(relationships, relationship{
-				relType:           relType,
-				column:            fk.Column,
-				referencedTable:   fk.ReferencedTable,
-				referencedColumn:  fk.ReferencedColumn,
+				relType:          relType,
+				column:           fk.Column,
+				referencedTable:  fk.ReferencedTable,
+				referencedColumn: fk.ReferencedColumn,
 			})
 		}
 	}
@@ -146,24 +168,35 @@ func (a *App) buildRelationshipTree(conn db.DatabaseConnection, tableName string
 			// Check if the referencing table is a junction table (N:N detection)
 			if a.isJunctionTable(conn, fk.ReferencedTable) {
 				// Get the other side of the N:N relationship
-				otherTable := a.getJunctionTableOtherSide(conn, fk.ReferencedTable, tableName)
+				otherTable := a.getJunctionTableOtherSide(
+					conn,
+					fk.ReferencedTable,
+					tableName,
+				)
 				if otherTable != "" {
 					// Create a unique key for deduplication
-					key := fmt.Sprintf("nn:%s:%s:%s", otherTable, fk.ReferencedTable, tableName)
+					key := fmt.Sprintf(
+						"nn:%s:%s:%s",
+						otherTable,
+						fk.ReferencedTable,
+						tableName,
+					)
 					if seenTables[key] {
 						continue
 					}
 					seenTables[key] = true
 
 					relationships = append(relationships, relationship{
-						relType:          hasManyToMany,
-						referencedTable:  otherTable,
-						junctionTable:    fk.ReferencedTable,
+						relType:         hasManyToMany,
+						referencedTable: otherTable,
+						junctionTable:   fk.ReferencedTable,
 					})
 				}
 			} else {
 				// Check if FK column in referencing table has UNIQUE constraint (1:1 relationship)
-				otherTableUnique, _ := conn.GetUniqueConstraints(fk.ReferencedTable)
+				otherTableUnique, _ := conn.GetUniqueConstraints(
+					fk.ReferencedTable,
+				)
 				isOneToOne := false
 				for _, uc := range otherTableUnique {
 					if uc == fk.Column {
@@ -173,7 +206,12 @@ func (a *App) buildRelationshipTree(conn db.DatabaseConnection, tableName string
 				}
 
 				// Create a unique key for deduplication
-				key := fmt.Sprintf("%s:%s:%s", fk.ReferencedTable, fk.Column, fk.ReferencedColumn)
+				key := fmt.Sprintf(
+					"%s:%s:%s",
+					fk.ReferencedTable,
+					fk.Column,
+					fk.ReferencedColumn,
+				)
 				if seenTables[key] {
 					continue
 				}
@@ -194,11 +232,24 @@ func (a *App) buildRelationshipTree(conn db.DatabaseConnection, tableName string
 		}
 	}
 
-	return a.renderNode(conn, tableName, relationships, maxDepth, currentDepth, visited, fkCache, true, verbose)
+	return a.renderNode(
+		conn,
+		tableName,
+		relationships,
+		maxDepth,
+		currentDepth,
+		visited,
+		fkCache,
+		true,
+		verbose,
+	)
 }
 
 // isJunctionTable checks if a table is a junction table for N:N relationship
-func (a *App) isJunctionTable(conn db.DatabaseConnection, tableName string) bool {
+func (a *App) isJunctionTable(
+	conn db.DatabaseConnection,
+	tableName string,
+) bool {
 	fks, err := conn.GetForeignKeys(tableName)
 	if err != nil || len(fks) != 2 {
 		return false
@@ -228,7 +279,10 @@ func (a *App) isJunctionTable(conn db.DatabaseConnection, tableName string) bool
 }
 
 // getJunctionTableOtherSide returns the other table referenced by a junction table
-func (a *App) getJunctionTableOtherSide(conn db.DatabaseConnection, junctionTable, currentTable string) string {
+func (a *App) getJunctionTableOtherSide(
+	conn db.DatabaseConnection,
+	junctionTable, currentTable string,
+) string {
 	fks, err := conn.GetForeignKeys(junctionTable)
 	if err != nil || len(fks) != 2 {
 		return ""
@@ -244,7 +298,16 @@ func (a *App) getJunctionTableOtherSide(conn db.DatabaseConnection, junctionTabl
 	return ""
 }
 
-func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relationships []relationship, maxDepth, currentDepth int, visited map[string]bool, fkCache map[string][]db.ForeignKey, isRoot bool, verbose bool) string {
+func (a *App) renderNode(
+	conn db.DatabaseConnection,
+	tableName string,
+	relationships []relationship,
+	maxDepth, currentDepth int,
+	visited map[string]bool,
+	fkCache map[string][]db.ForeignKey,
+	isRoot bool,
+	verbose bool,
+) string {
 	var builder strings.Builder
 
 	// Render current table with PK info (only at root level)
@@ -254,7 +317,9 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 			pks := strings.Join(metadata.PrimaryKeys, ", ")
 			builder.WriteString(styles.TableName.Render(tableName))
 			builder.WriteString(" ")
-			builder.WriteString(styles.PrimaryKeyLabel.Render(fmt.Sprintf("(PK: %s)", pks)))
+			builder.WriteString(
+				styles.PrimaryKeyLabel.Render(fmt.Sprintf("(PK: %s)", pks)),
+			)
 		} else {
 			builder.WriteString(styles.TableName.Render(tableName))
 		}
@@ -287,21 +352,36 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 			cardinality = "[N:1]"
 			relStyle = styles.BelongsToStyle
 			if verbose {
-				fkDetails = fmt.Sprintf("(FK: %s → %s.%s)", rel.column, rel.referencedTable, rel.referencedColumn)
+				fkDetails = fmt.Sprintf(
+					"(FK: %s → %s.%s)",
+					rel.column,
+					rel.referencedTable,
+					rel.referencedColumn,
+				)
 			}
 		} else if rel.relType == hasOne {
 			relText = "has one"
 			cardinality = "[1:1]"
 			relStyle = styles.HasOneStyle
 			if verbose {
-				fkDetails = fmt.Sprintf("(FK: %s → %s.%s)", rel.column, rel.referencedTable, rel.referencedColumn)
+				fkDetails = fmt.Sprintf(
+					"(FK: %s → %s.%s)",
+					rel.column,
+					rel.referencedTable,
+					rel.referencedColumn,
+				)
 			}
 		} else if rel.relType == hasMany {
 			relText = "has many"
 			cardinality = "[1:N]"
 			relStyle = styles.HasManyStyle
 			if verbose {
-				fkDetails = fmt.Sprintf("(on: %s ← %s.%s)", rel.referencedColumn, rel.referencedTable, rel.column)
+				fkDetails = fmt.Sprintf(
+					"(on: %s ← %s.%s)",
+					rel.referencedColumn,
+					rel.referencedTable,
+					rel.column,
+				)
 			}
 		} else if rel.relType == hasManyToMany {
 			relText = "↔"
@@ -352,7 +432,10 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 
 		// Recursively render children if within depth limit
 		if currentDepth+1 <= maxDepth {
-			childRelationships := a.getChildRelationships(conn, rel.referencedTable)
+			childRelationships := a.getChildRelationships(
+				conn,
+				rel.referencedTable,
+			)
 			if len(childRelationships) > 0 {
 				childPrefix := "    "
 				if !isLast {
@@ -366,13 +449,25 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 				}
 				localVisited[rel.referencedTable] = true
 
-				childTree := a.renderNode(conn, rel.referencedTable, childRelationships, maxDepth, currentDepth+1, localVisited, fkCache, false, verbose)
+				childTree := a.renderNode(
+					conn,
+					rel.referencedTable,
+					childRelationships,
+					maxDepth,
+					currentDepth+1,
+					localVisited,
+					fkCache,
+					false,
+					verbose,
+				)
 				lines := strings.Split(childTree, "\n")
 				for _, line := range lines {
 					if line == "" {
 						continue
 					}
-					builder.WriteString(styles.TreeConnector.Render(childPrefix))
+					builder.WriteString(
+						styles.TreeConnector.Render(childPrefix),
+					)
 					builder.WriteString(line)
 					builder.WriteString("\n")
 				}
@@ -383,7 +478,10 @@ func (a *App) renderNode(conn db.DatabaseConnection, tableName string, relations
 	return builder.String()
 }
 
-func (a *App) getChildRelationships(conn db.DatabaseConnection, tableName string) []relationship {
+func (a *App) getChildRelationships(
+	conn db.DatabaseConnection,
+	tableName string,
+) []relationship {
 	var relationships []relationship
 	seenTables := make(map[string]bool)
 
@@ -398,7 +496,12 @@ func (a *App) getChildRelationships(conn db.DatabaseConnection, tableName string
 	belongsToFKs, err := conn.GetForeignKeys(tableName)
 	if err == nil {
 		for _, fk := range belongsToFKs {
-			key := fmt.Sprintf("%s:%s:%s", fk.ReferencedTable, fk.Column, fk.ReferencedColumn)
+			key := fmt.Sprintf(
+				"%s:%s:%s",
+				fk.ReferencedTable,
+				fk.Column,
+				fk.ReferencedColumn,
+			)
 			if !seenTables[key] {
 				seenTables[key] = true
 
@@ -425,10 +528,19 @@ func (a *App) getChildRelationships(conn db.DatabaseConnection, tableName string
 			// Check if the referencing table is a junction table (N:N detection)
 			if a.isJunctionTable(conn, fk.ReferencedTable) {
 				// Get the other side of the N:N relationship
-				otherTable := a.getJunctionTableOtherSide(conn, fk.ReferencedTable, tableName)
+				otherTable := a.getJunctionTableOtherSide(
+					conn,
+					fk.ReferencedTable,
+					tableName,
+				)
 				if otherTable != "" {
 					// Create a unique key for deduplication
-					key := fmt.Sprintf("nn:%s:%s:%s", otherTable, fk.ReferencedTable, tableName)
+					key := fmt.Sprintf(
+						"nn:%s:%s:%s",
+						otherTable,
+						fk.ReferencedTable,
+						tableName,
+					)
 					if !seenTables[key] {
 						seenTables[key] = true
 
@@ -441,7 +553,9 @@ func (a *App) getChildRelationships(conn db.DatabaseConnection, tableName string
 				}
 			} else {
 				// Check if FK column in referencing table has UNIQUE constraint (1:1 relationship)
-				otherTableUnique, _ := conn.GetUniqueConstraints(fk.ReferencedTable)
+				otherTableUnique, _ := conn.GetUniqueConstraints(
+					fk.ReferencedTable,
+				)
 				isOneToOne := false
 				for _, uc := range otherTableUnique {
 					if uc == fk.Column {
@@ -450,7 +564,12 @@ func (a *App) getChildRelationships(conn db.DatabaseConnection, tableName string
 					}
 				}
 
-				key := fmt.Sprintf("%s:%s:%s", fk.ReferencedTable, fk.Column, fk.ReferencedColumn)
+				key := fmt.Sprintf(
+					"%s:%s:%s",
+					fk.ReferencedTable,
+					fk.Column,
+					fk.ReferencedColumn,
+				)
 				if !seenTables[key] {
 					seenTables[key] = true
 
@@ -473,7 +592,11 @@ func (a *App) getChildRelationships(conn db.DatabaseConnection, tableName string
 	return relationships
 }
 
-func (a *App) renderRelationshipLine(rel relationship, parentTable string, isSelfReference bool) string {
+func (a *App) renderRelationshipLine(
+	rel relationship,
+	parentTable string,
+	isSelfReference bool,
+) string {
 	var builder strings.Builder
 
 	var relText, cardinality, fkDetails string
@@ -483,12 +606,22 @@ func (a *App) renderRelationshipLine(rel relationship, parentTable string, isSel
 		relText = "belongs to"
 		cardinality = "[N:1]"
 		relStyle = styles.BelongsToStyle
-		fkDetails = fmt.Sprintf("(FK: %s → %s.%s)", rel.column, rel.referencedTable, rel.referencedColumn)
+		fkDetails = fmt.Sprintf(
+			"(FK: %s → %s.%s)",
+			rel.column,
+			rel.referencedTable,
+			rel.referencedColumn,
+		)
 	} else {
 		relText = "has many"
 		cardinality = "[1:N]"
 		relStyle = styles.HasManyStyle
-		fkDetails = fmt.Sprintf("(on: %s ← %s.%s)", rel.referencedColumn, rel.referencedTable, rel.column)
+		fkDetails = fmt.Sprintf(
+			"(on: %s ← %s.%s)",
+			rel.referencedColumn,
+			rel.referencedTable,
+			rel.column,
+		)
 	}
 
 	builder.WriteString(relStyle.Render(fmt.Sprintf("%s →", relText)))

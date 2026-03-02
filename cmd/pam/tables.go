@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/run"
-	"github.com/eduardofuncao/pam/internal/spinner"
-	"github.com/eduardofuncao/pam/internal/table"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/run"
+	"github.com/caiolandgraf/pam/internal/spinner"
+	"github.com/caiolandgraf/pam/internal/table"
 )
 
 type tablesFlags struct {

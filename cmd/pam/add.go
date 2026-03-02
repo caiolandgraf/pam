@@ -5,10 +5,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/editor"
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/editor"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 func (a *App) handleAdd() {

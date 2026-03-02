@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/styles"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 const (
@@ -17,14 +17,14 @@ const (
 )
 
 type InitInputModel struct {
-	name           string
-	dbType         string
-	connString     string
-	cursorIndex    int  // Which field is focused
-	nameCursor     int  // Cursor position within name field
-	connCursor     int  // Cursor position within conn-string field
-	dbTypes        []string
-	aborted        bool
+	name        string
+	dbType      string
+	connString  string
+	cursorIndex int // Which field is focused
+	nameCursor  int // Cursor position within name field
+	connCursor  int // Cursor position within conn-string field
+	dbTypes     []string
+	aborted     bool
 }
 
 func NewInitInputModel(name, dbType, connString string) InitInputModel {
@@ -234,21 +234,42 @@ func (m InitInputModel) View() string {
 	b.WriteString("\n")
 
 	// Name field
-	m.renderField(&b, "Connection name", m.name, m.nameCursor, fieldName == m.cursorIndex)
+	m.renderField(
+		&b,
+		"Connection name",
+		m.name,
+		m.nameCursor,
+		fieldName == m.cursorIndex,
+	)
 
 	// DB Type field (dropdown)
 	m.renderTypeDropdown(&b)
 
 	// Connection string field
-	m.renderField(&b, "Connection string", m.connString, m.connCursor, m.cursorIndex == fieldConnString)
+	m.renderField(
+		&b,
+		"Connection string",
+		m.connString,
+		m.connCursor,
+		m.cursorIndex == fieldConnString,
+	)
 
 	b.WriteString("\n")
-	b.WriteString(styles.Faint.Render("↑: up  ↓: down  ←/→: move cursor/cycle type  Type: input/paste  Enter: submit  Esc: cancel"))
+	b.WriteString(
+		styles.Faint.Render(
+			"↑: up  ↓: down  ←/→: move cursor/cycle type  Type: input/paste  Enter: submit  Esc: cancel",
+		),
+	)
 
 	return b.String()
 }
 
-func (m InitInputModel) renderField(b *strings.Builder, label, value string, cursorPos int, focused bool) {
+func (m InitInputModel) renderField(
+	b *strings.Builder,
+	label, value string,
+	cursorPos int,
+	focused bool,
+) {
 	if focused {
 		prompt := lipgloss.NewStyle().
 			Foreground(lipgloss.Color(styles.ActiveScheme.Primary)).
@@ -346,7 +367,9 @@ func (m InitInputModel) WasAborted() bool {
 	return m.aborted
 }
 
-func CollectInitParameters(name, dbType, connString string) (string, string, string, error) {
+func CollectInitParameters(
+	name, dbType, connString string,
+) (string, string, string, error) {
 	model := NewInitInputModel(name, dbType, connString)
 	program := tea.NewProgram(model)
 

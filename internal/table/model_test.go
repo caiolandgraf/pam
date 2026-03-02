@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/eduardofuncao/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/db"
 )
 
 func TestNew(t *testing.T) {

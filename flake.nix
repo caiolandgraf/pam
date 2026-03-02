@@ -45,7 +45,7 @@
 
           meta = with pkgs.lib; {
             description = "Minimal CLI tool for managing SQL queries across multiple databases";
-            homepage = "https://github.com/eduardofuncao/pam";
+            homepage = "https://github.com/caiolandgraf/pam";
             license = licenses.mit;
             mainProgram = "pam";
           };

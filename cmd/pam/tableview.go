@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/spinner"
-	"github.com/eduardofuncao/pam/internal/table"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/spinner"
+	"github.com/caiolandgraf/pam/internal/table"
 )
 
 func (a *App) handleTableView() {

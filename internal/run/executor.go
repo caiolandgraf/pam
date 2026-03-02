@@ -7,12 +7,12 @@ import (
 
 	stdlib "database/sql"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/parser"
-	"github.com/eduardofuncao/pam/internal/spinner"
-	"github.com/eduardofuncao/pam/internal/styles"
-	"github.com/eduardofuncao/pam/internal/table"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/parser"
+	"github.com/caiolandgraf/pam/internal/spinner"
+	"github.com/caiolandgraf/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/table"
 )
 
 type SaveQueryCallback func(query db.Query) (db.Query, error)
@@ -23,7 +23,7 @@ type ExecutionParams struct {
 	Config       *config.Config
 	SaveCallback SaveQueryCallback
 	OnRerun      func(editedSQL string)
-	Args         []any // Arguments for parameterized queries
+	Args         []any  // Arguments for parameterized queries
 	DisplaySQL   string // Human-readable SQL with values substituted (for TUI display)
 }
 
@@ -42,7 +42,10 @@ func ExecuteSelect(sql, queryName string, params ExecutionParams) error {
 
 	// Apply row limit if requested
 	if applyRowLimit && params.Config.DefaultRowLimit > 0 {
-		sql = params.Connection.ApplyRowLimit(sql, params.Config.DefaultRowLimit)
+		sql = params.Connection.ApplyRowLimit(
+			sql,
+			params.Config.DefaultRowLimit,
+		)
 	}
 
 	// Execute the query with or without parameters
@@ -59,7 +62,9 @@ func ExecuteSelect(sql, queryName string, params ExecutionParams) error {
 	}
 
 	// Format the results
-	columns, columnTypes, data, err := db.FormatTableDataWithTypes(rows.(*stdlib.Rows))
+	columns, columnTypes, data, err := db.FormatTableDataWithTypes(
+		rows.(*stdlib.Rows),
+	)
 	if err != nil {
 		done <- struct{}{}
 		return fmt.Errorf("formatting failed: %w", err)
@@ -89,7 +94,18 @@ func ExecuteSelect(sql, queryName string, params ExecutionParams) error {
 	}
 
 	// Render the TUI
-	model, err := table.Render(columns, columnTypes, data, elapsed, params.Connection, tableName, primaryKey, q, params.Config.DefaultColumnWidth, params.SaveCallback)
+	model, err := table.Render(
+		columns,
+		columnTypes,
+		data,
+		elapsed,
+		params.Connection,
+		tableName,
+		primaryKey,
+		q,
+		params.Config.DefaultColumnWidth,
+		params.SaveCallback,
+	)
 	if err != nil {
 		return fmt.Errorf("error rendering table: %w", err)
 	}
@@ -121,14 +137,26 @@ func ExecuteNonSelect(params ExecutionParams) {
 		return
 	}
 
-	fmt.Println(styles.Success.Render(fmt.Sprintf("✓ Command executed successfully in %.2fs", elapsed.Seconds())))
+	fmt.Println(
+		styles.Success.Render(
+			fmt.Sprintf(
+				"✓ Command executed successfully in %.2fs",
+				elapsed.Seconds(),
+			),
+		),
+	)
 	fmt.Println(styles.Faint.Render("\nExecuted SQL:"))
 	fmt.Println(parser.HighlightSQL(params.Query.SQL))
 }
 
 func Execute(params ExecutionParams) error {
 	if err := params.Connection.Open(); err != nil {
-		return fmt.Errorf("could not open connection to %s/%s: %w", params.Connection.GetDbType(), params.Connection.GetName(), err)
+		return fmt.Errorf(
+			"could not open connection to %s/%s: %w",
+			params.Connection.GetDbType(),
+			params.Connection.GetName(),
+			err,
+		)
 	}
 	defer params.Connection.Close()
 
@@ -140,7 +168,10 @@ func Execute(params ExecutionParams) error {
 	}
 }
 
-func extractMetadata(conn db.DatabaseConnection, query db.Query) (string, string) {
+func extractMetadata(
+	conn db.DatabaseConnection,
+	query db.Query,
+) (string, string) {
 	metadata, err := db.InferTableMetadata(conn, query)
 	if err == nil && metadata != nil {
 		// Return first primary key if available
@@ -151,7 +182,11 @@ func extractMetadata(conn db.DatabaseConnection, query db.Query) (string, string
 		return metadata.TableName, pk
 	}
 
-	fmt.Fprintf(os.Stderr, styles.Faint.Render("Warning: Could not extract table metadata %v\n"), err)
+	fmt.Fprintf(
+		os.Stderr,
+		styles.Faint.Render("Warning: Could not extract table metadata %v\n"),
+		err,
+	)
 	return "", ""
 }
 

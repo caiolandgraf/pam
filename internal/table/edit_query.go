@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caiolandgraf/pam/internal/styles"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 func (m Model) editAndRerunQuery() (tea.Model, tea.Cmd) {
@@ -21,7 +21,7 @@ func (m Model) editAndRerunQuery() (tea.Model, tea.Cmd) {
 	}
 	tmpPath := tmpFile.Name()
 
-	if _, err := tmpFile.WriteString(m.currentQuery. SQL); err != nil {
+	if _, err := tmpFile.WriteString(m.currentQuery.SQL); err != nil {
 		tmpFile.Close()
 		os.Remove(tmpPath)
 		return m, nil
@@ -35,9 +35,14 @@ func (m Model) editAndRerunQuery() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	cmd := buildEditorCommand(editorCmd, tmpPath, m.currentQuery. SQL, CursorAtEndOfFile)
+	cmd := buildEditorCommand(
+		editorCmd,
+		tmpPath,
+		m.currentQuery.SQL,
+		CursorAtEndOfFile,
+	)
 
-	return m, tea. ExecProcess(cmd, func(err error) tea.Msg {
+	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
 		// Check if file was modified
 		afterModTime, statErr := os.Stat(tmpPath)
 		if statErr != nil {
@@ -46,7 +51,8 @@ func (m Model) editAndRerunQuery() (tea.Model, tea.Cmd) {
 		}
 
 		// If file wasn't modified, user cancelled (exited without saving)
-		if afterModTime.ModTime().Equal(beforeModTime.ModTime()) || afterModTime.ModTime().Before(beforeModTime.ModTime()) {
+		if afterModTime.ModTime().Equal(beforeModTime.ModTime()) ||
+			afterModTime.ModTime().Before(beforeModTime.ModTime()) {
 			os.Remove(tmpPath)
 			// Return a message that will show "cancelled" status
 			return queryEditCompleteMsg{
@@ -55,8 +61,8 @@ func (m Model) editAndRerunQuery() (tea.Model, tea.Cmd) {
 			}
 		}
 		editedData, readErr := os.ReadFile(tmpPath)
-		os. Remove(tmpPath)
-		
+		os.Remove(tmpPath)
+
 		if err != nil || readErr != nil {
 			return nil
 		}
@@ -78,7 +84,9 @@ type queryEditCompleteMsg struct {
 	cancelled bool
 }
 
-func (m Model) handleQueryEditComplete(msg queryEditCompleteMsg) (tea.Model, tea.Cmd) {
+func (m Model) handleQueryEditComplete(
+	msg queryEditCompleteMsg,
+) (tea.Model, tea.Cmd) {
 	// If user cancelled (exited without saving)
 	if msg.cancelled {
 		m.statusMessage = styles.Error.Render("✗ Edit canceled")

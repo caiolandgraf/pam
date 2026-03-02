@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/run"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/run"
 )
 
 func (a *App) handleInfo() {
@@ -21,10 +21,14 @@ func (a *App) handleInfo() {
 	}
 
 	if a.config.CurrentConnection == "" {
-		printError("No active connection. Use 'pam switch <connection>' or 'pam init' first")
+		printError(
+			"No active connection. Use 'pam switch <connection>' or 'pam init' first",
+		)
 	}
 
-	conn := config.FromConnectionYaml(a.config.Connections[a.config.CurrentConnection])
+	conn := config.FromConnectionYaml(
+		a.config.Connections[a.config.CurrentConnection],
+	)
 
 	queryStr := conn.GetInfoSQL(infoType)
 	if queryStr == "" {
@@ -39,16 +43,23 @@ func (a *App) handleInfo() {
 	var onRerun func(string)
 	onRerun = func(sql string) {
 		run.ExecuteSelect(sql, "<edited>", run.ExecutionParams{
-			Query:        db.Query{Name: "<edited>", SQL: sql},
-			Connection:   conn,
-			Config:       a.config,
-			OnRerun:      onRerun,
+			Query:      db.Query{Name: "<edited>", SQL: sql},
+			Connection: conn,
+			Config:     a.config,
+			OnRerun:    onRerun,
 		})
 	}
-	run.ExecuteSelect(queryStr, fmt.Sprintf("info %s", infoType), run.ExecutionParams{
-		Query:        db.Query{Name: fmt.Sprintf("info %s", infoType), SQL: queryStr},
-		Connection:   conn,
-		Config:       a.config,
-		OnRerun:      onRerun,
-	})
+	run.ExecuteSelect(
+		queryStr,
+		fmt.Sprintf("info %s", infoType),
+		run.ExecutionParams{
+			Query: db.Query{
+				Name: fmt.Sprintf("info %s", infoType),
+				SQL:  queryStr,
+			},
+			Connection: conn,
+			Config:     a.config,
+			OnRerun:    onRerun,
+		},
+	)
 }

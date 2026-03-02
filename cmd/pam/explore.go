@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/run"
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/run"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 func (a *App) handleExplore() {
@@ -39,10 +39,14 @@ func (a *App) handleExplore() {
 	}
 
 	if a.config.CurrentConnection == "" {
-		printError("No active connection. Use 'pam switch <connection>' or 'pam init' first")
+		printError(
+			"No active connection. Use 'pam switch <connection>' or 'pam init' first",
+		)
 	}
 
-	conn := config.FromConnectionYaml(a.config.Connections[a.config.CurrentConnection])
+	conn := config.FromConnectionYaml(
+		a.config.Connections[a.config.CurrentConnection],
+	)
 
 	if err := conn.Open(); err != nil {
 		printError("Could not open connection: %v", err)
@@ -55,17 +59,17 @@ func (a *App) handleExplore() {
 	var onRerun func(string)
 	onRerun = func(newSQL string) {
 		run.ExecuteSelect(newSQL, tableName, run.ExecutionParams{
-			Query:        db.Query{Name: tableName, SQL: newSQL},
-			Connection:   conn,
-			Config:       a.config,
-			OnRerun:      onRerun,
+			Query:      db.Query{Name: tableName, SQL: newSQL},
+			Connection: conn,
+			Config:     a.config,
+			OnRerun:    onRerun,
 		})
 	}
 	run.ExecuteSelect(sql, tableName, run.ExecutionParams{
-		Query:        db.Query{Name: tableName, SQL: sql},
-		Connection:   conn,
-		Config:       a.config,
-		OnRerun:      onRerun,
+		Query:      db.Query{Name: tableName, SQL: sql},
+		Connection: conn,
+		Config:     a.config,
+		OnRerun:    onRerun,
 	})
 }
 
@@ -100,13 +104,21 @@ func (a *App) listTablesAndViews() {
 	}
 
 	if len(tables) > 0 {
-		fmt.Printf("%s tables %s\n", styles.Title.Render("◆"), styles.Faint.Render(fmt.Sprintf("(%d)", len(tables))))
+		fmt.Printf(
+			"%s tables %s\n",
+			styles.Title.Render("◆"),
+			styles.Faint.Render(fmt.Sprintf("(%d)", len(tables))),
+		)
 		a.formatTableList(tables)
 		fmt.Println()
 	}
 
 	if len(views) > 0 {
-		fmt.Printf("%s views %s\n", styles.Title.Render("◆"), styles.Faint.Render(fmt.Sprintf("(%d)", len(views))))
+		fmt.Printf(
+			"%s views %s\n",
+			styles.Title.Render("◆"),
+			styles.Faint.Render(fmt.Sprintf("(%d)", len(views))),
+		)
 		a.formatTableList(views)
 		fmt.Println()
 	}
@@ -159,4 +171,3 @@ func (a *App) formatTableList(items []string) {
 		fmt.Println()
 	}
 }
-

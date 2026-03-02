@@ -5,10 +5,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/initui"
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/initui"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 func (a *App) handleInit() {
@@ -34,7 +34,11 @@ func (a *App) handleInit() {
 	// Launch TUI
 	if missing {
 		var err error
-		name, dbType, connString, err = initui.CollectInitParameters(name, dbType, connString)
+		name, dbType, connString, err = initui.CollectInitParameters(
+			name,
+			dbType,
+			connString,
+		)
 		if err != nil {
 			if err == initui.ErrAborted {
 				fmt.Println(styles.Error.Render("✗ Init aborted"))
@@ -45,12 +49,19 @@ func (a *App) handleInit() {
 	}
 
 	if name == "" || dbType == "" || connString == "" {
-		printError("Missing required parameters: name, db-type, and connection-string are required")
+		printError(
+			"Missing required parameters: name, db-type, and connection-string are required",
+		)
 	}
 
 	conn, err := db.CreateConnection(name, dbType, connString)
 	if err != nil {
-		printError("Could not create connection interface: %s/%s, %s", dbType, name, err)
+		printError(
+			"Could not create connection interface: %s/%s, %s",
+			dbType,
+			name,
+			err,
+		)
 	}
 
 	if schema != "" {
@@ -66,11 +77,18 @@ func (a *App) handleInit() {
 
 	err = conn.Ping()
 	if err != nil {
-		printError("Could not communicate with the database: %s/%s, %s", dbType, name, err)
+		printError(
+			"Could not communicate with the database: %s/%s, %s",
+			dbType,
+			name,
+			err,
+		)
 	}
 
 	a.config.CurrentConnection = conn.GetName()
-	a.config.Connections[a.config.CurrentConnection] = config.ToConnectionYAML(conn)
+	a.config.Connections[a.config.CurrentConnection] = config.ToConnectionYAML(
+		conn,
+	)
 	err = a.config.Save()
 	if err != nil {
 		printError("Could not save configuration file: %v", err)
@@ -80,7 +98,17 @@ func (a *App) handleInit() {
 	if conn.GetSchema() != "" {
 		schemaInfo = fmt.Sprintf(" (schema: %s)", conn.GetSchema())
 	}
-	fmt.Println(styles.Success.Render("✓ Connection created: "), styles.Title.Render(fmt.Sprintf("%s/%s%s", conn.GetDbType(), conn.GetName(), schemaInfo)))
+	fmt.Println(
+		styles.Success.Render("✓ Connection created: "),
+		styles.Title.Render(
+			fmt.Sprintf(
+				"%s/%s%s",
+				conn.GetDbType(),
+				conn.GetName(),
+				schemaInfo,
+			),
+		),
+	)
 }
 
 // parseInitArgs parses flags and positional args

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/caiolandgraf/pam/internal/parser"
+	"github.com/caiolandgraf/pam/internal/styles"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/eduardofuncao/pam/internal/parser"
-	"github.com/eduardofuncao/pam/internal/styles"
 )
 
 type InputModel struct {
@@ -19,7 +19,11 @@ type InputModel struct {
 	aborted       bool
 }
 
-func NewInputModel(sql string, missingParams []string, defaults map[string]string) InputModel {
+func NewInputModel(
+	sql string,
+	missingParams []string,
+	defaults map[string]string,
+) InputModel {
 	currentValues := make(map[string]string)
 	for _, param := range missingParams {
 		if def, ok := defaults[param]; ok {
@@ -128,7 +132,9 @@ func (m InputModel) View() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.Faint.Render("↑: up  ↓: down  Enter: submit  Esc/q: cancel"))
+	b.WriteString(
+		styles.Faint.Render("↑: up  ↓: down  Enter: submit  Esc/q: cancel"),
+	)
 
 	return b.String()
 }
@@ -141,7 +147,11 @@ func (m InputModel) WasAborted() bool {
 	return m.aborted
 }
 
-func CollectParameters(sql string, missingParams []string, defaults map[string]string) (map[string]string, error) {
+func CollectParameters(
+	sql string,
+	missingParams []string,
+	defaults map[string]string,
+) (map[string]string, error) {
 	model := NewInputModel(sql, missingParams, defaults)
 	program := tea.NewProgram(model)
 

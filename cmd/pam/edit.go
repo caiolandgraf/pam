@@ -7,10 +7,10 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/db"
-	"github.com/eduardofuncao/pam/internal/editor"
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/db"
+	"github.com/caiolandgraf/pam/internal/editor"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 func (a *App) handleEdit() {
@@ -135,7 +135,7 @@ func parseSQLQueriesFile(content string) (map[string]db.Query, error) {
 		// Check for query name comment
 		if comment, ok := strings.CutPrefix(trimmed, "--"); ok {
 			comment = strings.TrimSpace(comment)
-			
+
 			// Skip help comments
 			if strings.HasPrefix(comment, "Editing") || strings.HasPrefix(comment, "Format") ||
 			   strings.HasPrefix(comment, "SQL") || strings.HasPrefix(comment, "Save") {
@@ -159,4 +159,3 @@ func parseSQLQueriesFile(content string) (map[string]db.Query, error) {
 	save()
 	return queries, nil
 }
-

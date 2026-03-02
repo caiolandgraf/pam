@@ -3,8 +3,8 @@ package table
 import (
 	"time"
 
+	"github.com/caiolandgraf/pam/internal/db"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/eduardofuncao/pam/internal/db"
 )
 
 func Render(

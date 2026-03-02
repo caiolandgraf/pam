@@ -4,11 +4,25 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 func Wait(done chan struct{}) {
-	spinnerStages := []string{"▉", "▊", "▋", "▌", "▍", "▎", "▏", "▎", "▍", "▌", "▋", "▊", "▉"}
+	spinnerStages := []string{
+		"▉",
+		"▊",
+		"▋",
+		"▌",
+		"▍",
+		"▎",
+		"▏",
+		"▎",
+		"▍",
+		"▌",
+		"▋",
+		"▊",
+		"▉",
+	}
 	var passed time.Duration = 0
 	for {
 		for _, s := range spinnerStages {
@@ -53,7 +67,11 @@ func CircleWaitWithTimer(done chan struct{}) {
 				fmt.Print("\r")
 				return
 			default:
-				fmt.Printf("\r%s %.2fs", styles.Success.Render(s), passed.Seconds())
+				fmt.Printf(
+					"\r%s %.2fs",
+					styles.Success.Render(s),
+					passed.Seconds(),
+				)
 				passed += 100 * time.Millisecond
 				time.Sleep(100 * time.Millisecond)
 			}

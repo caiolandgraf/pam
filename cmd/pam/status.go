@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/eduardofuncao/pam/internal/config"
-	"github.com/eduardofuncao/pam/internal/spinner"
-	"github.com/eduardofuncao/pam/internal/styles"
+	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/spinner"
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 func (a *App) handleStatus() {
@@ -60,6 +60,14 @@ func (a *App) handleStatus() {
 	}
 
 	// Print final output
-	fmt.Printf("%s Using %s\n", styles.Success.Render(circleIcon), styles.Title.Render(connInfo))
-	fmt.Printf("  %d saved queries, %s\n", queryCount, styles.Faint.Render(statusText))
+	fmt.Printf(
+		"%s Using %s\n",
+		styles.Success.Render(circleIcon),
+		styles.Title.Render(connInfo),
+	)
+	fmt.Printf(
+		"  %d saved queries, %s\n",
+		queryCount,
+		styles.Faint.Render(statusText),
+	)
 }

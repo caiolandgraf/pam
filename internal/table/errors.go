@@ -3,7 +3,8 @@ package table
 import (
 	"fmt"
 	"os"
-	"github.com/eduardofuncao/pam/internal/styles"
+
+	"github.com/caiolandgraf/pam/internal/styles"
 )
 
 func printError(format string, args ...any) {
