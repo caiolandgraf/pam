@@ -168,7 +168,10 @@ Note: Oracle support requires `allowUnfree = true` in your Nix configuration.
 ### Basic Usage
 
 ```bash
-# Create your first connection (PostgreSQL example)
+# Create your first connection — interactive TUI (recommended)
+pam init
+
+# Or pass arguments directly
 pam init mydb postgres "postgresql://user:pass@localhost:5432/mydb"
 
 # Add a saved query
@@ -256,6 +259,30 @@ Each scheme uses a 7-color palette: Primary (titles, headers), Success (success 
     <img width="auto" height="24" alt="image" style="vertical-align:middle;" src="https://github.com/user-attachments/assets/c46a2565-a58c-472c-9393-96724d9716da" />
     Database Support
 </h2>
+
+### Interactive Setup (recommended)
+
+Run `pam init` with no arguments to launch the interactive TUI. It will guide you through each field individually and assemble the connection string automatically:
+
+```
+  Connection name  › mydb
+  Database type    › postgres  ◀ ▶
+  Host             › localhost
+  Port             › 5432
+  Username         › myuser
+  Password         › ••••••
+  Database         › mydb
+
+  conn › postgres://myuser:secret@localhost:5432/mydb
+```
+
+- **Port** is pre-filled with the default for the selected database type
+- **Password** is masked by default — press `Ctrl+P` to toggle visibility
+- The **connection string preview** updates live as you type
+- For **SQLite**, only `File path` is shown (no host/user/password)
+- Press `Enter` to confirm, `Esc` to cancel
+
+---
 
 Examples of init/create commands to start working with different database types
 
@@ -515,11 +542,14 @@ pam import users.sql
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `init <name> <type> <conn-string> [schema]` | Create new database connection | `pam init mydb postgres "postgresql://..."` |
+| `init` | Create a new connection via interactive TUI | `pam init` |
+| `init <name> <type> <conn-string> [schema]` | Create connection with arguments | `pam init mydb postgres "postgresql://..."` |
 | `switch <name>` | Switch to a different connection | `pam switch production` |
 | `status` | Show current active connection | `pam status` |
 | `list connections` | List all configured connections | `pam list connections` |
+| `ls` | Shorthand for list connections | `pam ls` |
 | `disconnect` | Disconnect from current database | `pam disconnect` |
+| `remove --conn <name>` | Remove a saved connection | `pam remove --conn mydb` |
 
 ### Query Operations
 
@@ -527,6 +557,7 @@ pam import users.sql
 |---------|-------------|---------|
 | `add <name> [sql]` | Add a new saved query | `pam add users "SELECT * FROM users"` |
 | `remove <name\|id>` | Remove a saved query | `pam remove users` or `pam remove 3` |
+| `remove --conn <name>` | Remove a saved connection | `pam remove --conn mydb` |
 | `list queries` | List all saved queries | `pam list queries` |
 | `list queries --oneline` | lists each query in one line | `pam list -o` |
 | `list queries <searchterm>` | lists queries containing search term | `pam list employees` |
@@ -592,11 +623,11 @@ Many commands have shorter aliases for faster typing:
 |-------|--------------|-------------|
 | `use` | `switch` | Switch active connection |
 | `save` | `add` | Save a new query |
-| `delete` | `remove` | Remove a saved query |
-| `query` | `run` | Execute a query |
+| `delete` | `remove` | Remove a saved query or connection |
 | `ls` | `list connections` | List all connections |
 | `t` | `tables` | List or query tables |
 | `explore` | `tables` | List or query tables |
+| `tv` | `table-view` | Inspect and edit table structure |
 | `test` | `status` | Show current connection |
 | `clear`, `unset` | `disconnect` | Disconnect from database |
 

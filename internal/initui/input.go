@@ -2,6 +2,7 @@ package initui
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/caiolandgraf/pam/internal/db"
@@ -10,45 +11,227 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// Field indices
 const (
-	fieldName = iota
-	fieldType
-	fieldConnString
+	fieldName     = iota // Connection alias
+	fieldType            // DB type selector
+	fieldHost            // host / file path for sqlite
+	fieldPort            // port
+	fieldUser            // username
+	fieldPassword        // password (masked)
+	fieldDatabase        // database / schema name
+	fieldTotal           // sentinel
 )
 
+// dbDefaults holds the default port for each DB type
+var dbDefaults = map[string]string{
+	"postgres":   "5432",
+	"mysql":      "3306",
+	"sqlserver":  "1433",
+	"clickhouse": "9000",
+	"oracle":     "1521",
+	"firebird":   "3050",
+	"sqlite":     "",
+}
+
+// fieldsForType returns which field indices are visible for a given db type.
+// SQLite only needs name + type + host (file path).
+func fieldsForType(dbType string) []int {
+	switch dbType {
+	case "sqlite":
+		return []int{fieldName, fieldType, fieldHost}
+	default:
+		return []int{
+			fieldName,
+			fieldType,
+			fieldHost,
+			fieldPort,
+			fieldUser,
+			fieldPassword,
+			fieldDatabase,
+		}
+	}
+}
+
+type fieldState struct {
+	value  string
+	cursor int
+}
+
 type InitInputModel struct {
-	name        string
-	dbType      string
-	connString  string
-	cursorIndex int // Which field is focused
-	nameCursor  int // Cursor position within name field
-	connCursor  int // Cursor position within conn-string field
+	fields      [fieldTotal]fieldState
 	dbTypes     []string
+	cursorIndex int // index within the *visible* field list
 	aborted     bool
+	showPass    bool // toggle password visibility
 }
 
 func NewInitInputModel(name, dbType, connString string) InitInputModel {
 	types := db.GetSupportedDBTypes()
 
-	// Auto-infer db type if conn string provided but type is empty
 	if dbType == "" && connString != "" {
 		dbType = db.InferDBType(connString)
 	}
 
-	return InitInputModel{
-		name:        name,
-		dbType:      dbType,
-		connString:  connString,
-		cursorIndex: 0,
-		nameCursor:  len(name),
-		connCursor:  len(connString),
-		dbTypes:     types,
-		aborted:     false,
+	m := InitInputModel{
+		dbTypes:  types,
+		showPass: false,
+	}
+
+	m.fields[fieldName] = fieldState{value: name, cursor: len(name)}
+
+	if dbType == "" {
+		dbType = types[0]
+	}
+	m.fields[fieldType] = fieldState{value: dbType}
+
+	// Pre-fill default port
+	if port, ok := dbDefaults[dbType]; ok {
+		m.fields[fieldPort] = fieldState{value: port, cursor: len(port)}
+	}
+
+	// If a full connString was provided, try to parse it into individual fields
+	if connString != "" {
+		m.parseConnString(connString)
+	}
+
+	return m
+}
+
+// parseConnString tries to decompose an existing connection string into fields.
+func (m *InitInputModel) parseConnString(connString string) {
+	u, err := url.Parse(connString)
+	if err != nil {
+		return
+	}
+	if host := u.Hostname(); host != "" {
+		m.fields[fieldHost] = fieldState{value: host, cursor: len(host)}
+	}
+	if port := u.Port(); port != "" {
+		m.fields[fieldPort] = fieldState{value: port, cursor: len(port)}
+	}
+	if u.User != nil {
+		user := u.User.Username()
+		m.fields[fieldUser] = fieldState{value: user, cursor: len(user)}
+		if pass, ok := u.User.Password(); ok {
+			m.fields[fieldPassword] = fieldState{value: pass, cursor: len(pass)}
+		}
+	}
+	if dbName := strings.TrimPrefix(u.Path, "/"); dbName != "" {
+		m.fields[fieldDatabase] = fieldState{value: dbName, cursor: len(dbName)}
+	}
+}
+
+// buildConnString assembles a connection string from the individual fields.
+func (m *InitInputModel) buildConnString() string {
+	dbType := m.fields[fieldType].value
+	host := m.fields[fieldHost].value
+	port := m.fields[fieldPort].value
+	user := m.fields[fieldUser].value
+	pass := m.fields[fieldPassword].value
+	database := m.fields[fieldDatabase].value
+
+	if host == "" {
+		return ""
+	}
+
+	switch dbType {
+	case "sqlite":
+		return host
+
+	case "postgres":
+		u := &url.URL{Scheme: "postgres"}
+		if user != "" || pass != "" {
+			u.User = url.UserPassword(user, pass)
+		}
+		if port != "" {
+			u.Host = host + ":" + port
+		} else {
+			u.Host = host
+		}
+		u.Path = "/" + database
+		return u.String()
+
+	case "mysql":
+		// DSN format: user:pass@tcp(host:port)/dbname
+		auth := ""
+		if user != "" || pass != "" {
+			auth = url.QueryEscape(user) + ":" + url.QueryEscape(pass) + "@"
+		}
+		hp := host
+		if port != "" {
+			hp = host + ":" + port
+		}
+		return fmt.Sprintf("%stcp(%s)/%s", auth, hp, database)
+
+	case "sqlserver":
+		u := &url.URL{Scheme: "sqlserver"}
+		if user != "" || pass != "" {
+			u.User = url.UserPassword(user, pass)
+		}
+		if port != "" {
+			u.Host = host + ":" + port
+		} else {
+			u.Host = host
+		}
+		if database != "" {
+			q := u.Query()
+			q.Set("database", database)
+			u.RawQuery = q.Encode()
+		}
+		return u.String()
+
+	case "clickhouse":
+		u := &url.URL{Scheme: "clickhouse"}
+		if user != "" || pass != "" {
+			u.User = url.UserPassword(user, pass)
+		}
+		if port != "" {
+			u.Host = host + ":" + port
+		} else {
+			u.Host = host
+		}
+		u.Path = "/" + database
+		return u.String()
+
+	case "oracle":
+		// user/pass@host:port/service
+		return fmt.Sprintf("%s/%s@%s:%s/%s", user, pass, host, port, database)
+
+	case "firebird":
+		return fmt.Sprintf("%s:%s@%s:%s/%s", user, pass, host, port, database)
+
+	default:
+		u := &url.URL{Scheme: dbType}
+		if user != "" || pass != "" {
+			u.User = url.UserPassword(user, pass)
+		}
+		if port != "" {
+			u.Host = host + ":" + port
+		} else {
+			u.Host = host
+		}
+		u.Path = "/" + database
+		return u.String()
 	}
 }
 
 func (m InitInputModel) Init() tea.Cmd {
 	return nil
+}
+
+// visibleFields returns the ordered list of field indices for the current db type.
+func (m *InitInputModel) visibleFields() []int {
+	return fieldsForType(m.fields[fieldType].value)
+}
+
+// currentField returns the field index at the current cursor position.
+func (m *InitInputModel) currentField() int {
+	vf := m.visibleFields()
+	if m.cursorIndex >= len(vf) {
+		return vf[len(vf)-1]
+	}
+	return vf[m.cursorIndex]
 }
 
 func (m InitInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -60,74 +243,65 @@ func (m InitInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "enter":
-			// Check if all required fields are filled
-			if m.name == "" || m.dbType == "" || m.connString == "" {
-				// Move to next empty field
-				m.moveToNextEmptyField()
-				return m, nil
+			if m.isComplete() {
+				return m, tea.Quit
 			}
-			// All fields filled, submit and quit
-			return m, tea.Quit
+			m.moveToNextEmpty()
+			return m, nil
 
-		case "down":
-			if m.cursorIndex < fieldConnString {
+		case "tab", "down":
+			vf := m.visibleFields()
+			if m.cursorIndex < len(vf)-1 {
 				m.cursorIndex++
-				// Update cursor position for the new field
-				if m.cursorIndex == fieldName {
-					m.nameCursor = len(m.name)
-				} else if m.cursorIndex == fieldConnString {
-					m.connCursor = len(m.connString)
-				}
 			}
 
-		case "up":
-			if m.cursorIndex > fieldName {
+		case "shift+tab", "up":
+			if m.cursorIndex > 0 {
 				m.cursorIndex--
-				// Update cursor position for the new field
-				if m.cursorIndex == fieldName {
-					m.nameCursor = len(m.name)
-				} else if m.cursorIndex == fieldConnString {
-					m.connCursor = len(m.connString)
-				}
 			}
 
 		case "right":
-			// Cycle through db types when on type field
-			if m.cursorIndex == fieldType {
+			cf := m.currentField()
+			if cf == fieldType {
 				m.cycleDbType(1)
-			} else if m.cursorIndex == fieldName {
-				// Move cursor right within name field
-				if m.nameCursor < len(m.name) {
-					m.nameCursor++
-				}
-			} else if m.cursorIndex == fieldConnString {
-				// Move cursor right within conn-string field
-				if m.connCursor < len(m.connString) {
-					m.connCursor++
+			} else {
+				fs := &m.fields[cf]
+				if fs.cursor < len(fs.value) {
+					fs.cursor++
 				}
 			}
 
 		case "left":
-			// Cycle through db types when on type field
-			if m.cursorIndex == fieldType {
+			cf := m.currentField()
+			if cf == fieldType {
 				m.cycleDbType(-1)
-			} else if m.cursorIndex == fieldName {
-				// Move cursor left within name field
-				if m.nameCursor > 0 {
-					m.nameCursor--
-				}
-			} else if m.cursorIndex == fieldConnString {
-				// Move cursor left within conn-string field
-				if m.connCursor > 0 {
-					m.connCursor--
+			} else {
+				fs := &m.fields[cf]
+				if fs.cursor > 0 {
+					fs.cursor--
 				}
 			}
+
+		case "ctrl+a":
+			cf := m.currentField()
+			if cf != fieldType {
+				m.fields[cf].cursor = 0
+			}
+
+		case "ctrl+e":
+			cf := m.currentField()
+			if cf != fieldType {
+				fs := &m.fields[cf]
+				fs.cursor = len(fs.value)
+			}
+
+		case "ctrl+p":
+			m.showPass = !m.showPass
 
 		case "backspace":
 			m.handleBackspace()
 
 		default:
-			// Handle regular character input (including pasted text)
 			m.handleInput(msg.String())
 		}
 	}
@@ -136,132 +310,184 @@ func (m InitInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *InitInputModel) handleBackspace() {
-	switch m.cursorIndex {
-	case fieldName:
-		if m.nameCursor > 0 {
-			m.name = m.name[:m.nameCursor-1] + m.name[m.nameCursor:]
-			m.nameCursor--
-		}
-	case fieldConnString:
-		if m.connCursor > 0 {
-			m.connString = m.connString[:m.connCursor-1] + m.connString[m.connCursor:]
-			m.connCursor--
-		}
+	cf := m.currentField()
+	if cf == fieldType {
+		return
+	}
+	fs := &m.fields[cf]
+	if fs.cursor > 0 {
+		fs.value = fs.value[:fs.cursor-1] + fs.value[fs.cursor:]
+		fs.cursor--
 	}
 }
 
 func (m *InitInputModel) handleInput(ch string) {
-	// Ignore empty strings
 	if ch == "" {
 		return
 	}
-
-	// Handle bracketed paste mode - some terminals wrap pasted content
-	// If the pasted content starts with [ and ends with ], strip them
+	// Strip bracketed-paste wrappers that some terminals inject
 	if len(ch) > 1 && strings.HasPrefix(ch, "[") && strings.HasSuffix(ch, "]") {
 		ch = ch[1 : len(ch)-1]
 	}
 
-	switch m.cursorIndex {
-	case fieldName:
-		// Insert at cursor position
-		m.name = m.name[:m.nameCursor] + ch + m.name[m.nameCursor:]
-		m.nameCursor += len(ch)
-	case fieldConnString:
-		// Insert at cursor position
-		m.connString = m.connString[:m.connCursor] + ch + m.connString[m.connCursor:]
-		m.connCursor += len(ch)
-	case fieldType:
-		// Only accept single characters for type selection (numbers or letters)
-		// Multi-character paste is ignored for type field
-		if len(ch) == 1 {
-			// Allow typing number to select db type
-			if ch >= "1" && ch <= "9" {
-				idx := int(ch[0] - '1')
-				if idx < len(m.dbTypes) {
-					m.dbType = m.dbTypes[idx]
+	cf := m.currentField()
+	if cf == fieldType {
+		// Number shortcut to pick db type
+		if len(ch) == 1 && ch >= "1" && ch <= "9" {
+			idx := int(ch[0] - '1')
+			if idx < len(m.dbTypes) {
+				m.setDbType(m.dbTypes[idx])
+			}
+		}
+		return
+	}
+
+	fs := &m.fields[cf]
+	fs.value = fs.value[:fs.cursor] + ch + fs.value[fs.cursor:]
+	fs.cursor += len(ch)
+}
+
+func (m *InitInputModel) setDbType(t string) {
+	m.fields[fieldType].value = t
+
+	// Reset port to the new default only if the current value is still
+	// one of the known defaults (i.e. the user hasn't customised it)
+	if def, ok := dbDefaults[t]; ok {
+		current := m.fields[fieldPort].value
+		isDefault := current == ""
+		if !isDefault {
+			for _, v := range dbDefaults {
+				if v == current {
+					isDefault = true
+					break
 				}
 			}
 		}
+		if isDefault {
+			m.fields[fieldPort] = fieldState{value: def, cursor: len(def)}
+		}
+	}
+
+	// Keep cursor index in bounds after the visible field list may have changed
+	vf := m.visibleFields()
+	if m.cursorIndex >= len(vf) {
+		m.cursorIndex = len(vf) - 1
 	}
 }
 
 func (m *InitInputModel) cycleDbType(dir int) {
-	if len(m.dbTypes) == 0 {
+	types := m.dbTypes
+	if len(types) == 0 {
 		return
 	}
-
-	currentIdx := -1
-	for i, t := range m.dbTypes {
-		if t == m.dbType {
-			currentIdx = i
+	current := m.fields[fieldType].value
+	idx := 0
+	for i, t := range types {
+		if t == current {
+			idx = i
 			break
 		}
 	}
-
-	if currentIdx == -1 {
-		// Type not in list, select first
-		m.dbType = m.dbTypes[0]
-		return
-	}
-
-	newIdx := (currentIdx + dir) % len(m.dbTypes)
-	if newIdx < 0 {
-		newIdx = len(m.dbTypes) - 1
-	}
-	m.dbType = m.dbTypes[newIdx]
+	newIdx := (idx + dir + len(types)) % len(types)
+	m.setDbType(types[newIdx])
 }
 
-func (m *InitInputModel) moveToNextEmptyField() {
-	// Check each field in order and move to the first empty one
-	if m.name == "" {
-		m.cursorIndex = fieldName
-		m.nameCursor = len(m.name)
-	} else if m.dbType == "" {
-		m.cursorIndex = fieldType
-	} else if m.connString == "" {
-		m.cursorIndex = fieldConnString
-		m.connCursor = len(m.connString)
+func (m *InitInputModel) isComplete() bool {
+	if strings.TrimSpace(m.fields[fieldName].value) == "" {
+		return false
 	}
-	// If all fields are filled, don't move cursor (will submit on next enter)
+	if m.fields[fieldType].value == "" {
+		return false
+	}
+	vf := m.visibleFields()
+	for _, f := range vf {
+		if f == fieldType || f == fieldPassword {
+			continue // type is already checked; password is optional
+		}
+		if strings.TrimSpace(m.fields[f].value) == "" {
+			return false
+		}
+	}
+	return true
 }
 
+func (m *InitInputModel) moveToNextEmpty() {
+	vf := m.visibleFields()
+	for i, f := range vf {
+		if f == fieldType || f == fieldPassword {
+			continue
+		}
+		if strings.TrimSpace(m.fields[f].value) == "" {
+			m.cursorIndex = i
+			return
+		}
+	}
+}
+
+// View renders the TUI.
 func (m InitInputModel) View() string {
 	var b strings.Builder
 
-	// Title
 	b.WriteString(styles.Title.Render("Initialize new connection"))
-	b.WriteString("\n")
+	b.WriteString("\n\n")
 
-	// Name field
-	m.renderField(
-		&b,
-		"Connection name",
-		m.name,
-		m.nameCursor,
-		fieldName == m.cursorIndex,
-	)
+	vf := m.visibleFields()
+	for i, f := range vf {
+		focused := i == m.cursorIndex
+		switch f {
+		case fieldType:
+			m.renderTypeDropdown(&b, focused)
+		case fieldPassword:
+			m.renderPasswordField(&b, focused)
+		default:
+			label := fieldLabel(f, m.fields[fieldType].value)
+			fs := m.fields[f]
+			m.renderField(&b, label, fs.value, fs.cursor, focused)
+		}
+	}
 
-	// DB Type field (dropdown)
-	m.renderTypeDropdown(&b)
-
-	// Connection string field
-	m.renderField(
-		&b,
-		"Connection string",
-		m.connString,
-		m.connCursor,
-		m.cursorIndex == fieldConnString,
-	)
+	// Live preview of the assembled connection string
+	if preview := m.buildConnString(); preview != "" {
+		b.WriteString("\n")
+		b.WriteString(styles.Faint.Render("  conn › "))
+		b.WriteString(
+			lipgloss.NewStyle().
+				Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
+				Italic(true).
+				Render(preview),
+		)
+		b.WriteString("\n")
+	}
 
 	b.WriteString("\n")
 	b.WriteString(
 		styles.Faint.Render(
-			"↑: up  ↓: down  ←/→: move cursor/cycle type  Type: input/paste  Enter: submit  Esc: cancel",
+			"↑/↓ Tab: navigate  ←/→: cursor / cycle type  Ctrl+P: show/hide password  Enter: confirm  Esc: cancel",
 		),
 	)
 
 	return b.String()
+}
+
+func fieldLabel(f int, dbType string) string {
+	switch f {
+	case fieldName:
+		return "Connection name"
+	case fieldHost:
+		if dbType == "sqlite" {
+			return "File path      "
+		}
+		return "Host           "
+	case fieldPort:
+		return "Port           "
+	case fieldUser:
+		return "Username       "
+	case fieldPassword:
+		return "Password       "
+	case fieldDatabase:
+		return "Database       "
+	}
+	return "Field          "
 }
 
 func (m InitInputModel) renderField(
@@ -274,12 +500,10 @@ func (m InitInputModel) renderField(
 		prompt := lipgloss.NewStyle().
 			Foreground(lipgloss.Color(styles.ActiveScheme.Primary)).
 			Bold(true).
-			Render(label + " > ")
+			Render("  " + label + " › ")
 
-		// Split value at cursor position
 		before := value[:cursorPos]
 		after := value[cursorPos:]
-
 		inputBox := lipgloss.NewStyle().
 			Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
 			Render(before + "▏" + after)
@@ -288,7 +512,7 @@ func (m InitInputModel) renderField(
 	} else {
 		prompt := lipgloss.NewStyle().
 			Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
-			Render(label + "   ")
+			Render("  " + label + "   ")
 
 		inputBox := lipgloss.NewStyle().
 			Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
@@ -298,69 +522,77 @@ func (m InitInputModel) renderField(
 	}
 }
 
-func (m InitInputModel) renderTypeDropdown(b *strings.Builder) {
-	label := "Database type"
+func (m InitInputModel) renderPasswordField(b *strings.Builder, focused bool) {
+	fs := m.fields[fieldPassword]
+	display := fs.value
+	cursorPos := fs.cursor
+	if !m.showPass && len(display) > 0 {
+		display = strings.Repeat("•", len(display))
+	}
+	label := fieldLabel(fieldPassword, "")
+	m.renderField(b, label, display, cursorPos, focused)
+}
 
-	if m.cursorIndex == fieldType {
+func (m InitInputModel) renderTypeDropdown(b *strings.Builder, focused bool) {
+	const label = "Database type  "
+	current := m.fields[fieldType].value
+	if current == "" {
+		current = "<select>"
+	}
+
+	if focused {
 		prompt := lipgloss.NewStyle().
 			Foreground(lipgloss.Color(styles.ActiveScheme.Primary)).
 			Bold(true).
-			Render(label + " > ")
+			Render("  " + label + " › ")
 
-		// Show current selection + dropdown indicator
-		displayValue := m.dbType
-		if displayValue == "" {
-			displayValue = "<select>"
-		}
 		inputBox := lipgloss.NewStyle().
 			Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
-			Render(displayValue + " ▼")
+			Render(current + "  ◀ ▶")
 
 		b.WriteString(prompt + inputBox + "\n")
 
-		// Show available types below
-		b.WriteString(styles.Faint.Render("  Available: "))
+		// Show numbered list of available types
+		b.WriteString(styles.Faint.Render("    "))
 		for i, t := range m.dbTypes {
 			if i > 0 {
-				b.WriteString(styles.Faint.Render(", "))
+				b.WriteString(styles.Faint.Render("  "))
 			}
-			if t == m.dbType {
-				b.WriteString(lipgloss.NewStyle().
-					Foreground(lipgloss.Color(styles.ActiveScheme.Primary)).
-					Bold(true).
-					Render(t))
+			if t == m.fields[fieldType].value {
+				b.WriteString(
+					lipgloss.NewStyle().
+						Foreground(lipgloss.Color(styles.ActiveScheme.Primary)).
+						Bold(true).
+						Render(fmt.Sprintf("[%d] %s", i+1, t)),
+				)
 			} else {
-				b.WriteString(styles.Faint.Render(t))
+				b.WriteString(styles.Faint.Render(fmt.Sprintf("%d:%s", i+1, t)))
 			}
 		}
 		b.WriteString("\n")
 	} else {
 		prompt := lipgloss.NewStyle().
 			Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
-			Render(label + "   ")
+			Render("  " + label + "   ")
 
-		displayValue := m.dbType
-		if displayValue == "" {
-			displayValue = "<select>"
-		}
 		inputBox := lipgloss.NewStyle().
 			Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
-			Render(displayValue)
+			Render(current)
 
 		b.WriteString(prompt + inputBox + "\n")
 	}
 }
 
 func (m InitInputModel) GetName() string {
-	return m.name
+	return m.fields[fieldName].value
 }
 
 func (m InitInputModel) GetDBType() string {
-	return m.dbType
+	return m.fields[fieldType].value
 }
 
 func (m InitInputModel) GetConnString() string {
-	return m.connString
+	return m.buildConnString()
 }
 
 func (m InitInputModel) WasAborted() bool {

@@ -17,7 +17,7 @@ jobs:
     name: Build Linux AMD64
     runs-on: ubuntu-latest
     container:
-      image: "ghcr.io/goreleaser/goreleaser-cross:v1.22"
+      image: 'ghcr.io/goreleaser/goreleaser-cross:v1.22'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -46,7 +46,7 @@ jobs:
     name: Build Linux ARM64
     runs-on: ubuntu-latest
     container:
-      image: "ghcr.io/goreleaser/goreleaser-cross:v1.22"
+      image: 'ghcr.io/goreleaser/goreleaser-cross:v1.22'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -72,38 +72,12 @@ jobs:
           name: linux-arm64
           path: dist/${{ env.APP_NAME }}-linux-arm64
 
-  build-darwin-amd64:
-    name: Build macOS AMD64
-    runs-on: macos-15-large
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-
-      - name: Build macOS AMD64
-        env:
-          CGO_ENABLED: 1
-          GOOS: darwin
-          GOARCH: amd64
-        run: |
-          mkdir -p dist
-          go build -buildvcs=false -ldflags="-s -w" -o dist/${{ env.APP_NAME }}-darwin-amd64 ./cmd/pam
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: darwin-amd64
-          path: dist/${{ env.APP_NAME }}-darwin-amd64
-
-  build-darwin-arm64:
-    name: Build macOS ARM64
+  build-darwin:
+    name: Build macOS ${{ matrix.goarch }}
     runs-on: macos-latest
+    strategy:
+      matrix:
+        goarch: [amd64, arm64]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -115,26 +89,26 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Build macOS ARM64
+      - name: Build macOS ${{ matrix.goarch }}
         env:
           CGO_ENABLED: 1
           GOOS: darwin
-          GOARCH: arm64
+          GOARCH: ${{ matrix.goarch }}
         run: |
           mkdir -p dist
-          go build -buildvcs=false -ldflags="-s -w" -o dist/${{ env.APP_NAME }}-darwin-arm64 ./cmd/pam
+          go build -buildvcs=false -ldflags="-s -w" -o dist/${{ env.APP_NAME }}-darwin-${{ matrix.goarch }} ./cmd/pam
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: darwin-arm64
-          path: dist/${{ env.APP_NAME }}-darwin-arm64
+          name: darwin-${{ matrix.goarch }}
+          path: dist/${{ env.APP_NAME }}-darwin-${{ matrix.goarch }}
 
   build-windows-amd64:
     name: Build Windows AMD64
     runs-on: ubuntu-latest
     container:
-      image: "ghcr.io/goreleaser/goreleaser-cross:v1.22"
+      image: 'ghcr.io/goreleaser/goreleaser-cross:v1.22'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -162,11 +136,10 @@ jobs:
 
   create-release:
     name: Create Release
-    needs: 
+    needs:
       - build-linux-amd64
       - build-linux-arm64
-      - build-darwin-amd64
-      - build-darwin-arm64
+      - build-darwin
       - build-windows-amd64
     runs-on: ubuntu-latest
     steps:
