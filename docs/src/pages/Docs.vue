@@ -58,10 +58,13 @@
           <h3 id="init">Creating a connection</h3>
           <p>
             Use <code>pam init</code> to create and validate a new database
-            connection. The database type is auto-inferred from the connection
-            string.
+            connection. Run it with no arguments to launch the interactive TUI,
+            which asks for each field individually and assembles the connection
+            string live as you type. The database type is auto-inferred from the
+            connection string when using CLI flags or positional arguments.
           </p>
           <CodeBlock title="bash">{{ snippets.init }}</CodeBlock>
+          <CodeBlock title="Interactive TUI">{{ snippets.initTUI }}</CodeBlock>
 
           <h3 id="switch">Switching connections</h3>
           <CodeBlock title="bash">{{ snippets.switchConn }}</CodeBlock>
@@ -109,6 +112,14 @@
 
           <h3 id="remove-query">Removing queries</h3>
           <CodeBlock title="bash">{{ snippets.removeQuery }}</CodeBlock>
+
+          <h3 id="remove-conn">Removing a connection</h3>
+          <p>
+            Use <code>pam remove --conn &lt;name&gt;</code> to permanently
+            delete a saved connection. If it is the currently active connection,
+            it will be cleared automatically.
+          </p>
+          <CodeBlock title="bash">{{ snippets.removeConn }}</CodeBlock>
         </section>
 
         <!-- Tables -->
@@ -289,6 +300,7 @@ const toc = [
     title: 'Usage',
     items: [
       { id: 'queries', label: 'Query Management' },
+      { id: 'remove-conn', label: 'Removing a connection' },
       { id: 'tables', label: 'Database Exploration' },
       { id: 'export-import', label: 'Import & Export' }
     ]
@@ -352,7 +364,10 @@ nix run github:caiolandgraf/pam
 # Install to profile
 nix profile install github:caiolandgraf/pam`,
 
-  init: `# Auto-inferred type
+  init: `# Interactive TUI — recommended, guides you field by field
+pam init
+
+# Auto-inferred type from connection string
 pam init mydb "postgres://user:pass@localhost:5432/mydb"
 
 # Explicit type
@@ -360,6 +375,18 @@ pam init mydb postgres "postgres://user:pass@localhost:5432/mydb"
 
 # With schema
 pam init mydb oracle "user/pass@localhost:1521/XEPDB1" my_schema`,
+
+  initTUI: `  Connection name  › mydb
+  Database type    › postgres  ◀ ▶
+  Host             › localhost
+  Port             › 5432
+  Username         › myuser
+  Password         › ••••••
+  Database         › mydb
+
+  conn › postgres://myuser:secret@localhost:5432/mydb
+
+  ↑/↓ Tab: navigate  Ctrl+P: show/hide password  Enter: confirm  Esc: cancel`,
 
   switchConn: `pam switch production
 pam use dev          # alias`,
@@ -414,6 +441,11 @@ pam list queries --oneline    # compact`,
 
   removeQuery: `pam remove list_users
 pam remove 3`,
+
+  removeConn: `# Remove by name
+pam remove --conn mydb
+pam remove -c mydb       # short flag
+pam delete --conn mydb   # alias`,
 
   tablesList: `# List all tables
 pam tables
@@ -558,6 +590,11 @@ const commands = [
     cmd: 'remove',
     alias: 'delete',
     desc: 'Remove a saved query by name or ID'
+  },
+  {
+    cmd: 'remove --conn <name>',
+    alias: 'delete --conn',
+    desc: 'Remove a saved connection'
   },
   { cmd: 'run', alias: '', desc: 'Execute a saved query or inline SQL' },
   {
