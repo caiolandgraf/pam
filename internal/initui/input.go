@@ -20,8 +20,12 @@ const (
 	fieldUser            // username
 	fieldPassword        // password (masked)
 	fieldDatabase        // database / schema name
+	fieldSSL             // ssl mode toggle
 	fieldTotal           // sentinel
 )
+
+// sslModes lists the available SSL options in cycle order
+var sslModes = []string{"disable", "require", "verify-full"}
 
 // dbDefaults holds the default port for each DB type
 var dbDefaults = map[string]string{
@@ -40,6 +44,17 @@ func fieldsForType(dbType string) []int {
 	switch dbType {
 	case "sqlite":
 		return []int{fieldName, fieldType, fieldHost}
+	case "postgres", "mysql", "sqlserver", "clickhouse":
+		return []int{
+			fieldName,
+			fieldType,
+			fieldHost,
+			fieldPort,
+			fieldUser,
+			fieldPassword,
+			fieldDatabase,
+			fieldSSL,
+		}
 	default:
 		return []int{
 			fieldName,
@@ -90,6 +105,9 @@ func NewInitInputModel(name, dbType, connString string) InitInputModel {
 		m.fields[fieldPort] = fieldState{value: port, cursor: len(port)}
 	}
 
+	// Default SSL to disable
+	m.fields[fieldSSL] = fieldState{value: "disable"}
+
 	// If a full connString was provided, try to parse it into individual fields
 	if connString != "" {
 		m.parseConnString(connString)
@@ -120,6 +138,11 @@ func (m *InitInputModel) parseConnString(connString string) {
 	if dbName := strings.TrimPrefix(u.Path, "/"); dbName != "" {
 		m.fields[fieldDatabase] = fieldState{value: dbName, cursor: len(dbName)}
 	}
+	// Parse sslmode query param
+	q := u.Query()
+	if ssl := q.Get("sslmode"); ssl != "" {
+		m.fields[fieldSSL] = fieldState{value: ssl}
+	}
 }
 
 // buildConnString assembles a connection string from the individual fields.
@@ -134,6 +157,8 @@ func (m *InitInputModel) buildConnString() string {
 	if host == "" {
 		return ""
 	}
+
+	ssl := m.fields[fieldSSL].value
 
 	switch dbType {
 	case "sqlite":
@@ -150,10 +175,15 @@ func (m *InitInputModel) buildConnString() string {
 			u.Host = host
 		}
 		u.Path = "/" + database
+		q := u.Query()
+		if ssl != "" {
+			q.Set("sslmode", ssl)
+		}
+		u.RawQuery = q.Encode()
 		return u.String()
 
 	case "mysql":
-		// DSN format: user:pass@tcp(host:port)/dbname
+		// DSN format: user:pass@tcp(host:port)/dbname?tls=...
 		auth := ""
 		if user != "" || pass != "" {
 			auth = url.QueryEscape(user) + ":" + url.QueryEscape(pass) + "@"
@@ -162,7 +192,14 @@ func (m *InitInputModel) buildConnString() string {
 		if port != "" {
 			hp = host + ":" + port
 		}
-		return fmt.Sprintf("%stcp(%s)/%s", auth, hp, database)
+		dsn := fmt.Sprintf("%stcp(%s)/%s", auth, hp, database)
+		switch ssl {
+		case "require", "verify-full":
+			dsn += "?tls=true"
+		case "disable":
+			dsn += "?tls=false"
+		}
+		return dsn
 
 	case "sqlserver":
 		u := &url.URL{Scheme: "sqlserver"}
@@ -174,11 +211,20 @@ func (m *InitInputModel) buildConnString() string {
 		} else {
 			u.Host = host
 		}
+		q := u.Query()
 		if database != "" {
-			q := u.Query()
 			q.Set("database", database)
-			u.RawQuery = q.Encode()
 		}
+		switch ssl {
+		case "disable":
+			q.Set("encrypt", "disable")
+		case "require":
+			q.Set("encrypt", "true")
+		case "verify-full":
+			q.Set("encrypt", "true")
+			q.Set("TrustServerCertificate", "false")
+		}
+		u.RawQuery = q.Encode()
 		return u.String()
 
 	case "clickhouse":
@@ -192,6 +238,14 @@ func (m *InitInputModel) buildConnString() string {
 			u.Host = host
 		}
 		u.Path = "/" + database
+		q := u.Query()
+		switch ssl {
+		case "require", "verify-full":
+			q.Set("secure", "true")
+		case "disable":
+			q.Set("secure", "false")
+		}
+		u.RawQuery = q.Encode()
 		return u.String()
 
 	case "oracle":
@@ -264,6 +318,8 @@ func (m InitInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cf := m.currentField()
 			if cf == fieldType {
 				m.cycleDbType(1)
+			} else if cf == fieldSSL {
+				m.cycleSSL(1)
 			} else {
 				fs := &m.fields[cf]
 				if fs.cursor < len(fs.value) {
@@ -275,6 +331,8 @@ func (m InitInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cf := m.currentField()
 			if cf == fieldType {
 				m.cycleDbType(-1)
+			} else if cf == fieldSSL {
+				m.cycleSSL(-1)
 			} else {
 				fs := &m.fields[cf]
 				if fs.cursor > 0 {
@@ -284,13 +342,13 @@ func (m InitInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "ctrl+a":
 			cf := m.currentField()
-			if cf != fieldType {
+			if cf != fieldType && cf != fieldSSL {
 				m.fields[cf].cursor = 0
 			}
 
 		case "ctrl+e":
 			cf := m.currentField()
-			if cf != fieldType {
+			if cf != fieldType && cf != fieldSSL {
 				fs := &m.fields[cf]
 				fs.cursor = len(fs.value)
 			}
@@ -311,7 +369,7 @@ func (m InitInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *InitInputModel) handleBackspace() {
 	cf := m.currentField()
-	if cf == fieldType {
+	if cf == fieldType || cf == fieldSSL {
 		return
 	}
 	fs := &m.fields[cf]
@@ -339,6 +397,9 @@ func (m *InitInputModel) handleInput(ch string) {
 				m.setDbType(m.dbTypes[idx])
 			}
 		}
+		return
+	}
+	if cf == fieldSSL {
 		return
 	}
 
@@ -392,6 +453,19 @@ func (m *InitInputModel) cycleDbType(dir int) {
 	m.setDbType(types[newIdx])
 }
 
+func (m *InitInputModel) cycleSSL(dir int) {
+	current := m.fields[fieldSSL].value
+	idx := 0
+	for i, s := range sslModes {
+		if s == current {
+			idx = i
+			break
+		}
+	}
+	newIdx := (idx + dir + len(sslModes)) % len(sslModes)
+	m.fields[fieldSSL] = fieldState{value: sslModes[newIdx]}
+}
+
 func (m *InitInputModel) isComplete() bool {
 	if strings.TrimSpace(m.fields[fieldName].value) == "" {
 		return false
@@ -401,8 +475,8 @@ func (m *InitInputModel) isComplete() bool {
 	}
 	vf := m.visibleFields()
 	for _, f := range vf {
-		if f == fieldType || f == fieldPassword {
-			continue // type is already checked; password is optional
+		if f == fieldType || f == fieldPassword || f == fieldSSL {
+			continue // type/ssl always have a value; password is optional
 		}
 		if strings.TrimSpace(m.fields[f].value) == "" {
 			return false
@@ -414,7 +488,7 @@ func (m *InitInputModel) isComplete() bool {
 func (m *InitInputModel) moveToNextEmpty() {
 	vf := m.visibleFields()
 	for i, f := range vf {
-		if f == fieldType || f == fieldPassword {
+		if f == fieldType || f == fieldPassword || f == fieldSSL {
 			continue
 		}
 		if strings.TrimSpace(m.fields[f].value) == "" {
@@ -439,6 +513,8 @@ func (m InitInputModel) View() string {
 			m.renderTypeDropdown(&b, focused)
 		case fieldPassword:
 			m.renderPasswordField(&b, focused)
+		case fieldSSL:
+			m.renderSSLField(&b, focused)
 		default:
 			label := fieldLabel(f, m.fields[fieldType].value)
 			fs := m.fields[f]
@@ -462,7 +538,7 @@ func (m InitInputModel) View() string {
 	b.WriteString("\n")
 	b.WriteString(
 		styles.Faint.Render(
-			"↑/↓ Tab: navigate  ←/→: cursor / cycle type  Ctrl+P: show/hide password  Enter: confirm  Esc: cancel",
+			"↑/↓ Tab: navigate  ←/→: cursor / cycle type / ssl  Ctrl+P: show/hide password  Enter: confirm  Esc: cancel",
 		),
 	)
 
@@ -486,8 +562,55 @@ func fieldLabel(f int, dbType string) string {
 		return "Password       "
 	case fieldDatabase:
 		return "Database       "
+	case fieldSSL:
+		return "SSL mode       "
 	}
 	return "Field          "
+}
+
+func (m InitInputModel) renderSSLField(b *strings.Builder, focused bool) {
+	current := m.fields[fieldSSL].value
+
+	if focused {
+		prompt := lipgloss.NewStyle().
+			Foreground(lipgloss.Color(styles.ActiveScheme.Primary)).
+			Bold(true).
+			Render("  SSL mode        › ")
+
+		inputBox := lipgloss.NewStyle().
+			Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
+			Render(current + "  ◀ ▶")
+
+		b.WriteString(prompt + inputBox + "\n")
+
+		b.WriteString(styles.Faint.Render("    "))
+		for i, s := range sslModes {
+			if i > 0 {
+				b.WriteString(styles.Faint.Render("  "))
+			}
+			if s == current {
+				b.WriteString(
+					lipgloss.NewStyle().
+						Foreground(lipgloss.Color(styles.ActiveScheme.Primary)).
+						Bold(true).
+						Render(s),
+				)
+			} else {
+				b.WriteString(styles.Faint.Render(s))
+			}
+		}
+		b.WriteString("\n")
+	} else {
+		prompt := lipgloss.NewStyle().
+			Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
+			Render("  SSL mode           ")
+
+		inputBox := lipgloss.NewStyle().
+			Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
+			Render(current)
+
+		b.WriteString(prompt + inputBox + "\n")
+	}
 }
 
 func (m InitInputModel) renderField(
