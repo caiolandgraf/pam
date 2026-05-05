@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -11,32 +12,28 @@ import (
 
 func (a *App) handleRemove() {
 	if len(os.Args) < 3 {
-		printError(
-			"Usage:  pam remove <run-name>  |  pam remove --conn <connection-name>",
-		)
+		printError("Usage: pam remove <run-name> [--connection|-c <conn-name>]")
 	}
 
+	// Parse flags
+	var connectionName string
 	args := os.Args[2:]
-
-	// Check if removing a connection via --conn / -c
-	connName := ""
 	for i, arg := range args {
-		if (arg == "--conn" || arg == "-c") && i+1 < len(args) {
-			connName = args[i+1]
-			break
-		}
-		if strings.HasPrefix(arg, "--conn=") {
-			connName = strings.TrimPrefix(arg, "--conn=")
+		if arg == "--connection" || arg == "-c" {
+			if i+1 < len(args) {
+				connectionName = args[i+1]
+			}
 			break
 		}
 	}
 
-	if connName != "" {
-		a.handleRemoveConnection(connName)
+	// If --connection flag was used, remove connection
+	if connectionName != "" {
+		a.removeConnection(connectionName)
 		return
 	}
 
-	// Default: remove a saved query
+	// Otherwise, remove query (original behavior)
 	conn := a.config.Connections[a.config.CurrentConnection]
 	queries := conn.Queries
 
@@ -52,37 +49,47 @@ func (a *App) handleRemove() {
 		printError("Could not save configuration file: %v", err)
 	}
 
-	fmt.Println(
-		styles.Success.Render(fmt.Sprintf("✓ Removed query '%s'", query.Name)),
-	)
+	fmt.Println(styles.Success.Render(fmt.Sprintf("✓ Removed run '%s'", query.Name)))
 }
 
-func (a *App) handleRemoveConnection(name string) {
-	if _, exists := a.config.Connections[name]; !exists {
-		printError("Connection '%s' could not be found", name)
+func (a *App) removeConnection(connName string) {
+	conn, exists := a.config.Connections[connName]
+	if !exists {
+		printError(fmt.Sprintf("Connection '%s' does not exist", connName))
+		return
 	}
 
-	delete(a.config.Connections, name)
+	queryCount := len(conn.Queries)
 
-	// If we just removed the active connection, clear it
-	if a.config.CurrentConnection == name {
+	if !a.confirmDeletion(connName, queryCount) {
+		fmt.Println(styles.Faint.Render("Aborted"))
+		return
+	}
+
+	if a.config.CurrentConnection == connName {
 		a.config.CurrentConnection = ""
 	}
+
+	delete(a.config.Connections, connName)
 
 	err := a.config.Save()
 	if err != nil {
 		printError("Could not save configuration file: %v", err)
+		return
 	}
 
-	fmt.Println(
-		styles.Success.Render(fmt.Sprintf("✓ Removed connection '%s'", name)),
-	)
+	fmt.Println(styles.Success.Render(fmt.Sprintf("✓ Removed connection '%s' and %d queries", connName, queryCount)))
+}
 
-	if a.config.CurrentConnection == "" && len(a.config.Connections) > 0 {
-		fmt.Println(
-			styles.Faint.Render(
-				"  No active connection. Use 'pam switch <name>' to select one.",
-			),
-		)
+func (a *App) confirmDeletion(connName string, queryCount int) bool {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf(styles.Error.Render(fmt.Sprintf("This will delete connection '%s' and its %d queries. Continue? [y/N]: ", connName, queryCount)))
+
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return false
 	}
+
+	response = strings.TrimSpace(strings.ToLower(response))
+	return response == "y" || response == "yes"
 }

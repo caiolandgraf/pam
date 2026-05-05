@@ -1,30 +1,18 @@
 <div align="center">
 
-<h1>
-    <img src="https://github.com/user-attachments/assets/ba9b84d3-860b-4225-bf34-34572d4833e0" alt="Pam logo" height="45" style="vertical-align: middle;"/> 
-  Pam's Database Drawer
-  <img width="auto" height="45" alt="bitmap" src="https://github.com/user-attachments/assets/c4dd1637-3e8d-45e8-8196-0d8b48324265" />
-</h1>
-<img width="363" height="120" alt="image" src="https://github.com/user-attachments/assets/4495a407-4897-4b22-8b5e-6ac8a9340ca5" />
+# 🗂️ PAM
+### Pam's Database Drawer — SQL Query Management for the Scranton Branch
 
+[![MIT License](https://img.shields.io/badge/license-MIT-white.svg)](LICENSE)
+[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![GitHub Release](https://img.shields.io/github/v/release/caiolandgraf/pam)](https://github.com/caiolandgraf/pam/releases)
 
+**A minimal CLI tool for managing and executing SQL queries across multiple databases.**
+**Written in Go, made beautiful with BubbleTea. Filed, labeled, and ready when you need it.**
 
-### *"Pam, the receptionist, has been doing a fantastic job."*
+[Quick Start](#-quick-start) • [Configuration](docs/configuration.md) • [Commands](docs/commands.md) • [Keybindings](docs/keybindings.md) • [Features](docs/features.md) • [Completion](docs/completion.md) • [Databases](docs/databases.md) • [Roadmap](#%EF%B8%8F-roadmap) • [Contributing](CONTRIBUTING.md)
 
-> **Michael Scott:** "You know what's amazing? Pam. Pam is amazing. She's got this drawer - not just any drawer - a database drawer. Full of SQL queries. I didn't even know we needed that, but apparently everyone does because they keep asking her for them. 'Pam, I need the users query.' 'Pam, where's that sales report?' And she just opens the drawer and boom. There it is. I think it's the most popular drawer in the entire office. Maybe even in Scranton. Possibly Pennsylvania."
-
----
-
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![go badge](https://img.shields.io/badge/Go-1.21+-00ADD8?%20logo=go&logoColor=white)
-
-**A minimal CLI tool for managing and executing SQL queries across multiple databases. Written in Go, made beautiful with BubbleTea**
-
-_Straight out of Scranton: organize your SQL like Pam's legendary drawer._
-
-[Quick Start](#--------quick-start) • [Configuration](#--------configuration) • [Database Support](#--------database-support) • [Dbeesly](#-dbeesly) • [Features](#--------features) • [Commands](#--------all-commands) • [TUI Navigation](#--------tui-table-navigation) • [Roadmap](#--------roadmap) • [Contributing](#contributing)
-
-> 🟨 **Sticky Note:** This project is currently in beta, please report unexpected behavior through the issues tab
+> 🟨 **Sticky Note:** This project is currently in beta — please report unexpected behavior through the Issues tab.
 
 </div>
 
@@ -33,22 +21,22 @@ _Straight out of Scranton: organize your SQL like Pam's legendary drawer._
     <td width="60%">
       <strong>📎 INTEROFFICE MEMO</strong><br/>
       <strong>To:</strong> Everyone running queries<br/>
-      <strong>From:</strong> Pam's Database Drawer<br/>
-      <strong>Subject:</strong> Keep SQL organized and easy to find<br/>
-      <strong>Status:</strong> 🟡 Beta — report odd behavior in Issues
+      <strong>From:</strong> Pam Beesly, Receptionist & DBA<br/>
+      <strong>Subject:</strong> Please use the drawer. I organized it myself.<br/>
+      <strong>Status:</strong> 🟡 Beta — file unexpected behavior in Issues
     </td>
     <td width="40%">
       <strong>🗂 OFFICE DIRECTORY</strong>
       <ul>
-        <li><a href="#--------quick-start">Quick Start</a></li>
-        <li><a href="#--------configuration">Configuration</a></li>
-        <li><a href="#--------database-support">Database Support</a></li>
-        <li><a href="#-dbeesly">Dbeesly</a></li>
-        <li><a href="#--------features">Features</a></li>
-        <li><a href="#--------all-commands">Commands</a></li>
-        <li><a href="#--------tui-table-navigation">TUI Navigation</a></li>
-        <li><a href="#--------roadmap">Roadmap</a></li>
-        <li><a href="#contributing">Contributing</a></li>
+        <li><a href="#-quick-start">Quick Start</a></li>
+        <li><a href="#-installation">Installation</a></li>
+        <li><a href="#%EF%B8%8F-database-support">Database Support</a></li>
+        <li><a href="#-features">Features</a></li>
+        <li><a href="#-all-commands">All Commands</a></li>
+        <li><a href="#%EF%B8%8F-tui-keybindings">TUI Keybindings</a></li>
+        <li><a href="#%EF%B8%8F-configuration">Configuration</a></li>
+        <li><a href="#%EF%B8%8F-roadmap">Roadmap</a></li>
+        <li><a href="#-contributing">Contributing</a></li>
       </ul>
     </td>
   </tr>
@@ -63,76 +51,134 @@ _Straight out of Scranton: organize your SQL like Pam's legendary drawer._
 
 ---
 
-<h2>
-    <img width="auto" height="24" alt="image" style="vertical-align:middle;" src="https://github.com/user-attachments/assets/464275ac-085e-451f-b783-c991d24d3635" />
-    Demo
-</h2>
+> *"I have a system. Every query has a name, every name has a drawer, every drawer has a label. It's not complicated, it's just how I do things."* — Pam Beesly, Scranton Branch Receptionist & Unofficial DBA
 
-*A quick tour from the Scranton branch.*
-
-![pam-demo](https://github.com/user-attachments/assets/b62bec1d-2255-4d02-9b7f-1c99afbeb664)
-
-### Highlights (Office Favorites)
-
-- **Query Library** - Save and organize your most-used queries
-- **Runs in the CLI** - Execute queries with minimal overhead
-- **Multi-Database** - Works with PostgreSQL, MySQL, SQLite, Oracle, SQL Server, ClickHouse and Firebird
-- **Table view TUI** - Keyboard focused navigation with vim-style bindings
-- **In-Place Editing** - Update cells, delete rows and edit your SQL directly from the results table
-- **Export your data** - Export your data as CSV, JSON, SQL, Markdown or HTML tables
-- **SQL Dump Import/Export** - Full SQL dumps (schema + data) and import from file or stdin
-
-### Scranton Glossary
-
-| The Office | In PAM |
-| --- | --- |
-| Pam's drawer | Saved query library |
-| Reception desk | `pam init` and connection setup |
-| Conference Room B | TUI table viewer |
-| The annex | `~/.config/pam/config.yaml` |
-| Warehouse | Import/export workflows |
+PAM (Pam's Database Drawer) is a keyboard-first CLI tool for saving, organizing, and running SQL queries across multiple databases. Think of it as a filing cabinet for your SQL — instead of hunting through terminal history or a dozen `.sql` files, you `pam add`, `pam list`, and `pam run`. The interactive TUI table viewer lets you explore results, edit cells in-place, export data, and visualize schema relationships, all without leaving the terminal.
 
 ---
 
-<h2>
-    <img width="auto" height="24" alt="image" style="vertical-align:middle;" src="https://github.com/user-attachments/assets/30765e98-13b3-4c18-81e7-faf224b60e0b" />
-    Quick Start
-</h2>
+## 🎬 Demo
+
+![pamdemo](https://github.com/user-attachments/assets/b62bec1d-2255-4d02-9b7f-1c99afbeb664)
+
+---
+
+## ✨ Features
+
+- **Query Library** — Save, label, and organize queries like a well-maintained filing cabinet; search by name or content
+- **Multi-Database** — PostgreSQL, MySQL/MariaDB, SQLite, Oracle, SQL Server, ClickHouse, Firebird, DuckDB, and **Snowflake**
+- **Interactive TUI** — Vim-style keyboard navigation in a beautiful BubbleTea table viewer
+- **In-Place Editing** — Update cells, delete rows, and edit SQL directly from the results table
+- **Interactive Shell** — `pam shell` / `pam repl` for a persistent SQL REPL with history, multi-line input, and meta-commands
+- **Flexible Export** — `pam run --format <csv|json|tsv|html|sql|markdown>` streams results to stdout, pipe-friendly
+- **Edit Before Run** — `pam run --edit` / `-e` opens the query in `$EDITOR` before executing
+- **Repeat Last Query** — `pam run --last` / `-l` re-runs the last executed query without retyping
+- **Visual Line Mode** — `V` selects entire rows; `v` selects cell ranges — both copyable with `y`
+- **Export Full Table** — `X` exports the entire result set to clipboard in your chosen format
+- **Full-Text Search** — `/` searches cell contents; `f` searches column headers; `n`/`N` cycles matches
+- **Row Marking** — `m` marks rows for bulk operations; `D` deletes all marked rows in one round-trip
+- **Inline Cell Edit** — `e` edits a cell value in-place; `E` edits the query and reruns it
+- **Connection Management** — `pam remove --connection <name>` removes a saved connection
+- **Config Editor** — `pam config` opens the config file in `$EDITOR`
+- **SQL Import** — `pam import <file>` imports SQL dumps; `pam export` creates them
+- **Table Query Shortcut** — `pam query --table=<name>` for quick table access
+- **Enhanced Explain** — `pam explain --depth <n>` visualizes FK relationships up to N levels deep
+- **Shell Completion** — `pam completion --install` writes completion scripts to the standard path automatically
+- **`pam tables` / `\dt`** — list tables directly from the interactive shell
+- **Environment Variable Expansion** — use `${MY_VAR}` in connection strings; PAM expands them at runtime
+- **Database Exploration** — browse schema, visualize foreign key relationships with `pam explore` and `pam explain`
+- **Parameterized Queries** — `:param|default` syntax; pass values with `--param` flags or positional args
+
+See [Features](docs/features.md) for details and examples
+
+---
+
+## 🗄️ Database Support
+
+| Database | Type String | Notes |
+|----------|------------|-------|
+| PostgreSQL | `postgres` | Schema selection supported |
+| MySQL / MariaDB | `mysql` / `mariadb` | |
+| SQLite | `sqlite` | Local file-based |
+| Oracle | `oracle` | Schema selection supported |
+| SQL Server | `sqlserver` | |
+| ClickHouse | `clickhouse` | |
+| Firebird | `firebird` | |
+| DuckDB | `duckdb` | CSV/JSON file queries; requires CGO |
+| Snowflake | `snowflake` | Keypair authentication supported |
+
+See connection init examples in [Database Support](docs/databases.md)
+
+---
+
+## 🚀 Quick Start
 
 *Set up your desk at reception in under 2 minutes.*
 
-### Installation
-Go to [the releases page](https://github.com/caiolandgraf/pam/releases) and find the correct version for your system. Download it and make sure the file is executable and moved to a directory in your $PATH.
+```bash
+# Create your first connection (PostgreSQL example)
+pam init mydb postgres "postgresql://user:pass@localhost:5432/mydb"
 
+# Use environment variables in connection strings — PAM expands them at runtime
+pam init mydb postgres "postgresql://${DB_USER}:${DB_PASS}@localhost:5432/mydb"
+
+# Add a saved query
+pam add list_users "SELECT * FROM users"
+
+# List your saved queries
+pam list queries
+
+# Run it — opens the interactive table viewer
+pam run list_users
+
+# Or run inline SQL
+pam run "SELECT * FROM products WHERE price > 100"
+
+# Export results without opening the TUI
+pam run list_users --format csv > users.csv
+pam run list_users --format json
+
+# Start an interactive SQL shell
+pam shell
+```
+
+---
+
+## 📦 Installation
+
+Go to [the releases page](https://github.com/caiolandgraf/pam/releases) and download the binary for your system. Make sure it is executable and in a directory on your `$PATH`.
 
 <details>
 <summary>Go install</summary>
 
-Use go to install `pam` directly
 ```bash
 go install github.com/caiolandgraf/pam/cmd/pam@latest
 ```
-this will put the binary `pam` in your $GOBIN path (usually `~/go/bin`)
+
+This puts the `pam` binary in your `$GOBIN` path (usually `~/go/bin`).
 </details>
 
 <details>
 <summary>Build Manually</summary>
 
-Follow these instructions to build the project locally
 ```bash
 git clone https://github.com/caiolandgraf/pam
-
 go build -o pam ./cmd/pam
 ```
-The pam binary will be available in the root project directory
+
+The `pam` binary will be available in the project root directory.
+
+DuckDB requires CGO and is included in the default build. To build without DuckDB:
+
+```bash
+CGO_ENABLED=0 go build -o pam ./cmd/pam
+```
 </details>
 
 <details>
 <summary>Nix / NixOS (Flake)</summary>
 
-Pam is available as a Nix flake for easy installation on NixOS and systems with
-Nix.
-
+PAM is available as a Nix flake for easy installation on NixOS and systems with Nix.
 
 #### Run directly without installing
 ```bash
@@ -151,528 +197,129 @@ nix develop github:caiolandgraf/pam
 
 #### NixOS System-wide
 
-Add to your flake-based configuration.nix or flake.nix:
+Add to your flake-based `configuration.nix` or `flake.nix`:
 
 ```nix
 {
-description = "My NixOS config";
+  description = "My NixOS config";
 
-inputs = {
-  nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  pam.url = "github:caiolandgraf/pam";
-};
-
-outputs = { self, nixpkgs, pam, ... }: {
-  nixosConfigurations.myHostname = nixpkgs.lib.nixosSystem {
-    system = "x86_64-linux";
-    modules = [
-      {
-        nixpkgs.config.allowUnfree = true;
-        environment.systemPackages = [
-          pam.packages.x86_64-linux.default
-        ];
-      }
-    ];
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    pam.url = "github:caiolandgraf/pam";
   };
-};
+
+  outputs = { self, nixpkgs, pam, ... }: {
+    nixosConfigurations.myHostname = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        {
+          environment.systemPackages = [
+            pam.packages.x86_64-linux.default
+          ];
+        }
+      ];
+    };
+  };
 }
 ```
 
-Then rebuild: sudo nixos-rebuild switch
+Then rebuild: `sudo nixos-rebuild switch`
 
 #### Home Manager
 
-Add to your home.nix or flake config:
-
 ```nix
 {
-inputs = {
-  nixpkgs.url = "github:NixOS/nixpkgs/nix-unstable";
-  pam.url = "github:caiolandgraf/pam";
-};
-
-outputs = { self, nixpkgs, pam, ... }: {
-  homeConfigurations."username" = {
-    pkgs = nixpkgs.legacyPackages.x86_64-linux;
-    modules = [
-      {
-        nixpkgs.config.allowUnfree = true;
-        home.packages = [
-          pam.packages.x86_64-linux.default
-        ];
-      }
-    ];
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nix-unstable";
+    pam.url = "github:caiolandgraf/pam";
   };
-};
+
+  outputs = { self, nixpkgs, pam, ... }: {
+    homeConfigurations."username" = {
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      modules = [
+        {
+          home.packages = [
+            pam.packages.x86_64-linux.default
+          ];
+        }
+      ];
+    };
+  };
 }
 ```
 
-Then apply: home-manager switch
-
-Note: Oracle support requires `allowUnfree = true` in your Nix configuration.
+Then apply: `home-manager switch`
 </details>
 
-### Basic Usage
+<details>
+<summary>Arch (AUR) - Unofficial</summary>
 
-```bash
-# Create your first connection — interactive TUI (recommended)
-pam init
-
-# Or pass arguments directly
-pam init mydb postgres "postgresql://user:pass@localhost:5432/mydb"
-
-# Add a saved query
-pam add list_users "SELECT * FROM users"
-
-# List your saved queries
-pam list queries
-
-# Run it, this opens the interactive table viewer
-pam run list_users
-
-# Or run inline SQL
-pam run "SELECT * FROM products WHERE price > 100"
-```
-
-### Navigating the Table
-
-Once your query results appear, you can navigate and interact with the data:
-
-```bash
-# Use vim-style navigation or arrow-keys
-j/k        # Move down/up
-h/l        # Move left/right
-g/G        # Jump to first/last row
-
-# Copy data
-y          # Yank (copy) current cell
-v          # Enter visual mode to select multiple cells and copy with y
-x          # Export selected data as csv, tsv, json, sql, markdown or html
-
-# Sort data
-f          # Toggle sort on current column
-           # In tables list: • default → ↑ ASC → ↓ DESC → • default
-           # In regular queries: none → ↑ ASC → ↓ DESC → none
-
-# Edit data directly
-e          # Edit selected cell value (inline editor)
-u          # Update selected cell value (inline editor)
-m          # Mark/unmark row
-D          # Delete marked/selected rows
-
-# Modify and re-run
-E          # Edit the query and re-run it
-
-# Exit
-q          # Quit back to terminal
-```
+An unofficial AUR package is available at: [pam-bin](https://aur.archlinux.org/packages/pam-bin)
+</details>
 
 ---
 
-<h2>
-    <img width="auto" height="24" alt="image" style="vertical-align:middle" src="https://github.com/user-attachments/assets/8f5037c9-e616-4065-adfc-cd598621c887" />
-    Configuration
-</h2>
+## 📋 All Commands
 
-Pam stores its configuration at `~/.config/pam/config.yaml`.
-
-_Consider this the labeled map of Pam's drawer—everything in its place._
-
-### Row Limit `default_row_limit: 1000`
-All queries are automatically limited to prevent fetching massive result sets. Configure via `default_row_limit` in config or use explicit `LIMIT` in your SQL queries.
-
-### Column Width `default_column_width: 15`
-Column widths in the table TUI are now **dynamic and responsive**. They automatically adapt to:
-- The content of your data (sampling up to 100 rows)
-- The available terminal width
-- Column headers and type indicators
-
-The table will:
-- Use the full available terminal width
-- Resize automatically when you change your terminal size
-- Apply intelligent min/max constraints (8-50 characters per column)
-- Distribute extra space proportionally among columns
-
-You can still configure a fallback `default_column_width` in the config file for edge cases, but the dynamic sizing will take precedence in most scenarios.
-
-### Color Schemes `color_scheme: "default"`
-Customize the terminal UI colors with built-in schemes:
-
-**Available schemes:**
-`default`, `dracula`, `gruvbox`, `solarized`, `nord`, `monokai`
-`black-metal`, `black-metal-gorgoroth`, `vesper`, `catppuccin-mocha`, `tokyo-night`, `rose-pine`, `terracotta`
-
-Each scheme uses a 7-color palette: Primary (titles, headers), Success (success messages), Error (errors), Normal (table data), Muted (borders, help text), Highlight (selected backgrounds), Accent (keywords, strings).
-
----
-
-<h2>
-    <img width="auto" height="24" alt="image" style="vertical-align:middle;" src="https://github.com/user-attachments/assets/c46a2565-a58c-472c-9393-96724d9716da" />
-    Database Support
-</h2>
-
-### Interactive Setup (recommended)
-
-Run `pam init` with no arguments to launch the interactive TUI. It will guide you through each field individually and assemble the connection string automatically:
-
-_Think of each connection as a different Dunder Mifflin branch._
-
-```
-  Connection name  › mydb
-  Database type    › postgres  ◀ ▶
-  Host             › localhost
-  Port             › 5432
-  Username         › myuser
-  Password         › ••••••
-  Database         › mydb
-
-  conn › postgres://myuser:secret@localhost:5432/mydb
-```
-
-- **Port** is pre-filled with the default for the selected database type
-- **Password** is masked by default — press `Ctrl+P` to toggle visibility
-- The **connection string preview** updates live as you type
-- For **SQLite**, only `File path` is shown (no host/user/password)
-- Press `Enter` to confirm, `Esc` to cancel
-
----
-
-Examples of init/create commands to start working with different database types
-
-### PostgreSQL
-
-```bash
-pam init pg-prod postgres postgres://myuser:mypassword@localhost:5432/mydb?sslmode=disable
-
-# or connect to a specific schema:
-pam init pg-prod postgres postgres://myuser:mypassword@localhost:5432/mydb?sslmode=disable schema-name
-```
-
-### MySQL / MariaDB
-
-```bash
-pam init mysql-dev mysql 'myuser:mypassword@tcp(127.0.0.1:3306)/mydb'
-
-pam init mariadb-docker mariadb "root:MyStrongPass123@tcp(localhost:3306)/dundermifflin"
-```
-
-### SQL Server
-
-
-```bash
-pam init sqlserver-docker sqlserver "sqlserver://sa:MyStrongPass123@localhost:1433/master"
-```
-
-### SQLite
-
-```bash
-pam init sqlite-local sqlite file:///home/eduardo/dbeesly/sqlite/mydb.sqlite
-```
-
-### Oracle
-
-```bash
-pam init oracle-stg oracle myuser/mypassword@localhost:1521/XEPDB1
-
-# or connect to a specific schema:
-pam init oracle-stg oracle myuser/mypassword@localhost:1521/XEPDB1 schema-name
-```
-> Make sure you have the [Oracle Instant Client](https://www.oracle.com/database/technologies/instant-client/downloads.html) or equivalent installed in your system
-
-### ClickHouse
-
-```bash
-pam init clickhouse-docker clickhouse "clickhouse://myuser:mypassword@localhost:9000/dundermifflin"
-```
-
-### FireBird
-
-```bash
-pam init firebird-docker firebird user:masterkey@localhost:3050//var/lib/firebird/data/the_office
-```
-
----
-
-## 🐝 Dbeesly
-
-To run containerized test database servers for all supported databases, use the sister project [dbeesly](https://github.com/eduardofuncao/dbeesly)
-
-_Your warehouse training ground for database setups._
-
-<img width="879" height="571" alt="image" src="https://github.com/user-attachments/assets/c0a131eb-ea95-4523-86ac-cd00a561a5e0" />
-
----
-
-<h2>
-    <img width="auto" height="24" alt="image" style="vertical-align:middle;" src="https://github.com/user-attachments/assets/c125a9f2-d4b6-4ec3-aef4-f52e1c8f48e8" />
-    Features
-</h2>
-
-
-### Query Management
-
-Save, organize, and execute your SQL queries with ease. 
-
-```bash
-# Add queries with auto-incrementing IDs
-pam add daily_report "SELECT * FROM sales WHERE date = CURRENT_DATE"
-pam add user_count "SELECT COUNT(*) FROM users"
-pam add employees "SELECT TOP 10 * FROM employees ORDER BY last_name"
-
-# Add parameterized queries with :param|default syntax
-pam add emp_by_salary "SELECT * FROM employees WHERE salary > :min_sal|30000"
-pam add search_users "SELECT * FROM users WHERE name LIKE :name|P% AND status = :status|active"
-
-# When creating queries with params and not default, pam will prompt you for the param value every time you run the query
-pam add search_by_name "SELECT * FROM employees where first_name = :name"
-
-# Run parameterized queries with named parameters (order doesn't matter!)
-pam run emp_by_salary --min_sal 50000
-pam run search_users --name Michael --status active
-# Or use positional args (must match SQL order)
-pam run search_users Michael active
-
-# List all saved queries
-pam list queries
-
-# Search for specific queries
-pam list queries emp    # Finds queries with 'emp' in name or SQL
-pam list queries employees --oneline # displays each query in one line
-
-# Run by name or ID
-pam run daily_report
-pam run 2
-
-# Edit query before running (great for testing parameter values)
-pam run emp_by_salary --edit
-```
-
-<img width="1166" height="687" alt="image" src="https://github.com/user-attachments/assets/6f05c2dc-aa48-49ca-ab68-fdf3cfcc4eae" />
-
-### TUI Table Viewer
-
-Navigate query results with Vim-style keybindings, update cells in-place, delete rows and copy data
-
-<img width="1155" height="689" alt="image" src="https://github.com/user-attachments/assets/839bb77d-b358-43d0-98cd-0dc8102a9ac0" />
-
-**Key Features:**
-- Syntax-highlighted SQL display
-- Column type indicators
-- Primary key markers
-- Live cell editing
-- Visual selection mode
-
-### Connection Switching
-
-Manage multiple database connections and switch between them instantly.
-
-```bash
-# List all connections
-pam list connections
-pam switch production
-```
-Display current connection and check if it is reachable
-```
-pam status
-```
-<div align=center>
-  <img width="425" height="503" alt="image" src="https://github.com/user-attachments/assets/e291de99-3c03-4e2a-b559-dcbbb89dc232" />
-</div>
-
-### Database Exploration
-
-Explore your database schema and visualize relationships between tables.
-
-```bash
-# List all tables and views in multi-column format
-pam explore
-
-# Query a table directly
-pam explore employees --limit 100
-
-# Visualize foreign key relationships
-pam explain employees
-pam explain employees --depth 2    # Show relationships 2 levels deep
-```
-
-<img width="855" height="171" alt="image" src="https://github.com/user-attachments/assets/e824e87d-d3b3-4a1a-9850-cc041cf94216" />
-
-**Note:** The `pam explain` command is currently a work in progress and may change in future versions.
-
-
-
-
----
-
-### Editor Integration
-
-Pam uses your `$EDITOR` environment variable for editing queries and UPDATE/DELETE statements.
-
-<div align=center>
-  <img width="448" height="238" alt="image" src="https://github.com/user-attachments/assets/f416f41a-8ec3-4a35-86e7-0bba6596f75f" />
-</div>
-
-```bash
-# Set your preferred editor
-export EDITOR=vim
-export EDITOR=nano
-export EDITOR=code
-```
-
-You can also use the editor to edit queries before running them
-
-```bash
-# Edit existing query before running
-pam run daily_report --edit
-
-# Create and run a new query on the fly
-pam run
-
-# Re-run the last executed query
-pam run --last
-
-# Edit all queries at once
-pam edit queries
-```
-
----
-
-### Data Import & Export
-
-Export tables as portable SQL dumps with `CREATE TABLE` + `INSERT` statements, and import them back into any compatible database.
-
-```bash
-# ── Export ─────────────────────────────────────────────────────
-
-# Dump all tables to a file (schema + data)
-pam export --output=backup.sql
-
-# Dump a single table
-pam export --table=users --output=users.sql
-pam export users                              # shorthand
-
-# Pipe to stdout (status messages go to stderr, so this is clean)
-pam export --table=orders > orders.sql
-
-# Schema only — CREATE TABLE statements, no INSERT
-pam export --no-data --output=schema.sql
-
-# Data only — INSERT statements, no CREATE TABLE
-pam export --data-only > inserts.sql
-
-# Add DROP TABLE IF EXISTS before each CREATE TABLE
-pam export --drop --output=full.sql
-
-# ── Import ─────────────────────────────────────────────────────
-
-# Import from a file
-pam import dump.sql
-
-# Read from stdin (pipe-friendly)
-cat dump.sql | pam import
-
-# Don't stop on the first error — collect and report all failures
-pam import dump.sql --continue-on-error
-
-# Dry run — parse and list every statement without executing
-pam import dump.sql --dry-run
-
-# Full migration pipeline between two connections
-pam switch staging
-pam export --table=users > users.sql
-pam switch production
-pam import users.sql
-```
-
-> SQL output is always written to **stdout** and status/progress messages to **stderr**, so redirects like `pam export > dump.sql` work cleanly without mixing output.
-
----
-
-<h2>
-    <img width="auto" height="24" alt="image" style="vertical-align:middle;" src="https://github.com/user-attachments/assets/4b1425ae-7918-4a3f-b37c-41c3e443929e" />
-    All Commands
-</h2>
+See [Commands](docs/commands.md) for the full command reference and database init examples.
 
 ### Connection Management
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `init` | Create a new connection via interactive TUI | `pam init` |
-| `init <name> <type> <conn-string> [schema]` | Create connection with arguments | `pam init mydb postgres "postgresql://..."` |
-| `switch <name>` | Switch to a different connection | `pam switch production` |
-| `status` | Show current active connection | `pam status` |
+| `init <name> <type> <conn>` | Create a new database connection | `pam init mydb postgres "postgresql://..."` |
+| `use` / `switch <name>` | Switch active connection | `pam use production` |
+| `status` | Show current connection info | `pam status` |
 | `list connections` | List all configured connections | `pam list connections` |
-| `ls` | Shorthand for list connections | `pam ls` |
-| `disconnect` | Disconnect from current database | `pam disconnect` |
-| `remove --conn <name>` | Remove a saved connection | `pam remove --conn mydb` |
+| `remove --connection <name>` | Remove a saved connection | `pam remove --connection dev4` |
 
 ### Query Operations
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `add <name> [sql]` | Add a new saved query | `pam add users "SELECT * FROM users"` |
-| `remove <name\|id>` | Remove a saved query | `pam remove users` or `pam remove 3` |
-| `remove --conn <name>` | Remove a saved connection | `pam remove --conn mydb` |
+| `add <name> [sql]` | Save a new query | `pam add users "SELECT * FROM users"` |
+| `remove <name\|id>` | Remove a saved query | `pam remove users` |
 | `list queries` | List all saved queries | `pam list queries` |
-| `list queries --oneline` | lists each query in one line | `pam list -o` |
-| `list queries <searchterm>` | lists queries containing search term | `pam list employees` |
+| `list queries --oneline` | One query per line | `pam list -o` |
+| `list queries <term>` | Search queries by name or SQL | `pam list employees` |
 | `run <name\|id\|sql>` | Execute a query | `pam run users` or `pam run 2` |
 | `run` | Create and run a new query | `pam run` |
-| `run --edit` | Edit query before running | `pam run users --edit` |
-| `run --last`, `-l` | Re-run last executed query | `pam run --last` |
-| `run --param` | run with named params | `pam run --name Pam` |
-
+| `run --edit` / `-e` | Edit query before running | `pam run users --edit` |
+| `run --last` / `-l` | Re-run last executed query | `pam run --last` |
+| `run --format <fmt>` | Output as csv/json/tsv/html/sql/markdown | `pam run users --format json` |
+| `run --param` | Run with named parameters | `pam run emp --name Michael` |
+| `shell` / `repl` | Interactive SQL REPL with history | `pam shell` |
 
 ### Database Exploration
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `explore` | List all tables and views in multi-column format | `pam explore` |
+| `explore` | List all tables and views | `pam explore` |
 | `explore <table> [-l N]` | Query a table with optional row limit | `pam explore employees --limit 100` |
-| `explain <table> [-d N] [-c]` | Visualize foreign key relationships | `pam explain employees --depth 2` |
+| `explain <table>` | Visualize foreign key relationships | `pam explain employees` |
+| `explain <table> -d N` | FK relationships up to depth N | `pam explain employees --depth 2` |
+| `tables` | Open tables in the TUI results view | `pam tables` |
+| `query --table=<name>` | Quick table query in TUI | `pam query --table=employees` |
 
-### Tables
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `tables` | List all tables in current database | `pam tables` |
-| `tables <table>` | Query a specific table | `pam tables users` |
-| `tables --oneline` | List tables one per line | `pam tables --oneline` |
-
-### Info
+### Configuration & Utilities
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `info tables` | List all tables from current schema | `pam info tables` |
-| `info views` | List all views from current schema | `pam info views` |
-
-### Configuration
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `edit config` | Edit main configuration file | `pam edit config` |
-| `edit queries` | Edit all queries for current connection | `pam edit queries` |
-| `help [command]` | Show help information | `pam help run` |
-
-### Import & Export
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `export` | Dump all tables (schema + data) to stdout | `pam export > backup.sql` |
+| `config` | Edit config file in `$EDITOR` | `pam config` |
+| `edit` | Edit all queries for current connection | `pam edit` |
+| `edit <name\|id>` | Edit a single named query | `pam edit 3` |
+| `import <file>` | Import a SQL dump from a file | `pam import dump.sql` |
+| `export` | Dump all tables to stdout | `pam export > backup.sql` |
 | `export --table=<t>` | Dump a single table | `pam export --table=users` |
 | `export --output=<f>` | Write dump to a file | `pam export --output=dump.sql` |
-| `export --no-create` | Skip `CREATE TABLE` statements | `pam export --no-create` |
-| `export --drop` | Prepend `DROP TABLE IF EXISTS` | `pam export --drop --output=full.sql` |
-| `export --no-data` | Schema only, no `INSERT` statements | `pam export --no-data --output=schema.sql` |
-| `export --data-only` | Data only, no `CREATE TABLE` | `pam export --data-only > inserts.sql` |
-| `import <file>` | Import a SQL dump from a file | `pam import dump.sql` |
-| `import --file=<f>` | Import with explicit flag | `pam import --file=dump.sql` |
-| `import --continue-on-error` | Keep going after failed statements | `pam import dump.sql --continue-on-error` |
-| `import --dry-run` | Parse statements without executing | `pam import dump.sql --dry-run` |
+| `export --no-data` | Schema only (no INSERT statements) | `pam export --no-data` |
+| `export --data-only` | Data only (no CREATE TABLE) | `pam export --data-only > inserts.sql` |
+| `export --drop` | Prepend DROP TABLE IF EXISTS | `pam export --drop --output=full.sql` |
+| `completion --install` | Install shell completion scripts | `pam completion --install` |
+| `help [command]` | Show help information | `pam help run` |
 
 ### Command Aliases
-
-Many commands have shorter aliases for faster typing:
 
 | Alias | Full Command | Description |
 |-------|--------------|-------------|
@@ -680,162 +327,169 @@ Many commands have shorter aliases for faster typing:
 | `save` | `add` | Save a new query |
 | `delete` | `remove` | Remove a saved query or connection |
 | `ls` | `list connections` | List all connections |
-| `t` | `tables` | List or query tables |
-| `explore` | `tables` | List or query tables |
+| `t`, `explore` | `tables` | List or query tables |
 | `tv` | `table-view` | Inspect and edit table structure |
 | `test` | `status` | Show current connection |
 | `clear`, `unset` | `disconnect` | Disconnect from database |
+| `repl` | `shell` | Interactive SQL REPL |
 
 ---
 
-<h2>
-    <img width="auto" height="24" alt="image" style="vertical-align:middle;" src="https://github.com/user-attachments/assets/504a8488-69bf-43b4-860b-0659a6db3c69" />
-    TUI Table Navigation
-</h2>
+## ⌨️ TUI Keybindings
 
-When viewing query results in the TUI, you have full Vim-style navigation and editing capabilities. 
+See [Keybindings](docs/keybindings.md) for the full reference.
 
-### Basic Navigation
+Once your query results appear you can navigate, edit, and export without leaving the TUI:
 
-| Key | Action |
-|-----|--------|
-| `h`, `←` | Move left |
-| `j`, `↓` | Move down |
-| `k`, `↑` | Move up |
-| `l`, `→` | Move right |
-| `g` | Jump to first row |
-| `G` | Jump to last row |
-| `0`, `_`, `Home` | Jump to first column |
-| `$`, `End` | Jump to last column |
-| `Ctrl+u`, `PgUp` | Page up |
-| `Ctrl+d`, `PgDown` | Page down |
+```
+# Navigation (Vim-style)
+j / k      Move down / up
+h / l      Move left / right
+g / G      Jump to first / last row
+0 / $      Jump to first / last column
+Ctrl+u/d   Page up / down
 
-### Data Operations
+# Copy & export
+y          Yank (copy) current cell
+v          Visual selection mode (cell range)
+V          Visual line mode (full rows)
+x          Export selection (csv/tsv/json/sql/markdown/html)
+X          Export the entire table
 
-| Key | Action |
-|-----|--------|
-| `v` | Enter visual selection mode |
-| `y` | Copy selected cell(s) to clipboard |
-| `Enter` | Show cell value in detail view (with JSON formatting) |
-| `u` | Update current cell (opens editor) |
-| `D` | Delete current row (requires WHERE clause) |
-| `e` | Edit and re-run query |
-| `s` | Save current query |
-| `q`, `Ctrl+c`, `Esc` | Quit table view |
+# Edit data
+e          Edit cell value in-place
+E          Edit query and re-run
+m          Mark / unmark row for bulk ops
+D          Delete all marked rows (or current row)
 
-### Detail View Mode
+# Search
+/          Search cell contents  (n / N to cycle)
+f          Search column headers (; / , to cycle)
 
-Press `Enter` on any cell to open a detailed view that shows the full cell content. If the content is valid JSON, it will be automatically formatted with proper indentation.
-
-**In Detail View:**
-
-| Key | Action |
-|-----|--------|
-| `↑`, `↓`, `j`, `k` | Scroll through content |
-| `e` | Edit cell content (opens editor with formatted JSON) |
-| `q`, `Esc`, `Enter` | Close detail view |
-
-When you press `e` in detail view:
-- The editor opens with the full content (JSON will be formatted)
-- Edit the content as needed
-- Save and close to update the database
-- JSON validation is performed automatically
-- The table view updates with the new value
-
-### Visual Mode
-
-Press `v` to enter visual mode, then navigate to select a range of cells. 
-Press `y` to copy the selection as plain text, or `x` to export the selected data as csv, tsv, json, sql insert statement, markdown or html
-
-> The copied or exported data will be available in your clipboard
+# Other
+Enter      Detail view (JSON-formatted)
+s          Save current query
+?          Toggle keybindings help
+q / Esc    Quit table view
+```
 
 ---
 
-<h2>
-    <img width="auto" height="24" alt="image" style="vertical-align:middle;" src="https://github.com/user-attachments/assets/432c6b41-b2e0-4326-a3cc-7b349a987bb0" />
-    Roadmap
-</h2>
+## ⚙️ Shell Completion
 
-> This project is currently in beta, please report unexpected behavior through the issues tab
+PAM provides dynamic tab completion for bash, zsh, and fish — automatically including your saved queries and connections.
 
-_Release names follow the Scranton crew._
+```bash
+# Install to the standard path for your shell (recommended)
+pam completion --install
 
-### v0.1.0 Ryan 📎
-- [x] Multi-database support (PostgreSQL, MySQL, SQLite, Oracle, SQL Server, ClickHouse)
-- [x] Query library with save/edit/remove functionality
-- [x] Interactive TUI with Vim navigation
-- [x] In-place cell updates and row deletion
-- [x] Visual selection and copy (single and multi cell)
-- [x] Syntax highlighting
-- [x] Query editing in external editor
-- [x] Primary key detection
-- [x] Column type indicators
-- [x] Row limit configuration option
-- [x] Info command, list all tables/views in current connection
+# Or manually:
+echo 'eval "$(pam completion bash)"' >> ~/.bashrc        # Bash
+echo 'eval "$(pam completion zsh)"' >> ~/.zshrc          # Zsh
+pam completion fish > ~/.config/fish/completions/pam.fish # Fish
+```
 
-### v0.2.0 - Kelly 👗
-- [x] Program colors configuration option
-- [x] Query parameter with prompt and defaults (e.g., `WHERE first_name = :name|Pam`)
-- [x] CSV/JSON export for multiple cells
-- [x] Display column types correctly for join queries
-- [x] `pam explore` and `pam explain`
-
-### v0.3.0 - Jim 👔
-- [x] Shell autocomplete (bash, fish, zsh)
-- [ ] Encryption on connection username/password in config file
-- [x] Dynamic column width
-- [x] SQL dump export — `pam export [--table=<t>] [--output=<file>] [--drop] [--no-data] [--data-only]`
-- [x] SQL dump import — `pam import [<file>] [--continue-on-error] [--dry-run]`
+See [Shell Completion](docs/completion.md)
 
 ---
 
-## Contributing
+## ⚙️ Configuration
 
-We welcome contributions! Get started with detailed instructions from [CONTRIBUTING.md](CONTRIBUTING.md)
+Row limits, column widths, color schemes, and UI visibility options are configured at `~/.config/pam/config.yaml`.
 
-_We keep it like a Dunder Mifflin memo: concise, kind, and well-labeled._
+```yaml
+default_row_limit: 1000
+default_column_width: 15
+color_scheme: "dracula"   # dracula, gruvbox, catppuccin-mocha, tokyo-night, nord, rose-pine, ...
 
-Thanks a lot to all the contributors:
+ui_visibility:
+  query_name: true          # Show query name header
+  query_sql: true           # Show SQL query display
+  type_display: true        # Show column type indicators
+  key_icons: true           # Show primary key (⚿) and foreign key (⚭) icons
+  footer_cell_content: true # Show current cell preview in footer
+  footer_stats: true        # Show row/col count and position in footer
+  footer_keymaps: true      # Show keybindings help in footer
+```
+
+Open and edit the config directly with:
+
+```bash
+pam config
+```
+
+See [Configuration](docs/configuration.md)
+
+---
+
+## 🗺️ Roadmap
+
+> *"I have a lot of questions. Number one: how dare you ship without tests."* — Dwight Schrute (probably)
+
+### v1.2.0 — The Merge
+- [x] Snowflake database support with keypair authentication
+- [x] DuckDB improvements (CSV/JSON file queries, improved driver)
+- [x] Environment variable expansion in connection strings (`${MY_VAR}`)
+- [x] Interactive SQL REPL (`pam shell` / `pam repl`) with history, multi-line, meta-commands
+- [x] `pam run --format <csv|json|tsv|html|sql|markdown>` — pipe-friendly export
+- [x] `pam run --edit` / `-e` — open query in editor before running
+- [x] `pam run --last` / `-l` — repeat last executed query
+- [x] Visual line mode (`V` key)
+- [x] Export full table (`X` key)
+- [x] `pam remove --connection <name>` — remove saved connections
+- [x] `pam config` — edit config file in `$EDITOR`
+- [x] `pam import <file>` — import SQL dumps
+- [x] `pam query --table=<name>` — quick table query
+- [x] Enhanced `pam explain --depth <n>` — N-level FK visualization
+- [x] Shell completion with `--install` flag (writes to standard paths)
+- [x] `pam tables` / `\dt` in interactive shell
+- [x] Full-text search in table view (`/`) and column header search (`f`)
+- [x] Row marking (`m`) and multi-row delete (`D`)
+- [x] Inline cell edit (`e`) and edit+rerun (`E`)
+
+### v1.3.0 — Schrute's Farm
+- [ ] Configurable keybinds
+- [ ] Migrate to Bubble Tea v2
+- [ ] Return more info on exec statements (INSERT, UPDATE, DELETE row counts)
+- [ ] Homebrew custom tap and nixpkgs entry
+- [ ] More options to encrypt data in the config file
+
+---
+
+## 🤖 For Robots
+
+PAM ships a `SKILL.md` file in the repo root — a simple reference for AI coding agents (Claude Code, Copilot, etc.) to use PAM non-interactively. It covers safe commands, format flags, parameterized queries, and which commands to avoid (TUI/editor). Point your agent at it if you want it to run SQL queries as part of an automated workflow.
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed instructions.
+
+*"We keep it like a Dunder Mifflin memo: concise, kind, and well-labeled."*
+
+Thanks to all contributors:
 
 <a href="https://github.com/DeprecatedLuar"><img src="https://github.com/DeprecatedLuar.png" width="40" /></a>
 <a href="https://github.com/caiolandgraf"><img src="https://github.com/caiolandgraf.png" width="40" /></a>
+<a href="https://github.com/g4brielklein"><img src="https://github.com/g4brielklein.png" width="40" /></a>
 <a href="https://github.com/eduardofuncao"><img src="https://github.com/eduardofuncao.png" width="40" /></a>
+<a href="https://github.com/udirona"><img src="https://github.com/udirona.png" width="40" /></a>
+<a href="https://github.com/Leosallin"><img src="https://github.com/Leosallin.png" width="40" /></a>
 
+PAM builds on these fantastic projects:
 
-## Acknowledgments
+- **[naggie/dstask](https://github.com/naggie/dstask)** — elegant CLI design patterns and file-based data storage
+- **[DeprecatedLuar/better-curl-saul](https://github.com/DeprecatedLuar/better-curl-saul)** — a simple and genius approach to CLI tooling
+- **[eduardofuncao/squix](https://github.com/eduardofuncao/squix)** — upstream project whose features were merged into PAM
+- **[dbeaver](https://github.com/dbeaver/dbeaver)** — the OG database management tool
 
-Pam wouldn't exist without the inspiration and groundwork laid by these fantastic projects:
-
-- **[naggie/dstask](https://github.com/naggie/dstask)** - For the elegant CLI design patterns and file-based data storage approach
-- **[DeprecatedLuar/better-curl-saul](https://github.com/DeprecatedLuar/better-curl-saul)** - For demonstrating a simple and genius approach to making a CLI tool
-- **[dbeaver](https://github.com/dbeaver/dbeaver)** - The OG database management tool
-
-
-Built with: 
-- [Bubble Tea](https://github.com/charmbracelet/bubbletea) - The TUI framework
-- Go standard library and various database drivers
-
----
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details
-
----
-
-<pre>
-┌──────────────────────────────┐
-│         END OF MEMO          │
-└──────────────────────────────┘
-</pre>
+Built with [Bubble Tea](https://github.com/charmbracelet/bubbletea) and the Go standard library.
 
 <div align="center">
 
-**Made with 👚 by [@caiolandgraf](https://github.com/caiolandgraf)**
+**Made with 🗂️ for the Scranton Branch**
 
-> *"I don't think it would be the worst thing if it didn't work out...  Wait, can I say that?"* - Pam Beesly (definitely NOT about Pam's Database Drawer)
-
-<img width="320" height="224" alt="Pam mascot" src="https://github.com/user-attachments/assets/f995ce07-3742-4e98-b737-bbdbf982012e" />
-
+*"I am ready to face any challenges that might be foolish enough to face me."* — Dwight Schrute
 
 </div>

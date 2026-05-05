@@ -53,9 +53,7 @@ func (a *App) handleExplain() {
 	flags, args := parseExplainFlags()
 
 	if len(args) == 0 {
-		fmt.Println(
-			"Usage: pam explain [--depth|-d N] [--verbose|-v] <table-name>",
-		)
+		fmt.Println("Usage: pam explain [--depth|-d N] [--verbose|-v] <table-name>")
 		os.Exit(1)
 	}
 

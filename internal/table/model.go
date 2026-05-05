@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caiolandgraf/pam/internal/config"
 	"github.com/caiolandgraf/pam/internal/db"
 	"github.com/caiolandgraf/pam/internal/parser"
 	"github.com/charmbracelet/bubbles/textarea"
@@ -13,6 +14,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// editorKind identifies which inline-editor mode is active.
 type editorKind int
 
 const (
@@ -21,68 +23,93 @@ const (
 	editorKindDetailUpdate
 )
 
+type CellPosition struct {
+	Row int
+	Col int
+}
+
 type Model struct {
-	width                  int
-	height                 int
-	selectedRow            int
-	selectedCol            int
-	offsetX                int
-	offsetY                int
-	visibleCols            int
-	visibleRows            int
-	columns                []string
-	columnTypes            []string
-	columnFKs              []string // Maps column index to FK reference (e.g., "people.id")
-	data                   [][]string
-	elapsed                time.Duration
-	blinkCopiedCell        bool
-	visualMode             bool
-	visualStartRow         int
-	visualStartCol         int
-	dbConnection           db.DatabaseConnection
-	tableName              string
-	primaryKeyCol          string
-	blinkUpdatedCell       bool
-	updatedRow             int
-	updatedCol             int
-	blinkDeletedRow        bool
-	deletedRow             int
-	currentQuery           db.Query
-	shouldRerunQuery       bool
-	editedQuery            string
-	lastExecutedQuery      string
-	cellWidth              int
-	detailViewMode         bool
-	detailViewContent      string
-	detailViewScroll       int
-	isTablesList           bool
-	onTableSelect          func(string) tea.Cmd
-	selectedTableName      string
-	saveQueryCallback      func(query db.Query) (db.Query, error)
-	statusMessage          string
-	editorActive           bool
-	editorTitle            string
-	editorHelp             string
-	editorKind             editorKind
-	editor                 textarea.Model
-	editorCol              int
+	width             int
+	height            int
+	selectedRow       int
+	selectedCol       int
+	offsetX           int
+	offsetY           int
+	visibleCols       int
+	visibleRows       int
+	columns           []string
+	columnTypes       []string
+	columnFKs         []string // Maps column index to FK reference (e.g., "people.id")
+	data              [][]string
+	elapsed           time.Duration
+	blinkCopiedCell   bool
+	visualMode        bool
+	visualLineMode    bool
+	visualStartRow    int
+	visualStartCol    int
+	dbConnection      db.DatabaseConnection
+	tableName         string
+	primaryKeyCol     string
+	blinkUpdatedCell  bool
+	updatedRow        int
+	updatedCol        int
+	blinkDeletedRow   bool
+	deletedRow        int
+	currentQuery      db.Query
+	shouldRerunQuery  bool
+	editedQuery       string
+	lastExecutedQuery string
+	displaySQL        string
+	cellWidth         int
+	detailViewMode    bool
+	detailViewContent string
+	detailViewScroll  int
+	isTablesList      bool
+	onTableSelect     func(string) tea.Cmd
+	selectedTableName string
+	saveQueryCallback func(query db.Query) (db.Query, error)
+	statusMessage     string
+	exportWaiting     exportWaitingFormatState
+	exportStatus      string
+	uiVisibility      config.UIVisibility
+	// Search state
+	searchMode       bool
+	searchQuery      string
+	searchMatches    []CellPosition
+	searchColMatches []int
+	searchCursor     int
+	columnSearchMode bool
+
+	// Column sort state
+	sortColumn    string
+	sortDirection string
+
+	// Row marking (multi-row operations)
+	markedRows map[int]bool
+
+	// Inline textarea editor (multi-line, e.g. SQL rewrite)
+	editorActive bool
+	editorKind   editorKind
+	editorTitle  string
+	editorHelp   string
+	editor       textarea.Model
+	editorCol    int
+
+	// Single-line value editor (cell update)
 	valueEditorActive      bool
+	valueEditorKind        editorKind
 	valueEditorTitle       string
 	valueEditorHelp        string
-	valueEditorKind        editorKind
 	valueEditorInput       textinput.Model
-	valueEditorCol         int
 	valueEditorCurrent     string
+	valueEditorCol         int
 	valueEditorMasked      bool
 	valueEditorPlaceholder string
-	markedRows             map[int]bool
-	confirmActive          bool
-	confirmMessage         string
-	confirmRows            []int
-	exportWaiting          exportWaitingFormatState
-	exportStatus           string
-	sortColumn             string
-	sortDirection          string // "", "ASC", "DESC"
+
+	// Delete confirmation dialog
+	confirmActive  bool
+	confirmMessage string
+	confirmRows    []int
 }
 
 type blinkMsg struct{}
@@ -96,6 +123,7 @@ func New(
 	tableName, primaryKeyCol string,
 	query db.Query,
 	columnWidth int,
+	visibility config.UIVisibility,
 ) Model {
 	columnTypes := make([]string, len(columns))
 
@@ -167,7 +195,13 @@ func New(
 		editedQuery:      "",
 		cellWidth:        columnWidth,
 		isTablesList:     false,
-		markedRows:       make(map[int]bool),
+		uiVisibility:     visibility,
+		searchMode:       false,
+		searchQuery:      "",
+		searchMatches:    []CellPosition{},
+		searchColMatches: []int{},
+		searchCursor:     0,
+		columnSearchMode: false,
 		sortColumn:       sortCol,
 		sortDirection:    sortDir,
 	}
@@ -203,19 +237,28 @@ func (m Model) SetStatusMessage(msg string) Model {
 }
 
 func (m Model) calculateHeaderLines() int {
-	titleLines := 1
+	headerLines := 0
 
-	var queryToDisplay string
-	if m.lastExecutedQuery != "" {
-		queryToDisplay = m.lastExecutedQuery
-	} else {
-		queryToDisplay = m.currentQuery.SQL
+	if m.uiVisibility.QueryName {
+		headerLines++
 	}
 
-	formattedSQL := parser.FormatSQLWithLineBreaks(queryToDisplay)
-	sqlLines := strings.Count(formattedSQL, "\n") + 1
+	if m.uiVisibility.QuerySQL {
+		var queryToDisplay string
+		if m.lastExecutedQuery != "" {
+			queryToDisplay = m.lastExecutedQuery
+		} else {
+			queryToDisplay = m.currentQuery.SQL
+		}
 
-	return titleLines + sqlLines + 1
+		formattedSQL := parser.FormatSQLWithLineBreaks(queryToDisplay)
+		headerLines += strings.Count(formattedSQL, "\n") + 1
+	}
+
+	// Always add separator line
+	headerLines++
+
+	return headerLines
 }
 
 func (m Model) SetTablesList(onSelect func(string) tea.Cmd) Model {

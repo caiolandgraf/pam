@@ -1,6 +1,7 @@
 package table
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -56,7 +57,7 @@ func (m Model) saveQuery() (tea.Model, tea.Cmd) {
 
 	// For unnamed queries, use editor to get the name
 	editorCmd := editor.GetEditorCommand()
-	instructions := "# Enter the name for this query\n# Lines starting with # will be ignored\n# Save and exit to confirm, or exit without saving to cancel\n"
+	instructions := fmt.Sprintf("-- Saving query:\n-- %s\n--\n-- Enter the name for this query below\n-- Lines starting with -- will be ignored. Save and exit to confirm, or exit without saving to cancel\n", strings.ReplaceAll(sqlToSave, "\n", "\n-- "))
 
 	tmpFile, err := editor.CreateTempFile("pam-query-name-", instructions)
 	if err != nil {
@@ -66,7 +67,6 @@ func (m Model) saveQuery() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	tmpPath := tmpFile.Name()
-	defer os.Remove(tmpPath)
 	tmpFile.Close()
 
 	cmd := exec.Command(editorCmd, tmpPath)
@@ -75,6 +75,8 @@ func (m Model) saveQuery() (tea.Model, tea.Cmd) {
 	cmd.Stderr = os.Stderr
 
 	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
+		defer os.Remove(tmpPath)
+
 		if err != nil {
 			return saveQueryCompleteMsg{success: false, query: db.Query{}}
 		}
@@ -90,7 +92,7 @@ func (m Model) saveQuery() (tea.Model, tea.Cmd) {
 		var name string
 		for _, line := range lines {
 			line = strings.TrimSpace(line)
-			if line != "" && !strings.HasPrefix(line, "#") {
+			if line != "" && !strings.HasPrefix(line, "--") {
 				name = line
 				break
 			}

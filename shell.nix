@@ -7,9 +7,6 @@ pkgs.mkShell {
     oracle-instantclient
     postgresql_15
     go
-    sqlite
-    duckdb
-    arrow-cpp 
   ];
 
   hardeningDisable = [ "fortify" ];
@@ -19,7 +16,7 @@ pkgs.mkShell {
     export ORACLE_HOME=${oracleLib}
 
     echo "========================================="
-    echo "Pam development environment ready!"
+    echo "Squix development environment ready!"
     echo "========================================="
     echo ""
     echo "Available tools:"
@@ -28,7 +25,7 @@ pkgs.mkShell {
     echo "  - SQLite client (sqlite3)"
     echo "  - Oracle Instant Client"
     echo ""
-    echo "To test Pam with real databases, use dbeesly:"
+    echo "To test Squix with real databases, use dbeesly:"
     echo "  https://github.com/dbeesly"
     echo ""
   '';

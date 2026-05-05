@@ -1,7 +1,7 @@
 package table
 
 import (
-	"strings"
+	"os"
 	"time"
 
 	"github.com/caiolandgraf/pam/internal/styles"
@@ -9,7 +9,27 @@ import (
 )
 
 func (m Model) editAndRerunQuery() (tea.Model, tea.Cmd) {
-	if strings.TrimSpace(m.currentQuery.SQL) == "" {
+	editorCmd := os.Getenv("EDITOR")
+	if editorCmd == "" {
+		editorCmd = "vim"
+	}
+
+	tmpFile, err := os.CreateTemp("", "pam-edit-query-*.sql")
+	if err != nil {
+		return m, nil
+	}
+	tmpPath := tmpFile.Name()
+
+	if _, err := tmpFile.WriteString(m.currentQuery.SQL); err != nil {
+		tmpFile.Close()
+		os.Remove(tmpPath)
+		return m, nil
+	}
+	tmpFile.Close()
+
+	// Verify temp file exists before opening editor
+	if _, err := os.Stat(tmpPath); err != nil {
+		os.Remove(tmpPath)
 		return m, nil
 	}
 

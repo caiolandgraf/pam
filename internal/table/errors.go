@@ -3,7 +3,6 @@ package table
 import (
 	"fmt"
 	"os"
-
 	"github.com/caiolandgraf/pam/internal/styles"
 )
 

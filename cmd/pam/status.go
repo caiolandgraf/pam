@@ -2,20 +2,16 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/caiolandgraf/pam/internal/config"
+	"github.com/caiolandgraf/pam/internal/db"
 	"github.com/caiolandgraf/pam/internal/spinner"
 	"github.com/caiolandgraf/pam/internal/styles"
 )
 
-func (a *App) handleStatus() {
-	if a.config.CurrentConnection == "" {
-		fmt.Println(styles.Faint.Render("No active connection"))
-		return
-	}
-
+func (a *App) printConnStatus(conn db.DatabaseConnection) {
 	currConn := a.config.Connections[a.config.CurrentConnection]
-
 	connInfo := fmt.Sprintf("%s/%s", currConn.DBType, currConn.Name)
 	if currConn.Schema != "" {
 		connInfo += fmt.Sprintf(" (schema: %s)", currConn.Schema)
@@ -32,42 +28,46 @@ func (a *App) handleStatus() {
 	reachable := make(chan bool)
 
 	go func() {
-		conn := config.FromConnectionYaml(currConn)
-		conn.Open()
-		defer conn.Close()
-
 		err := conn.Ping()
 		reachable <- (err == nil)
 	}()
 
 	go spinner.CircleWait(done)
 
-	isReachable := <-reachable
-	close(done)
-
-	fmt.Print("\r\033[2K") // Clear current line
-	fmt.Print("\033[1A")   // Move up one line
-	fmt.Print("\r\033[2K") // Clear that line too
-
-	circleIcon := "●"
-	if !isReachable {
-		circleIcon = "○"
+	var isReachable bool
+	select {
+	case isReachable = <-reachable:
+		close(done)
+	case <-time.After(5 * time.Second):
+		close(done)
+		isReachable = false
 	}
 
+	// Clear spinner lines
+	fmt.Print("\r\033[2K")
+	fmt.Print("\033[1A")
+	fmt.Print("\r\033[2K")
+
+	circleIcon := "●"
 	statusText := "reachable"
 	if !isReachable {
+		circleIcon = "○"
 		statusText = "unreachable"
 	}
 
-	// Print final output
-	fmt.Printf(
-		"%s Using %s\n",
-		styles.Success.Render(circleIcon),
-		styles.Title.Render(connInfo),
-	)
-	fmt.Printf(
-		"  %d saved queries, %s\n",
-		queryCount,
-		styles.Faint.Render(statusText),
-	)
+	fmt.Printf("%s Using %s\n", styles.Success.Render(circleIcon), styles.Title.Render(connInfo))
+	fmt.Printf("  %d saved queries, %s\n", queryCount, styles.Faint.Render(statusText))
+}
+
+func (a *App) handleStatus() {
+	if a.config.CurrentConnection == "" {
+		fmt.Println(styles.Faint.Render("No active connection"))
+		return
+	}
+
+	conn := config.FromConnectionYaml(a.config.Connections[a.config.CurrentConnection])
+	conn.Open()
+	defer conn.Close()
+
+	a.printConnStatus(conn)
 }

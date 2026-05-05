@@ -39,9 +39,7 @@ func (a *App) handleExplore() {
 	}
 
 	if a.config.CurrentConnection == "" {
-		printError(
-			"No active connection. Use 'pam switch <connection>' or 'pam init' first",
-		)
+		printError("No active connection. Use 'pam switch <connection>' or 'pam init' first")
 	}
 
 	conn := config.FromConnectionYaml(
@@ -56,21 +54,23 @@ func (a *App) handleExplore() {
 	sql := fmt.Sprintf("SELECT * FROM %s", tableName)
 	sql = conn.ApplyRowLimit(sql, limit)
 
-	var onRerun func(string)
-	onRerun = func(newSQL string) {
-		run.ExecuteSelect(newSQL, tableName, run.ExecutionParams{
+	var onRerun func(string) error
+	onRerun = func(newSQL string) error {
+		return run.ExecuteSelect(newSQL, tableName, run.ExecutionParams{
 			Query:      db.Query{Name: tableName, SQL: newSQL},
 			Connection: conn,
 			Config:     a.config,
 			OnRerun:    onRerun,
 		})
 	}
-	run.ExecuteSelect(sql, tableName, run.ExecutionParams{
+	if err := run.ExecuteSelect(sql, tableName, run.ExecutionParams{
 		Query:      db.Query{Name: tableName, SQL: sql},
 		Connection: conn,
 		Config:     a.config,
 		OnRerun:    onRerun,
-	})
+	}); err != nil {
+		printError("%v", err)
+	}
 }
 
 func (a *App) listTablesAndViews() {

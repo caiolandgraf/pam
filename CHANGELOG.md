@@ -11,6 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### From Upstream (squix merge)
+- **Snowflake support** — connect to Snowflake with keypair authentication (`authenticator=snowflake_jwt`)
+- **DuckDB improvements** — query CSV and JSON files directly as views; improved driver stability
+- **Environment variable expansion** — use `${MY_VAR}` in any connection string; PAM expands at runtime
+- **Interactive SQL REPL** — `pam shell` / `pam repl` with persistent connection, command history, multi-line input, and meta-commands (`\dt`, `\q`, `\h`, etc.)
+- **`pam run --format`** — stream results to stdout as `csv`, `json`, `tsv`, `html`, `sql`, or `markdown`; fully pipe-friendly
+- **`pam run --edit` / `-e`** — open query in `$EDITOR` before executing
+- **`pam run --last` / `-l`** — re-run the last executed query
+- **Visual line mode** — `V` key selects entire rows for copy/export (previously only cell-range `v` was available)
+- **Export full table** — `X` key exports the entire result set to clipboard in the chosen format
+- **`pam remove --connection <name>`** — remove a saved database connection from the config
+- **`pam config`** — open the config file directly in `$EDITOR`
+- **`pam import <file>`** — import a SQL dump file; reads from stdin when no file is given
+- **`pam query --table=<name>`** — open a specific table directly in the TUI results view
+- **Enhanced `pam explain`** — `--depth` / `-d` flag controls how many FK levels deep the tree renders
+- **Shell completion `--install`** — writes completion scripts to the standard shell path automatically (fish/zsh/bash)
+- **`pam tables` / `\dt` in shell** — list database tables from within the interactive REPL
+- **Full-text search in table view** — `/` searches cell contents (`n`/`N` to cycle); `f` searches column headers (`;`/`,` to cycle)
+
 #### CLI / TUI
 - **Inline cell editor** — press `e` to edit a cell value directly inside the TUI using a `bubbles/textarea`, no external `$EDITOR` needed
 - **Row marking** — press `m` to mark / unmark individual rows; marked rows are highlighted and queued for bulk operations

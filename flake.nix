@@ -1,5 +1,5 @@
 {
-  description = "Pam's Database Drawer - SQL query CLI tool";
+  description = "Squix's SQL Stash - SQL query CLI tool";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -11,27 +11,21 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          config.allowUnfree = true;  # For Oracle Instant Client
         };
       in
       {
         packages.default = pkgs.buildGoModule {
-          pname = "pam";
-          version = "0.2.0-beta";
+          pname = "squix";
+          version = "0.4.0-beta";
 
           src = ./.;
 
           # Run: nix build .#default 2>&1 | grep "got:" to get real hash
-          vendorHash = "sha256-CRvFH9Fn7iGZck6DBTh+2yNRj6J/qqLs6Z1dgfePUYs=";
+          vendorHash = "sha256-54wxute5KG/q7uzNimzAxh+JK9UXgqDmaSl9Tpg28eg=";
 
+          enableCGO = true;
 
-          # Native dependencies
-          buildInputs = with pkgs; [
-            sqlite.dev        # For go-sqlite3
-            duckdb           # For go-duckdb
-            arrow-cpp        # DuckDB dependency
-            oracle-instantclient.lib  # For godror
-          ];
+          # Native dependencies (none needed - all drivers are pure Go)
 
           # Linker flags
           ldflags = [
@@ -40,41 +34,29 @@
             "-X main.Version=${self.packages.${system}.default.version}"
           ];
 
-          # Oracle library paths
-          propagatedBuildInputs = with pkgs; [ oracle-instantclient.lib ];
-
           meta = with pkgs.lib; {
             description = "Minimal CLI tool for managing SQL queries across multiple databases";
             homepage = "https://github.com/caiolandgraf/pam";
             license = licenses.mit;
-            mainProgram = "pam";
+            mainProgram = "squix";
           };
         };
 
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             go
-            sqlite.dev
-            duckdb
-            arrow-cpp
-            oracle-instantclient.lib
             postgresql
           ];
 
           shellHook = ''
-            export LD_LIBRARY_PATH=${pkgs.oracle-instantclient.lib}/lib:$LD_LIBRARY_PATH
-            export ORACLE_HOME=${pkgs.oracle-instantclient.lib}
-            export CGO_ENABLED=1
-
             echo "========================================="
-            echo "Pam development environment ready!"
+            echo "Squix development environment ready!"
             echo "========================================="
             echo ""
             echo "Available tools:"
             echo "  - Go compiler"
             echo "  - PostgreSQL client (psql)"
             echo "  - SQLite client (sqlite3)"
-            echo "  - Oracle Instant Client"
             echo ""
           '';
         };

@@ -9,7 +9,7 @@ import (
 	"github.com/caiolandgraf/pam/internal/styles"
 )
 
-const Version = "v0.2.0"
+const Version = "v0.4.0-beta"
 
 type App struct {
 	config *config.Config
@@ -40,12 +40,14 @@ func (a *App) Run() {
 		a.handleSwitch()
 	case "add", "save":
 		a.handleAdd()
-	case "remove", "delete":
+	case "remove", "rm", "delete":
 		a.handleRemove()
 	case "query":
 		a.handleQuery()
 	case "run":
 		a.handleRun()
+	case "shell", "repl":
+		a.handleShell()
 	case "list":
 		a.handleList()
 	case "ls":
@@ -64,29 +66,23 @@ func (a *App) Run() {
 		a.handleTableView()
 	case "disconnect", "clear", "unset":
 		a.handleDisconnect()
-	case "export":
-		a.handleExport()
-	case "import":
-		a.handleImport()
+	case "config":
+		a.handleConfig()
 	case "explain":
 		a.handleExplain()
 	case "help":
 		a.handleHelp()
+	case "__complete":
+		a.handleComplete()
 	case "completion":
 		a.handleCompletion()
-	case "__complete_tables":
-		a.handleCompleteTables()
-	case "__complete_connections":
-		a.handleCompleteConnections()
-	case "__complete_queries":
-		a.handleCompleteQueries()
 	default:
 		log.Fatalf("Unknown command: %s", command)
 	}
 }
 
 func (a *App) printUsage() {
-	fmt.Println(styles.Title.Render("Pam's database drawer"))
+	fmt.Println(styles.Title.Render("Squix's SQL Stash"))
 	fmt.Println(styles.Faint.Render("Query manager for your databases"))
 	fmt.Println()
 
@@ -106,13 +102,8 @@ func (a *App) printUsage() {
 
 	fmt.Println(styles.Title.Render("Common Commands"))
 	fmt.Println(
-		"  pam run <run>        " + styles.Faint.Render(
+		"  pam run <run>      " + styles.Faint.Render(
 			"Execute a saved query",
-		),
-	)
-	fmt.Println(
-		"  pam query --table=<table> [sql]  " + styles.Faint.Render(
-			"Run a SQL query against a table",
 		),
 	)
 	fmt.Println(
@@ -124,12 +115,10 @@ func (a *App) printUsage() {
 		),
 	)
 	fmt.Println(
-		"  pam tv <table>       " + styles.Faint.Render(
-			"View and edit table structure",
-		),
+		"  pam list queries     " + styles.Faint.Render("List saved queries"),
 	)
 	fmt.Println(
-		"  pam list queries     " + styles.Faint.Render("List saved queries"),
+		"  pam shell            " + styles.Faint.Render("Interactive query REPL"),
 	)
 	fmt.Println(
 		"  pam ls               " + styles.Faint.Render(
@@ -164,7 +153,7 @@ func (a *App) printUsage() {
 }
 
 func (a *App) printVersion() {
-	fmt.Println(styles.Title.Render("Pam's database drawer"))
+	fmt.Println(styles.Title.Render("Squix's SQL Stash"))
 	fmt.Println(styles.Faint.Render("version: " + Version))
 }
 

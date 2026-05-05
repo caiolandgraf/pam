@@ -49,6 +49,11 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.executeExportForFormat(msg.String())
 	}
 
+	// Handle search input mode
+	if m.searchMode {
+		return m.handleSearchInput(msg)
+	}
+
 	// If in detailed view mode, handle specific keys
 	if m.detailViewMode {
 		switch msg.String() {
@@ -79,6 +84,9 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c", "q":
 		return m, tea.Quit
+	case "?":
+		m.uiVisibility.FooterKeymaps = !m.uiVisibility.FooterKeymaps
+		return m, nil
 
 	case "up", "k":
 		return m.moveUp(), nil
@@ -105,14 +113,15 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "v":
 		return m.toggleVisualMode()
-	case "m":
-		m.toggleMarkRow(m.selectedRow)
-		return m, nil
+	case "V":
+		return m.toggleVisualLineMode()
 
 	case "y":
 		return m.copySelection()
 	case "x":
 		return m.startExportFormatSelection()
+	case "X":
+		return m.startExportAllFormatSelection()
 
 	case "enter":
 		// If this is a tables list, select the table
@@ -153,8 +162,18 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.editAndRerunQuery()
 	case "s":
 		return m.saveQuery()
+	case "/":
+		return m.startCellSearch(), nil
 	case "f":
-		return m.toggleSort()
+		return m.startColumnSearch(), nil
+	case "n":
+		return m.nextSearchMatch(), nil
+	case "N":
+		return m.prevSearchMatch(), nil
+	case ",":
+		return m.prevColumnMatch(), nil
+	case ";":
+		return m.nextColumnMatch(), nil
 	}
 
 	return m, nil

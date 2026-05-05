@@ -26,9 +26,7 @@ func ResolveQuery(
 		}
 		lastQuery := cfg.Connections[currentConn].LastQuery
 		if lastQuery.Name == "" {
-			return ResolvedQuery{}, fmt.Errorf(
-				"no last query found. Run a query first, then use pam run --last",
-			)
+			return ResolvedQuery{}, fmt.Errorf("no last query found. Run a query first, then use pam run --last")
 		}
 		return ResolvedQuery{
 			Query:    lastQuery,

@@ -11,7 +11,7 @@
 !LICENSE
 !README.md
 !CONTRIBUTING.md
-!CHANGELOG.md
+!SKILL.md
 
 !shell.nix
 !flake.nix
@@ -21,9 +21,4 @@
 
 !cmd/
 !internal/
-
 !docs/
-docs/node_modules/
-docs/dist/
-docs/public/sql-wasm.wasm
-docs/public/sql-wasm-browser.wasm

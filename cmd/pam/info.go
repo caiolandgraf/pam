@@ -21,14 +21,10 @@ func (a *App) handleInfo() {
 	}
 
 	if a.config.CurrentConnection == "" {
-		printError(
-			"No active connection. Use 'pam switch <connection>' or 'pam init' first",
-		)
+		printError("No active connection. Use 'pam switch <connection>' or 'pam init' first")
 	}
 
-	conn := config.FromConnectionYaml(
-		a.config.Connections[a.config.CurrentConnection],
-	)
+	conn := config.FromConnectionYaml(a.config.Connections[a.config.CurrentConnection])
 
 	queryStr := conn.GetInfoSQL(infoType)
 	if queryStr == "" {
@@ -40,26 +36,21 @@ func (a *App) handleInfo() {
 	}
 	defer conn.Close()
 
-	var onRerun func(string)
-	onRerun = func(sql string) {
-		run.ExecuteSelect(sql, "<edited>", run.ExecutionParams{
+	var onRerun func(string) error
+	onRerun = func(sql string) error {
+		return run.ExecuteSelect(sql, "<edited>", run.ExecutionParams{
 			Query:      db.Query{Name: "<edited>", SQL: sql},
 			Connection: conn,
 			Config:     a.config,
 			OnRerun:    onRerun,
 		})
 	}
-	run.ExecuteSelect(
-		queryStr,
-		fmt.Sprintf("info %s", infoType),
-		run.ExecutionParams{
-			Query: db.Query{
-				Name: fmt.Sprintf("info %s", infoType),
-				SQL:  queryStr,
-			},
-			Connection: conn,
-			Config:     a.config,
-			OnRerun:    onRerun,
-		},
-	)
+	if err := run.ExecuteSelect(queryStr, fmt.Sprintf("info %s", infoType), run.ExecutionParams{
+		Query:      db.Query{Name: fmt.Sprintf("info %s", infoType), SQL: queryStr},
+		Connection: conn,
+		Config:     a.config,
+		OnRerun:    onRerun,
+	}); err != nil {
+		printError("%v", err)
+	}
 }

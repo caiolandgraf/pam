@@ -14,14 +14,16 @@ func CreateConnection(name, dbType, connString string) (DatabaseConnection, erro
 		return NewSQLiteConnection(name, connString)
 	case "sqlserver", "mssql":
 		return NewSQLServerConnection(name, connString)
-	// case "duckdb":
-	// 	return NewDuckDBConnection(name, connString)
+	case "duckdb":
+		return NewDuckDBConnection(name, connString)
 	case "clickhouse":
 		return NewClickHouseConnection(name, connString)
 	case "godror", "oracle":
 		return NewOracleConnection(name, connString)
 	case "firebird", "interbase":
 		return NewFirebirdConnection(name, connString)
+	case "snowflake":
+		return NewSnowflakeConnection(name, connString)
 	default:
 		return nil, fmt.Errorf("driver not implemented for %s", dbType)
 	}

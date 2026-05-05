@@ -135,8 +135,8 @@ func (a *App) handleQuery() {
 	}
 
 	if run.IsSelectQuery(sql) {
-		var onRerun func(editedSQL string)
-		onRerun = func(editedSQL string) {
+		var onRerun func(editedSQL string) error
+		onRerun = func(editedSQL string) error {
 			editedQuery := db.Query{
 				Name:      queryName,
 				SQL:       editedSQL,
@@ -154,6 +154,7 @@ func (a *App) handleQuery() {
 					OnRerun:      onRerun,
 				},
 			)
+			return nil
 		}
 		run.ExecuteSelect(
 			sql,

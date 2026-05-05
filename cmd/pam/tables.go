@@ -75,27 +75,7 @@ func (a *App) handleTables() {
 			query.PrimaryKeys = metadata.PrimaryKeys
 		}
 
-		var onRerunTable func(editedSQL string)
-		onRerunTable = func(editedSQL string) {
-			editedQuery := db.Query{
-				Name:      tableName,
-				SQL:       editedSQL,
-				TableName: tableName,
-				Id:        -1,
-			}
-			run.ExecuteSelect(
-				editedSQL,
-				tableName,
-				run.ExecutionParams{
-					Query:        editedQuery,
-					Connection:   conn,
-					Config:       a.config,
-					SaveCallback: a.saveQueryFromTable,
-					OnRerun:      onRerunTable,
-				},
-			)
-		}
-		run.ExecuteSelect(
+		if err := run.ExecuteSelect(
 			query.SQL,
 			query.Name,
 			run.ExecutionParams{
@@ -103,9 +83,28 @@ func (a *App) handleTables() {
 				Connection:   conn,
 				Config:       a.config,
 				SaveCallback: a.saveQueryFromTable,
-				OnRerun:      onRerunTable,
+				OnRerun: func(editedSQL string) error {
+					// Re-run query if edited
+					editedQuery := db.Query{
+						Name:      tableName,
+						SQL:       editedSQL,
+						TableName: tableName,
+						Id:        -1,
+					}
+					return run.ExecuteSelect(
+						editedSQL,
+						tableName,
+						run.ExecutionParams{
+							Query:      editedQuery,
+							Connection: conn,
+							Config:     a.config,
+						},
+					)
+				},
 			},
-		)
+		); err != nil {
+			printError("%v", err)
+		}
 		return
 	}
 
@@ -146,6 +145,66 @@ func (a *App) handleTables() {
 	}
 }
 
+func (a *App) handleReplTables(conn db.DatabaseConnection, args []string) {
+	if len(args) > 0 {
+		tableName := args[0]
+		query := db.Query{
+			Name:      tableName,
+			SQL:       fmt.Sprintf("SELECT * FROM %s", tableName),
+			TableName: tableName,
+			Id:        -1,
+		}
+
+		if metadata, err := conn.GetTableMetadata(tableName); err == nil && metadata != nil {
+			query.PrimaryKeys = metadata.PrimaryKeys
+		}
+
+		if err := run.ExecuteSelect(
+			query.SQL,
+			query.Name,
+			run.ExecutionParams{
+				Query:        query,
+				Connection:   conn,
+				Config:       a.config,
+				SaveCallback: a.saveQueryFromTable,
+				OnRerun: func(editedSQL string) error {
+					editedQuery := db.Query{
+						Name:      tableName,
+						SQL:       editedSQL,
+						TableName: tableName,
+						Id:        -1,
+					}
+					return run.ExecuteSelect(
+						editedSQL,
+						tableName,
+						run.ExecutionParams{
+							Query:      editedQuery,
+							Connection: conn,
+							Config:     a.config,
+						},
+					)
+				},
+			},
+		); err != nil {
+			printError("%v", err)
+		}
+		return
+	}
+
+	// No args — list tables in interactive viewer
+	queryStr := conn.GetInfoSQL("tables")
+	if queryStr == "" {
+		printError("Could not get tables SQL for this database type")
+	}
+
+	nameOnlyQuery := fmt.Sprintf(
+		"SELECT name FROM (%s) AS tables_info ORDER BY name",
+		queryStr,
+	)
+
+	a.showTablesInteractive(conn, nameOnlyQuery)
+}
+
 func (a *App) showTablesInteractive(
 	conn db.DatabaseConnection,
 	queryStr string,
@@ -158,16 +217,19 @@ func (a *App) showTablesInteractive(
 		rows, err := conn.ExecQuery(queryStr)
 		if err != nil {
 			done <- struct{}{}
+			fmt.Print("\r\033[2K")
 			printError("Could not retrieve tables: %v", err)
 		}
 
 		columns, data, err := db.FormatTableData(rows)
 		if err != nil {
 			done <- struct{}{}
+			fmt.Print("\r\033[2K")
 			printError("Could not format table data: %v", err)
 		}
 
 		done <- struct{}{}
+		fmt.Print("\r\033[2K")
 		elapsed := time.Since(start)
 
 		if len(data) == 0 {
@@ -187,6 +249,7 @@ func (a *App) showTablesInteractive(
 			conn,
 			q,
 			a.config.DefaultColumnWidth,
+			a.config.UIVisibility,
 		)
 		if err != nil {
 			printError("Error rendering tables: %v", err)
@@ -211,27 +274,7 @@ func (a *App) showTablesInteractive(
 				query.PrimaryKeys = metadata.PrimaryKeys
 			}
 
-			var onRerunSelected func(editedSQL string)
-			onRerunSelected = func(editedSQL string) {
-				editedQuery := db.Query{
-					Name:      selectedTable,
-					SQL:       editedSQL,
-					TableName: selectedTable,
-					Id:        -1,
-				}
-				run.ExecuteSelect(
-					editedSQL,
-					selectedTable,
-					run.ExecutionParams{
-						Query:        editedQuery,
-						Connection:   conn,
-						Config:       a.config,
-						SaveCallback: a.saveQueryFromTable,
-						OnRerun:      onRerunSelected,
-					},
-				)
-			}
-			run.ExecuteSelect(
+			if err := run.ExecuteSelect(
 				query.SQL,
 				query.Name,
 				run.ExecutionParams{
@@ -239,9 +282,27 @@ func (a *App) showTablesInteractive(
 					Connection:   conn,
 					Config:       a.config,
 					SaveCallback: a.saveQueryFromTable,
-					OnRerun:      onRerunSelected,
+					OnRerun: func(editedSQL string) error {
+						editedQuery := db.Query{
+							Name:      selectedTable,
+							SQL:       editedSQL,
+							TableName: selectedTable,
+							Id:        -1,
+						}
+						return run.ExecuteSelect(
+							editedSQL,
+							selectedTable,
+							run.ExecutionParams{
+								Query:      editedQuery,
+								Connection: conn,
+								Config:     a.config,
+							},
+						)
+					},
 				},
-			)
+			); err != nil {
+				printError("%v", err)
+			}
 			// After returning from table view, go back to tables list
 			continue
 		}
