@@ -1,5 +1,5 @@
 {
-  description = "Squix's SQL Stash - SQL query CLI tool";
+  description = "PAM — Pam's Database Drawer, SQL query CLI tool";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -15,30 +15,27 @@
       in
       {
         packages.default = pkgs.buildGoModule {
-          pname = "squix";
-          version = "0.4.0-beta";
+          pname = "pam";
+          version = "1.2.0";
 
           src = ./.;
 
-          # Run: nix build .#default 2>&1 | grep "got:" to get real hash
-          vendorHash = "sha256-54wxute5KG/q7uzNimzAxh+JK9UXgqDmaSl9Tpg28eg=";
+          # Update by running: nix build .#default 2>&1 | grep "got:"
+          vendorHash = "sha256-fjjYqn0Rui2ZfRY/eo01ZfuEK1kA3ZwO48hnqaA7V1U=";
 
           enableCGO = true;
 
-          # Native dependencies (none needed - all drivers are pure Go)
-
-          # Linker flags
           ldflags = [
             "-s"
             "-w"
-            "-X main.Version=${self.packages.${system}.default.version}"
+            "-X main.Version=v1.2.0"
           ];
 
           meta = with pkgs.lib; {
             description = "Minimal CLI tool for managing SQL queries across multiple databases";
             homepage = "https://github.com/caiolandgraf/pam";
             license = licenses.mit;
-            mainProgram = "squix";
+            mainProgram = "pam";
           };
         };
 
@@ -50,7 +47,7 @@
 
           shellHook = ''
             echo "========================================="
-            echo "Squix development environment ready!"
+            echo "PAM development environment ready!"
             echo "========================================="
             echo ""
             echo "Available tools:"
