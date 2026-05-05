@@ -8,52 +8,81 @@ import (
 
 	"github.com/caiolandgraf/pam/internal/db"
 	"github.com/caiolandgraf/pam/internal/parser"
+	"github.com/charmbracelet/bubbles/textarea"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type editorKind int
+
+const (
+	editorKindUpdateCell editorKind = iota
+	editorKindEditQuery
+	editorKindDetailUpdate
+)
+
 type Model struct {
-	width             int
-	height            int
-	selectedRow       int
-	selectedCol       int
-	offsetX           int
-	offsetY           int
-	visibleCols       int
-	visibleRows       int
-	columns           []string
-	columnTypes       []string
-	columnFKs         []string // Maps column index to FK reference (e.g., "people.id")
-	data              [][]string
-	elapsed           time.Duration
-	blinkCopiedCell   bool
-	visualMode        bool
-	visualStartRow    int
-	visualStartCol    int
-	dbConnection      db.DatabaseConnection
-	tableName         string
-	primaryKeyCol     string
-	blinkUpdatedCell  bool
-	updatedRow        int
-	updatedCol        int
-	blinkDeletedRow   bool
-	deletedRow        int
-	currentQuery      db.Query
-	shouldRerunQuery  bool
-	editedQuery       string
-	lastExecutedQuery string
-	cellWidth         int
-	detailViewMode    bool
-	detailViewContent string
-	detailViewScroll  int
-	isTablesList      bool
-	onTableSelect     func(string) tea.Cmd
-	selectedTableName string
-	saveQueryCallback func(query db.Query) (db.Query, error)
-	statusMessage     string
-	exportWaiting     exportWaitingFormatState
-	exportStatus      string
-	sortColumn        string
-	sortDirection     string // "", "ASC", "DESC"
+	width                  int
+	height                 int
+	selectedRow            int
+	selectedCol            int
+	offsetX                int
+	offsetY                int
+	visibleCols            int
+	visibleRows            int
+	columns                []string
+	columnTypes            []string
+	columnFKs              []string // Maps column index to FK reference (e.g., "people.id")
+	data                   [][]string
+	elapsed                time.Duration
+	blinkCopiedCell        bool
+	visualMode             bool
+	visualStartRow         int
+	visualStartCol         int
+	dbConnection           db.DatabaseConnection
+	tableName              string
+	primaryKeyCol          string
+	blinkUpdatedCell       bool
+	updatedRow             int
+	updatedCol             int
+	blinkDeletedRow        bool
+	deletedRow             int
+	currentQuery           db.Query
+	shouldRerunQuery       bool
+	editedQuery            string
+	lastExecutedQuery      string
+	cellWidth              int
+	detailViewMode         bool
+	detailViewContent      string
+	detailViewScroll       int
+	isTablesList           bool
+	onTableSelect          func(string) tea.Cmd
+	selectedTableName      string
+	saveQueryCallback      func(query db.Query) (db.Query, error)
+	statusMessage          string
+	editorActive           bool
+	editorTitle            string
+	editorHelp             string
+	editorKind             editorKind
+	editor                 textarea.Model
+	editorCol              int
+	valueEditorActive      bool
+	valueEditorTitle       string
+	valueEditorHelp        string
+	valueEditorKind        editorKind
+	valueEditorInput       textinput.Model
+	valueEditorCol         int
+	valueEditorCurrent     string
+	valueEditorMasked      bool
+	valueEditorPlaceholder string
+	markedRows             map[int]bool
+	confirmActive          bool
+	confirmMessage         string
+	confirmRows            []int
+	exportWaiting          exportWaitingFormatState
+	exportStatus           string
+	sortColumn             string
+	sortDirection          string // "", "ASC", "DESC"
 }
 
 type blinkMsg struct{}
@@ -138,6 +167,7 @@ func New(
 		editedQuery:      "",
 		cellWidth:        columnWidth,
 		isTablesList:     false,
+		markedRows:       make(map[int]bool),
 		sortColumn:       sortCol,
 		sortDirection:    sortDir,
 	}

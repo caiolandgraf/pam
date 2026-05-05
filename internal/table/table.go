@@ -34,7 +34,7 @@ func Render(
 	if len(initialStatus) > 0 && initialStatus[0] != "" {
 		model.statusMessage = initialStatus[0]
 	}
-	p := tea.NewProgram(model)
+	p := tea.NewProgram(model, tea.WithAltScreen())
 	finalModel, err := p.Run()
 	if err != nil {
 		return model, err
@@ -52,7 +52,7 @@ func RenderTablesList(
 ) (Model, error) {
 	model := New(columns, nil, data, elapsed, conn, "", "", query, columnWidth)
 	model.isTablesList = true
-	p := tea.NewProgram(model)
+	p := tea.NewProgram(model, tea.WithAltScreen())
 	finalModel, err := p.Run()
 	if err != nil {
 		return model, err

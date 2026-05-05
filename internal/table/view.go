@@ -14,6 +14,16 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
+	// Value editor view
+	if m.valueEditorActive {
+		return m.renderValueEditorView()
+	}
+
+	// Inline editor view
+	if m.editorActive {
+		return m.renderInlineEditorView()
+	}
+
 	// If in detailed view mode, show the detailed view
 	if m.detailViewMode {
 		return m.renderDetailView()
@@ -77,6 +87,12 @@ func (m Model) View() string {
 	// Display status message if present
 	if m.statusMessage != "" {
 		b.WriteString(m.statusMessage)
+	}
+
+	// Confirm prompt (e.g., delete)
+	if m.confirmActive && m.confirmMessage != "" {
+		b.WriteString("\n")
+		b.WriteString(styles.Error.Render(m.confirmMessage))
 	}
 
 	return b.String()
@@ -201,16 +217,16 @@ func (m Model) renderFooter() string {
 		delInfo = ""
 	} else if m.tableName != "" && m.primaryKeyCol != "" {
 		updateInfo = styles.TableHeader.Render(
-			"u",
+			"e",
 		) + styles.Faint.Render(
-			"pdate",
+			"dit",
 		)
 		delInfo = styles.TableHeader.Render("D") + styles.Faint.Render("el")
 	} else if m.tableName != "" {
 		updateInfo = styles.TableHeader.Render(
-			"u",
+			"e",
 		) + styles.Faint.Render(
-			"pdate (no PK)",
+			"dit (no PK)",
 		)
 		delInfo = ""
 	} else {
@@ -220,7 +236,8 @@ func (m Model) renderFooter() string {
 	}
 
 	sel := styles.TableHeader.Render("v") + styles.Faint.Render("sel")
-	edit := styles.TableHeader.Render("e") + styles.Faint.Render("ditSQL")
+	mark := styles.TableHeader.Render("m") + styles.Faint.Render("ark")
+	edit := styles.TableHeader.Render("E") + styles.Faint.Render("ditSQL")
 	save := styles.TableHeader.Render("s") + styles.Faint.Render("ave")
 	yank := styles.TableHeader.Render("y") + styles.Faint.Render("ank")
 	sort := styles.TableHeader.Render("f") + styles.Faint.Render("sort")
@@ -233,6 +250,13 @@ func (m Model) renderFooter() string {
 	)
 	quit := styles.TableHeader.Render("q") + styles.Faint.Render("uit")
 	hjkl := styles.TableHeader.Render("hjkl") + styles.Faint.Render("←↓↑→")
+
+	markedInfo := ""
+	if m.markedCount() > 0 {
+		markedInfo = styles.Faint.Render(
+			fmt.Sprintf("marked:%d", m.markedCount()),
+		)
+	}
 
 	var footer string
 	if m.isTablesList {
@@ -255,7 +279,7 @@ func (m Model) renderFooter() string {
 	} else {
 		if m.visualMode {
 			footer = fmt.Sprintf(
-				"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s  %s",
+				"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s  %s  %s  %s",
 				cellPreview,
 				styles.Faint.Render(
 					fmt.Sprintf("%dx%d", m.numRows(), m.numCols()),
@@ -269,15 +293,17 @@ func (m Model) renderFooter() string {
 				yank,
 				exportKey,
 				sel,
+				mark,
 				sort,
 				edit,
 				save,
 				quit,
 				hjkl,
+				markedInfo,
 			)
 		} else {
 			footer = fmt.Sprintf(
-				"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s  %s  %s  %s",
+				"\n%s%s %s | %s | %s  %s  %s  %s  %s  %s  %s  %s  %s  %s  %s  %s",
 				cellPreview,
 				styles.Faint.Render(
 					fmt.Sprintf("%dx%d", m.numRows(), m.numCols()),
@@ -292,12 +318,14 @@ func (m Model) renderFooter() string {
 				delInfo,
 				yank,
 				sel,
+				mark,
 				sort,
 				edit,
 				save,
 				exportKey,
 				quit,
 				hjkl,
+				markedInfo,
 			)
 		}
 	}
@@ -311,6 +339,10 @@ func (m Model) getCellStyle(row, col int) lipgloss.Style {
 
 	if m.blinkUpdatedCell && m.updatedRow == row && m.updatedCol == col {
 		return styles.TableUpdated
+	}
+
+	if m.isRowMarked(row) {
+		return styles.TableSelected
 	}
 
 	if m.isCellInSelection(row, col) {
@@ -463,7 +495,7 @@ func (m Model) renderDetailView() string {
 	// Show if editing/updating is enabled
 	if m.tableName != "" && m.primaryKeyCol != "" {
 		b.WriteString(" ")
-		b.WriteString(styles.Faint.Render("• Press 'e' to edit"))
+		b.WriteString(styles.Faint.Render("• Press 'e' to edit value"))
 	}
 
 	b.WriteString("\n\n")

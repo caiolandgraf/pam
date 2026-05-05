@@ -2,7 +2,6 @@ package table
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -16,82 +15,7 @@ func (m Model) deleteRow() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	if m.primaryKeyCol == "" {
-		return m, nil
-	}
-
-	deleteStmt := m.buildDeleteStatement()
-
-	editorCmd := os.Getenv("EDITOR")
-	if editorCmd == "" {
-		editorCmd = "vim"
-	}
-
-	tmpFile, err := os.CreateTemp("", "pam-delete-*.sql")
-	if err != nil {
-		return m, nil
-	}
-	tmpPath := tmpFile.Name()
-
-	header := `-- DELETE Statement
--- WARNING: This will permanently delete data!
--- To cancel, exit without saving (e.g., :q! in vim)
---
-`
-	content := header + deleteStmt
-
-	if _, err := tmpFile.Write([]byte(content)); err != nil {
-		tmpFile.Close()
-		os.Remove(tmpPath)
-		return m, nil
-	}
-	tmpFile.Close()
-
-	// Get file modification time before editor
-	beforeModTime, err := os.Stat(tmpPath)
-	if err != nil {
-		os.Remove(tmpPath)
-		return m, nil
-	}
-
-	rowToDelete := m.selectedRow
-
-	// Build command with cursor at WHERE clause
-	cmd := buildEditorCommand(editorCmd, tmpPath, content, CursorAtWhereClause)
-
-	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
-		// Check if file was modified
-		afterModTime, statErr := os.Stat(tmpPath)
-		if statErr != nil {
-			os.Remove(tmpPath)
-			return nil
-		}
-
-		// If file wasn't modified, user cancelled (exited without saving)
-		if afterModTime.ModTime().Equal(beforeModTime.ModTime()) ||
-			afterModTime.ModTime().Before(beforeModTime.ModTime()) {
-			os.Remove(tmpPath)
-			// Return a message that will show "cancelled" status
-			return deleteCompleteMsg{
-				sql:       "",
-				rowIndex:  rowToDelete,
-				cancelled: true,
-			}
-		}
-
-		editedSQL, readErr := os.ReadFile(tmpPath)
-		os.Remove(tmpPath)
-
-		if err != nil || readErr != nil {
-			return nil
-		}
-
-		return deleteCompleteMsg{
-			sql:       string(editedSQL),
-			rowIndex:  rowToDelete,
-			cancelled: false,
-		}
-	})
+	return m.requestDeleteRows([]int{m.selectedRow})
 }
 
 // Message sent when delete editor completes

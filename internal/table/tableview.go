@@ -2,12 +2,12 @@ package table
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/caiolandgraf/pam/internal/db"
 	"github.com/caiolandgraf/pam/internal/styles"
+	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -25,6 +25,10 @@ type TableViewModel struct {
 	elapsed      time.Duration
 	message      string // transient status message
 	messageStyle lipgloss.Style
+	editorActive bool
+	editorTitle  string
+	editorHelp   string
+	editor       textarea.Model
 }
 
 // TableViewResult holds the outcome of a table-view session
@@ -76,6 +80,9 @@ func (m TableViewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
+		if m.editorActive {
+			return m.handleInlineEditorUpdate(msg)
+		}
 		return m.handleKey(msg)
 
 	case tableViewBlinkMsg:
@@ -230,7 +237,7 @@ func (m TableViewModel) addColumn() (tea.Model, tea.Cmd) {
 		m.tableName,
 	)
 
-	return m.openEditor(header + template)
+	return m.openEditor("Add column", header+template)
 }
 
 func (m TableViewModel) editColumn() (tea.Model, tea.Cmd) {
@@ -259,7 +266,7 @@ func (m TableViewModel) editColumn() (tea.Model, tea.Cmd) {
 		m.tableName,
 	)
 
-	return m.openEditor(header + template)
+	return m.openEditor("Edit column", header+template)
 }
 
 func (m TableViewModel) renameColumn() (tea.Model, tea.Cmd) {
@@ -280,7 +287,7 @@ func (m TableViewModel) renameColumn() (tea.Model, tea.Cmd) {
 		m.tableName,
 	)
 
-	return m.openEditor(header + template)
+	return m.openEditor("Rename column", header+template)
 }
 
 func (m TableViewModel) dropColumn() (tea.Model, tea.Cmd) {
@@ -297,57 +304,108 @@ func (m TableViewModel) dropColumn() (tea.Model, tea.Cmd) {
 		m.tableName,
 	)
 
-	return m.openEditor(header + template)
+	return m.openEditor("Drop column", header+template)
 }
 
-func (m TableViewModel) openEditor(content string) (tea.Model, tea.Cmd) {
-	editorCmd := os.Getenv("EDITOR")
-	if editorCmd == "" {
-		editorCmd = "vim"
+func (m TableViewModel) openEditor(title, content string) (tea.Model, tea.Cmd) {
+	ta := textarea.New()
+	ta.SetValue(content)
+	ta.Focus()
+	ta.ShowLineNumbers = false
+	ta.CharLimit = 0
+	ta.Prompt = "  "
+
+	width := m.width - 6
+	if width < 40 {
+		width = 40
+	}
+	height := m.height - 10
+	if height < 6 {
+		height = 6
+	}
+	ta.SetWidth(width)
+	ta.SetHeight(height)
+
+	m.editorActive = true
+	m.editorTitle = title
+	m.editorHelp = "Ctrl+S: save • Esc: cancel"
+	m.editor = ta
+
+	return m, nil
+}
+
+func (m TableViewModel) handleInlineEditorUpdate(
+	msg tea.Msg,
+) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc":
+			m.editorActive = false
+			m.editorHelp = ""
+			m.message = "Cancelled (empty SQL)"
+			m.messageStyle = styles.Faint
+			return m, m.blinkCmd()
+		case "ctrl+s":
+			return m.handleInlineEditorSave()
+		}
 	}
 
-	tmpFile, err := os.CreateTemp("", "pam-tableview-*.sql")
-	if err != nil {
-		m.message = fmt.Sprintf("Could not create temp file: %v", err)
-		m.messageStyle = styles.Error
+	var cmd tea.Cmd
+	m.editor, cmd = m.editor.Update(msg)
+	return m, cmd
+}
+
+func (m TableViewModel) handleInlineEditorSave() (tea.Model, tea.Cmd) {
+	raw := strings.TrimSpace(m.editor.Value())
+	m.editorActive = false
+	m.editorHelp = ""
+
+	if raw == "" {
+		m.message = "Cancelled (empty SQL)"
+		m.messageStyle = styles.Faint
 		return m, m.blinkCmd()
 	}
-	tmpPath := tmpFile.Name()
 
-	if _, err := tmpFile.WriteString(content); err != nil {
-		tmpFile.Close()
-		os.Remove(tmpPath)
-		m.message = fmt.Sprintf("Could not write temp file: %v", err)
-		m.messageStyle = styles.Error
-		return m, m.blinkCmd()
+	sql := stripCommentLines(raw)
+	return m.handleEditorResult(tableViewEditorMsg{sql: sql})
+}
+
+func stripCommentLines(raw string) string {
+	var sqlLines []string
+	for _, line := range strings.Split(raw, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" && !strings.HasPrefix(trimmed, "--") {
+			sqlLines = append(sqlLines, trimmed)
+		}
 	}
-	tmpFile.Close()
+	return strings.Join(sqlLines, " ")
+}
 
-	cmd := buildEditorCommand(editorCmd, tmpPath, content, CursorAtEndOfFile)
+func (m TableViewModel) renderInlineEditorView() string {
+	var b strings.Builder
 
-	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
-		editedData, readErr := os.ReadFile(tmpPath)
-		os.Remove(tmpPath)
+	title := "✎ " + m.editorTitle
+	b.WriteString(styles.Title.Render(title))
+	b.WriteString("\n")
 
-		if err != nil {
-			return tableViewEditorMsg{err: err}
-		}
-		if readErr != nil {
-			return tableViewEditorMsg{err: readErr}
-		}
+	sepWidth := m.width
+	if sepWidth < 30 {
+		sepWidth = 30
+	}
+	b.WriteString(styles.Separator.Render(strings.Repeat("─", sepWidth)))
+	b.WriteString("\n")
 
-		// Strip comment lines
-		raw := string(editedData)
-		var sqlLines []string
-		for _, line := range strings.Split(raw, "\n") {
-			trimmed := strings.TrimSpace(line)
-			if trimmed != "" && !strings.HasPrefix(trimmed, "--") {
-				sqlLines = append(sqlLines, trimmed)
-			}
-		}
+	b.WriteString(m.editor.View())
+	b.WriteString("\n")
 
-		return tableViewEditorMsg{sql: strings.Join(sqlLines, " ")}
-	})
+	b.WriteString(
+		lipgloss.NewStyle().
+			Foreground(lipgloss.Color(styles.ActiveScheme.Muted)).
+			Render(m.editorHelp),
+	)
+
+	return b.String()
 }
 
 // ---- View ----
@@ -355,6 +413,10 @@ func (m TableViewModel) openEditor(content string) (tea.Model, tea.Cmd) {
 func (m TableViewModel) View() string {
 	if m.width == 0 {
 		return "Loading..."
+	}
+
+	if m.editorActive {
+		return m.renderInlineEditorView()
 	}
 
 	var b strings.Builder
@@ -603,7 +665,7 @@ func RenderTableView(
 	elapsed time.Duration,
 ) (TableViewModel, error) {
 	model := NewTableViewModel(tableName, columns, conn, elapsed)
-	p := tea.NewProgram(model)
+	p := tea.NewProgram(model, tea.WithAltScreen())
 	finalModel, err := p.Run()
 	if err != nil {
 		return model, err

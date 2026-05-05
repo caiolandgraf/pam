@@ -7,6 +7,15 @@ import (
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.valueEditorActive {
+			return m.handleValueEditorUpdate(msg)
+		}
+		if m.editorActive {
+			return m.handleInlineEditorUpdate(msg)
+		}
+		if m.confirmActive {
+			return m.handleDeleteConfirm(msg)
+		}
 		return m.handleKeyPress(msg)
 	case exportCompleteMsg:
 		return m.handleExportComplete(msg)
@@ -96,6 +105,9 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "v":
 		return m.toggleVisualMode()
+	case "m":
+		m.toggleMarkRow(m.selectedRow)
+		return m, nil
 
 	case "y":
 		return m.copySelection()
@@ -115,10 +127,29 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.showDetailView(), nil
 
 	case "u":
-		return m.updateCell()
+		if m.tableName != "" {
+			return m.updateCell()
+		}
+		return m, nil
 	case "D":
-		return m.deleteRow()
+		if m.hasMarkedRows() {
+			return m.requestDeleteRows(m.getMarkedRows())
+		}
+		if m.visualMode {
+			minRow, maxRow, _, _ := m.getSelectionBounds()
+			rows := make([]int, 0, maxRow-minRow+1)
+			for r := minRow; r <= maxRow; r++ {
+				rows = append(rows, r)
+			}
+			return m.requestDeleteRows(rows)
+		}
+		return m.requestDeleteRows([]int{m.selectedRow})
 	case "e":
+		if m.tableName != "" {
+			return m.updateCell()
+		}
+		return m.editAndRerunQuery()
+	case "E":
 		return m.editAndRerunQuery()
 	case "s":
 		return m.saveQuery()

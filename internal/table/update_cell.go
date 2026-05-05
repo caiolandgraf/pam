@@ -2,7 +2,6 @@ package table
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -19,71 +18,16 @@ func (m Model) updateCell() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	updateStmt := m.buildUpdateStatement()
-	editorCmd := os.Getenv("EDITOR")
-	if editorCmd == "" {
-		editorCmd = "vim"
-	}
+	columnName := m.columns[m.selectedCol]
+	currentValue := m.data[m.selectedRow][m.selectedCol]
+	title := fmt.Sprintf("Edit value (%s)", columnName)
 
-	tmpFile, err := os.CreateTemp("", "pam-update-*.sql")
-	if err != nil {
-		return m, nil
-	}
-	tmpPath := tmpFile.Name()
-
-	if _, err := tmpFile.Write([]byte(updateStmt)); err != nil {
-		tmpFile.Close()
-		os.Remove(tmpPath)
-		return m, nil
-	}
-	tmpFile.Close()
-
-	// Get file modification time before editor
-	beforeModTime, err := os.Stat(tmpPath)
-	if err != nil {
-		os.Remove(tmpPath)
-		return m, nil
-	}
-
-	cmd := buildEditorCommand(
-		editorCmd,
-		tmpPath,
-		updateStmt,
-		CursorAtUpdateValue,
+	return m.openValueEditor(
+		editorKindUpdateCell,
+		title,
+		currentValue,
+		m.selectedCol,
 	)
-
-	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
-		// Check if file was modified
-		afterModTime, statErr := os.Stat(tmpPath)
-		if statErr != nil {
-			os.Remove(tmpPath)
-			return nil
-		}
-
-		// If file wasn't modified, user cancelled (exited without saving)
-		if afterModTime.ModTime().Equal(beforeModTime.ModTime()) ||
-			afterModTime.ModTime().Before(beforeModTime.ModTime()) {
-			os.Remove(tmpPath)
-			// Return a message that will show "cancelled" status
-			return editorCompleteMsg{
-				sql:       "",
-				colIndex:  m.selectedCol,
-				cancelled: true,
-			}
-		}
-
-		editedSQL, readErr := os.ReadFile(tmpPath)
-		os.Remove(tmpPath)
-
-		if err != nil || readErr != nil {
-			return nil
-		}
-		return editorCompleteMsg{
-			sql:       string(editedSQL),
-			colIndex:  m.selectedCol,
-			cancelled: false,
-		}
-	})
 }
 
 type editorCompleteMsg struct {
@@ -136,8 +80,12 @@ func (m Model) blinkCmd() tea.Cmd {
 }
 
 func (m Model) buildUpdateStatement() string {
-	columnName := m.columns[m.selectedCol]
 	currentValue := m.data[m.selectedRow][m.selectedCol]
+	return m.buildUpdateStatementWithValue(currentValue)
+}
+
+func (m Model) buildUpdateStatementWithValue(newValue string) string {
+	columnName := m.columns[m.selectedCol]
 
 	pkValue := ""
 	var multipleMatches bool
@@ -156,10 +104,29 @@ func (m Model) buildUpdateStatement() string {
 		pkValue, multipleMatches = m.fetchPrimaryKeyValue()
 	}
 
+	if m.dbConnection == nil {
+		if m.primaryKeyCol == "" {
+			return fmt.Sprintf(
+				"UPDATE %s\nSET %s = '%s'\nWHERE <condition>;",
+				m.tableName,
+				columnName,
+				newValue,
+			)
+		}
+		return fmt.Sprintf(
+			"UPDATE %s\nSET %s = '%s'\nWHERE %s = '%s';",
+			m.tableName,
+			columnName,
+			newValue,
+			m.primaryKeyCol,
+			pkValue,
+		)
+	}
+
 	stmt := m.dbConnection.BuildUpdateStatement(
 		m.tableName,
 		columnName,
-		currentValue,
+		newValue,
 		m.primaryKeyCol,
 		pkValue,
 	)

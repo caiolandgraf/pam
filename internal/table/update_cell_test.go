@@ -114,6 +114,38 @@ func TestModel_BuildUpdateStatement(t *testing.T) {
 	}
 }
 
+func TestModel_BuildUpdateStatementWithValue(t *testing.T) {
+	model := New(
+		[]string{"id", "name"},
+		nil,
+		[][]string{{"1", "Alice"}},
+		0,
+		nil,
+		"users",
+		"id",
+		db.Query{},
+		15,
+	)
+	model.selectedRow = 0
+	model.selectedCol = 1
+
+	result := model.buildUpdateStatementWithValue("NEWVALUE")
+
+	if !contains(result, "UPDATE") || !contains(result, "SET") ||
+		!contains(result, "WHERE") {
+		t.Errorf(
+			"buildUpdateStatementWithValue() missing keywords:\n%s",
+			result,
+		)
+	}
+	if !contains(result, "NEWVALUE") {
+		t.Errorf(
+			"buildUpdateStatementWithValue() missing new value:\n%s",
+			result,
+		)
+	}
+}
+
 func TestModel_BuildUpdateStatement_EdgeCases(t *testing.T) {
 	tests := []struct {
 		name        string

@@ -3,8 +3,6 @@ package table
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"os/exec"
 	"strings"
 	"time"
 
@@ -228,57 +226,12 @@ func (m Model) editFromDetailView() (Model, tea.Cmd) {
 		currentValue = m.detailViewContent
 	}
 
-	pkValue := ""
-	if m.primaryKeyCol != "" {
-		for i, col := range m.columns {
-			if col == m.primaryKeyCol {
-				pkValue = m.data[m.selectedRow][i]
-				break
-			}
-		}
-	}
-
-	updateStmt := m.dbConnection.BuildUpdateStatement(
-		m.tableName,
-		columnName,
+	return m.openValueEditor(
+		editorKindDetailUpdate,
+		"Edit value ("+columnName+")",
 		currentValue,
-		m.primaryKeyCol,
-		pkValue,
+		m.selectedCol,
 	)
-
-	editorCmd := os.Getenv("EDITOR")
-	if editorCmd == "" {
-		editorCmd = "vim"
-	}
-
-	tmpFile, err := os.CreateTemp("", "pam-update-*.sql")
-	if err != nil {
-		return m, nil
-	}
-	tmpPath := tmpFile.Name()
-
-	if _, err := tmpFile.Write([]byte(updateStmt)); err != nil {
-		tmpFile.Close()
-		os.Remove(tmpPath)
-		return m, nil
-	}
-	tmpFile.Close()
-
-	cmd := buildEditorCommandForDetailView(editorCmd, tmpPath, updateStmt)
-
-	return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
-		editedSQL, readErr := os.ReadFile(tmpPath)
-		os.Remove(tmpPath)
-
-		if err != nil || readErr != nil {
-			return nil
-		}
-
-		return detailViewEditCompleteMsg{
-			sql:      string(editedSQL),
-			colIndex: m.selectedCol,
-		}
-	})
 }
 
 type detailViewEditCompleteMsg struct {
@@ -369,16 +322,4 @@ func formatValueIfJSON(value string) string {
 	}
 
 	return string(formatted)
-}
-
-func buildEditorCommandForDetailView(
-	editorCmd, tmpPath, updateStmt string,
-) *exec.Cmd {
-	// Use the same logic as buildEditorCommand for positioning cursor
-	return buildEditorCommand(
-		editorCmd,
-		tmpPath,
-		updateStmt,
-		CursorAtUpdateValue,
-	)
 }
