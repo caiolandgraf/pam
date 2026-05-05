@@ -9,7 +9,7 @@ import (
 	"github.com/caiolandgraf/pam/internal/styles"
 )
 
-const Version = "v0.4.0-beta"
+const Version = "v1.2.0"
 
 type App struct {
 	config *config.Config
@@ -82,7 +82,7 @@ func (a *App) Run() {
 }
 
 func (a *App) printUsage() {
-	fmt.Println(styles.Title.Render("Squix's SQL Stash"))
+	fmt.Println(styles.Title.Render("PAM — Pam's Database Drawer"))
 	fmt.Println(styles.Faint.Render("Query manager for your databases"))
 	fmt.Println()
 
@@ -153,7 +153,7 @@ func (a *App) printUsage() {
 }
 
 func (a *App) printVersion() {
-	fmt.Println(styles.Title.Render("Squix's SQL Stash"))
+	fmt.Println(styles.Title.Render("PAM — Pam's Database Drawer"))
 	fmt.Println(styles.Faint.Render("version: " + Version))
 }
 

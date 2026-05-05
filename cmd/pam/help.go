@@ -69,7 +69,7 @@ func (a *App) PrintGeneralHelp() {
 	// Header
 	fmt.Println(
 		styles.Title.Render(
-			"Squix's SQL Stash - query manager for your databases",
+			"PAM — Pam's Database Drawer",
 		),
 	)
 	fmt.Println(

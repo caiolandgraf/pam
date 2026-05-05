@@ -221,7 +221,7 @@ func (a *App) runFromArgsOpenConn(args []string, conn db.DatabaseConnection) err
 
 func shellHelpText() string {
 	var sb strings.Builder
-	sb.WriteString(styles.Title.Render("Squix Shell Help"))
+	sb.WriteString(styles.Title.Render("PAM Shell Help"))
 	sb.WriteString("\n\n")
 	sb.WriteString(styles.Title.Render("Commands"))
 	sb.WriteString("\n")
