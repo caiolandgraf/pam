@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/caiolandgraf/pam/internal/config" // Adicionado: Importar o pacote config
 	"github.com/caiolandgraf/pam/internal/db"
 )
 
@@ -20,7 +21,19 @@ func TestNew(t *testing.T) {
 		Id:   1,
 	}
 
-	model := New(columns, nil, data, elapsed, nil, "", "", query, 15)
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
+	model := New(
+		columns,
+		nil,
+		data,
+		elapsed,
+		nil,
+		"",
+		"",
+		query,
+		15,
+		config.UIVisibility{},
+	)
 
 	// Verify initial state
 	if model.selectedRow != 0 {
@@ -140,6 +153,7 @@ func TestModel_GetEditedQuery(t *testing.T) {
 		SQL:  "SELECT * FROM users",
 		Id:   1,
 	}
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id"},
 		nil,
@@ -150,6 +164,7 @@ func TestModel_GetEditedQuery(t *testing.T) {
 		"",
 		query,
 		15,
+		config.UIVisibility{},
 	)
 
 	// Initially should return current query
@@ -175,6 +190,7 @@ func TestModel_GetEditedQuery(t *testing.T) {
 }
 
 func TestModel_ShouldRerunQuery(t *testing.T) {
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id"},
 		nil,
@@ -185,6 +201,7 @@ func TestModel_ShouldRerunQuery(t *testing.T) {
 		"",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	// Initially should not rerun
@@ -200,6 +217,7 @@ func TestModel_ShouldRerunQuery(t *testing.T) {
 }
 
 func TestModel_GetSelectedTableName(t *testing.T) {
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"name"},
 		nil,
@@ -210,6 +228,7 @@ func TestModel_GetSelectedTableName(t *testing.T) {
 		"",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	// Initially empty
@@ -231,6 +250,7 @@ func TestModel_GetSelectedTableName(t *testing.T) {
 }
 
 func TestModel_ExtractNewValue(t *testing.T) {
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id", "name", "email"},
 		nil,
@@ -241,6 +261,7 @@ func TestModel_ExtractNewValue(t *testing.T) {
 		"",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	tests := []struct {
@@ -298,6 +319,7 @@ func TestModel_ExtractNewValue(t *testing.T) {
 }
 
 func TestModel_BlinkCmd(t *testing.T) {
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id"},
 		nil,
@@ -308,6 +330,7 @@ func TestModel_BlinkCmd(t *testing.T) {
 		"",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	cmd := model.blinkCmd()
@@ -328,6 +351,7 @@ func TestModel_NavigationBounds(t *testing.T) {
 		{"2", "Bob", "bob@example.com"},
 		{"3", "Charlie", "charlie@example.com"},
 	}
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id", "name", "email"},
 		nil,
@@ -338,6 +362,7 @@ func TestModel_NavigationBounds(t *testing.T) {
 		"",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	// Test row bounds
@@ -366,6 +391,7 @@ func TestModel_NavigationBounds(t *testing.T) {
 }
 
 func TestModel_VisualModeToggle(t *testing.T) {
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id"},
 		nil,
@@ -376,6 +402,7 @@ func TestModel_VisualModeToggle(t *testing.T) {
 		"",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	// Initially not in visual mode
@@ -400,6 +427,7 @@ func TestModel_VisualModeToggle(t *testing.T) {
 }
 
 func TestModel_DetailViewToggle(t *testing.T) {
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id"},
 		nil,
@@ -410,6 +438,7 @@ func TestModel_DetailViewToggle(t *testing.T) {
 		"",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	// Initially not in detail view
@@ -461,6 +490,7 @@ func TestModel_CellWidth(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Correção: Adicionado o décimo argumento config.UIVisibility{}
 			model := New(
 				[]string{"id"},
 				nil,
@@ -471,6 +501,7 @@ func TestModel_CellWidth(t *testing.T) {
 				"",
 				db.Query{},
 				tt.cellWidth,
+				config.UIVisibility{},
 			)
 			if model.cellWidth != tt.wantWidth {
 				t.Errorf(
@@ -521,6 +552,7 @@ func TestModel_SortDirection(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Correção: Adicionado o décimo argumento config.UIVisibility{}
 			model := New(
 				[]string{"id", "name"},
 				nil,
@@ -531,6 +563,7 @@ func TestModel_SortDirection(t *testing.T) {
 				"",
 				tt.query,
 				15,
+				config.UIVisibility{},
 			)
 			if model.sortColumn != tt.wantColumn {
 				t.Errorf(
@@ -552,6 +585,7 @@ func TestModel_SortDirection(t *testing.T) {
 
 func TestModel_EmptyData(t *testing.T) {
 	// Test with empty data
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id", "name"},
 		nil,
@@ -562,6 +596,7 @@ func TestModel_EmptyData(t *testing.T) {
 		"",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	if len(model.data) != 0 {
@@ -578,6 +613,7 @@ func TestModel_EmptyData(t *testing.T) {
 func TestModel_SingleRow(t *testing.T) {
 	// Test with single row
 	data := [][]string{{"1", "Alice"}}
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id", "name"},
 		nil,
@@ -588,6 +624,7 @@ func TestModel_SingleRow(t *testing.T) {
 		"",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	if len(model.data) != 1 {
@@ -605,6 +642,7 @@ func TestModel_LargeDataset(t *testing.T) {
 		data[i] = []string{string(rune(i)), "name", "email"}
 	}
 
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id", "name", "email"},
 		nil,
@@ -615,6 +653,7 @@ func TestModel_LargeDataset(t *testing.T) {
 		"",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	if len(model.data) != 1000 {
@@ -626,6 +665,7 @@ func TestModel_LargeDataset(t *testing.T) {
 }
 
 func TestModel_BlinkStates(t *testing.T) {
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id"},
 		nil,
@@ -636,6 +676,7 @@ func TestModel_BlinkStates(t *testing.T) {
 		"",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	// Test blink states are initially false
@@ -685,6 +726,7 @@ func TestToggleSort_Cycle(t *testing.T) {
 			}
 			return "regular_table"
 		}(), func(t *testing.T) {
+			// Correção: Adicionado o décimo argumento config.UIVisibility{}
 			model := New(
 				[]string{"id", "name"},
 				nil,
@@ -695,6 +737,7 @@ func TestToggleSort_Cycle(t *testing.T) {
 				"",
 				db.Query{SQL: "SELECT id, name FROM users"},
 				15,
+				config.UIVisibility{},
 			)
 			model.isTablesList = isTablesList
 			model.selectedCol = 1 // "name" column
@@ -722,6 +765,7 @@ func TestToggleSort_Cycle(t *testing.T) {
 			}
 
 			// Simulate re-run: new model with sorted SQL, same col selected
+			// Correção: Adicionado o décimo argumento config.UIVisibility{}
 			model = New(
 				[]string{"id", "name"},
 				nil,
@@ -732,6 +776,7 @@ func TestToggleSort_Cycle(t *testing.T) {
 				"",
 				db.Query{SQL: model.editedQuery},
 				15,
+				config.UIVisibility{},
 			)
 			model.isTablesList = isTablesList
 			model.selectedCol = 1
@@ -747,6 +792,7 @@ func TestToggleSort_Cycle(t *testing.T) {
 			}
 
 			// Simulate re-run again
+			// Correção: Adicionado o décimo argumento config.UIVisibility{}
 			model = New(
 				[]string{"id", "name"},
 				nil,
@@ -757,6 +803,7 @@ func TestToggleSort_Cycle(t *testing.T) {
 				"",
 				db.Query{SQL: model.editedQuery},
 				15,
+				config.UIVisibility{},
 			)
 			model.isTablesList = isTablesList
 			model.selectedCol = 1
@@ -769,6 +816,7 @@ func TestToggleSort_Cycle(t *testing.T) {
 			}
 
 			// Simulate re-run again
+			// Correção: Adicionado o décimo argumento config.UIVisibility{}
 			model = New(
 				[]string{"id", "name"},
 				nil,
@@ -779,6 +827,7 @@ func TestToggleSort_Cycle(t *testing.T) {
 				"",
 				db.Query{SQL: model.editedQuery},
 				15,
+				config.UIVisibility{},
 			)
 			model.isTablesList = isTablesList
 			model.selectedCol = 1
@@ -807,6 +856,7 @@ func TestToggleSort_TablesListInitialASC(t *testing.T) {
 	// (built into nameOnlyQuery). Pressing F should cycle DESC → no sort → ASC, not loop.
 	initialSQL := "SELECT name FROM (SELECT TABLE_NAME as name FROM information_schema.TABLES) AS t ORDER BY name ASC"
 
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"name"},
 		nil,
@@ -817,6 +867,7 @@ func TestToggleSort_TablesListInitialASC(t *testing.T) {
 		"",
 		db.Query{SQL: initialSQL},
 		15,
+		config.UIVisibility{},
 	)
 	model.isTablesList = true
 	model.selectedCol = 0 // "name"
@@ -840,6 +891,7 @@ func TestToggleSort_TablesListInitialASC(t *testing.T) {
 	}
 
 	// Simulate re-run with DESC query
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model = New(
 		[]string{"name"},
 		nil,
@@ -850,6 +902,7 @@ func TestToggleSort_TablesListInitialASC(t *testing.T) {
 		"",
 		db.Query{SQL: model.editedQuery},
 		15,
+		config.UIVisibility{},
 	)
 	model.isTablesList = true
 	model.selectedCol = 0
@@ -874,6 +927,7 @@ func TestToggleSort_TablesListInitialASC(t *testing.T) {
 
 func TestToggleSort_DifferentColumn(t *testing.T) {
 	// Switching to a different column should restart the cycle at ASC
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id", "name", "email"},
 		nil,
@@ -884,6 +938,7 @@ func TestToggleSort_DifferentColumn(t *testing.T) {
 		"",
 		db.Query{SQL: "SELECT id, name, email FROM users ORDER BY name ASC"},
 		15,
+		config.UIVisibility{},
 	)
 	model.selectedCol = 1 // "name" — already sorted
 

@@ -3,6 +3,7 @@ package table
 import (
 	"testing"
 
+	"github.com/caiolandgraf/pam/internal/config" // Adicionado: Importar o pacote config
 	"github.com/caiolandgraf/pam/internal/db"
 )
 
@@ -84,6 +85,7 @@ func TestModel_BuildUpdateStatement(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Correção: Adicionado o décimo argumento config.UIVisibility{}
 			model := New(
 				tt.columns,
 				nil,
@@ -94,6 +96,7 @@ func TestModel_BuildUpdateStatement(t *testing.T) {
 				tt.primaryKeyCol,
 				db.Query{},
 				15,
+				config.UIVisibility{},
 			)
 			model.selectedRow = tt.selectedRow
 			model.selectedCol = tt.selectedCol
@@ -115,6 +118,7 @@ func TestModel_BuildUpdateStatement(t *testing.T) {
 }
 
 func TestModel_BuildUpdateStatementWithValue(t *testing.T) {
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id", "name"},
 		nil,
@@ -125,6 +129,7 @@ func TestModel_BuildUpdateStatementWithValue(t *testing.T) {
 		"id",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 	model.selectedRow = 0
 	model.selectedCol = 1
@@ -183,6 +188,7 @@ func TestModel_BuildUpdateStatement_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Correção: Adicionado o décimo argumento config.UIVisibility{}
 			model := New(
 				tt.columns,
 				nil,
@@ -193,6 +199,7 @@ func TestModel_BuildUpdateStatement_EdgeCases(t *testing.T) {
 				"id",
 				db.Query{},
 				15,
+				config.UIVisibility{},
 			)
 			model.selectedRow = tt.selectedRow
 			model.selectedCol = tt.selectedCol
@@ -221,6 +228,7 @@ func TestModel_BuildUpdateStatement_EdgeCases(t *testing.T) {
 }
 
 func TestModel_UpdateCell_Bounds(t *testing.T) {
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id", "name"},
 		nil,
@@ -231,6 +239,7 @@ func TestModel_UpdateCell_Bounds(t *testing.T) {
 		"id",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	tests := []struct {
@@ -315,6 +324,7 @@ func TestModel_NumRows(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Correção: Adicionado o décimo argumento config.UIVisibility{}
 			model := New(
 				[]string{"id", "name"},
 				nil,
@@ -325,6 +335,7 @@ func TestModel_NumRows(t *testing.T) {
 				"",
 				db.Query{},
 				15,
+				config.UIVisibility{},
 			)
 			if got := model.numRows(); got != tt.want {
 				t.Errorf("numRows() = %d, want %d", got, tt.want)
@@ -358,6 +369,7 @@ func TestModel_NumCols(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Correção: Adicionado o décimo argumento config.UIVisibility{}
 			model := New(
 				tt.columns,
 				nil,
@@ -368,6 +380,7 @@ func TestModel_NumCols(t *testing.T) {
 				"",
 				db.Query{},
 				15,
+				config.UIVisibility{},
 			)
 			if got := model.numCols(); got != tt.want {
 				t.Errorf("numCols() = %d, want %d", got, tt.want)
@@ -430,6 +443,7 @@ func TestModel_GetPrimaryKeyValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Correção: Adicionado o décimo argumento config.UIVisibility{}
 			model := New(
 				tt.columns,
 				nil,
@@ -440,6 +454,7 @@ func TestModel_GetPrimaryKeyValue(t *testing.T) {
 				tt.primaryKeyCol,
 				db.Query{},
 				15,
+				config.UIVisibility{},
 			)
 			model.selectedRow = tt.selectedRow
 
@@ -486,6 +501,7 @@ func TestEditorCompleteMsg(t *testing.T) {
 
 func TestModel_UpdateCell_WithoutTableName(t *testing.T) {
 	// Model without table name should not allow updates
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id", "name"},
 		nil,
@@ -496,6 +512,7 @@ func TestModel_UpdateCell_WithoutTableName(t *testing.T) {
 		"",
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	model.selectedRow = 0
@@ -514,6 +531,7 @@ func TestModel_UpdateCell_WithoutTableName(t *testing.T) {
 
 func TestModel_UpdateCell_WithoutPrimaryKey(t *testing.T) {
 	// Model without primary key should not allow updates
+	// Correção: Adicionado o décimo argumento config.UIVisibility{}
 	model := New(
 		[]string{"id", "name"},
 		nil,
@@ -524,6 +542,7 @@ func TestModel_UpdateCell_WithoutPrimaryKey(t *testing.T) {
 		"", // No primary key
 		db.Query{},
 		15,
+		config.UIVisibility{},
 	)
 
 	model.selectedRow = 0
