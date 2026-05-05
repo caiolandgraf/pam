@@ -11,6 +11,7 @@
 !LICENSE
 !README.md
 !CONTRIBUTING.md
+!CHANGELOG.md
 
 !shell.nix
 !flake.nix

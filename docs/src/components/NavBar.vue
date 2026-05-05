@@ -1,10 +1,21 @@
 <template>
   <nav class="navbar">
     <div class="nav-inner">
-      <router-link to="/" class="nav-brand">
-        <span class="brand-icon">🗄️</span>
-        <span class="brand-text">pam</span>
-      </router-link>
+      <div class="nav-left">
+        <router-link to="/" class="nav-brand">
+          <span class="brand-row">
+            <span class="brand-icon">🗄️</span>
+            <span class="brand-text">Pam's Database Drawer</span>
+          </span>
+          <span class="brand-sub">Scranton Branch</span>
+        </router-link>
+        <div class="nav-meta">
+          <span><span class="meta-label">To:</span> The Office</span>
+          <span><span class="meta-label">From:</span> Reception</span>
+          <span><span class="meta-label">Subject:</span> Queries & Docs</span>
+          <span><span class="meta-label">Form:</span> DM-00</span>
+        </div>
+      </div>
       <button
         class="mobile-toggle"
         @click="menuOpen = !menuOpen"
@@ -21,6 +32,14 @@
         <router-link to="/contributors" @click="menuOpen = false"
           >Contributors</router-link
         >
+        <button
+          class="theme-toggle"
+          @click="toggleTheme"
+          :aria-label="`Switch to ${themeLabel} mode`"
+        >
+          <span class="theme-icon">{{ themeIcon }}</span>
+          <span class="theme-text">{{ themeLabel }}</span>
+        </button>
         <button class="search-trigger" @click="$emit('openSearch')">
           <svg
             width="14"
@@ -54,12 +73,39 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 defineEmits(['openSearch'])
 
 const menuOpen = ref(false)
 const metaKey = navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'
+const theme = ref('light')
+
+const themeIcon = computed(() => (theme.value === 'dark' ? '☀️' : '🌙'))
+const themeLabel = computed(() => (theme.value === 'dark' ? 'Light' : 'Dark'))
+
+function applyTheme(value) {
+  document.documentElement.dataset.theme = value
+  localStorage.setItem('pam-docs-theme', value)
+}
+
+function toggleTheme() {
+  theme.value = theme.value === 'dark' ? 'light' : 'dark'
+  applyTheme(theme.value)
+}
+
+onMounted(() => {
+  const stored = localStorage.getItem('pam-docs-theme')
+  if (stored) {
+    theme.value = stored
+  } else if (
+    window.matchMedia &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  ) {
+    theme.value = 'dark'
+  }
+  applyTheme(theme.value)
+})
 </script>
 
 <style scoped>
@@ -69,44 +115,91 @@ const metaKey = navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'
   left: 0;
   right: 0;
   z-index: 100;
-  background: rgba(13, 17, 23, 0.85);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  border-bottom: 2px solid var(--border);
+  box-shadow: var(--shadow-soft);
 }
 .nav-inner {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 1.5rem;
-  height: 64px;
+  padding: 0.625rem 1.5rem;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: nowrap;
+}
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 .nav-brand {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.1rem;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: var(--text);
 }
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
 .brand-icon {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
+}
+.brand-sub {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+.nav-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.15rem 1rem;
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.meta-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-right: 0.3rem;
 }
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 .nav-links a {
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: color 0.2s;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 6px 6px 0 0;
+  background: var(--bg-card);
+  font-family: var(--font-mono);
 }
 .nav-links a:hover,
 .nav-links a.router-link-active {
   color: var(--text);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-soft);
 }
 .nav-github {
   display: flex;
@@ -114,28 +207,50 @@ const metaKey = navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'
 }
 
 /* Search trigger */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--bg-code);
+  border: 1px dashed var(--border);
+  color: var(--text-secondary);
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  transition: all 0.15s;
+}
+.theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.theme-icon {
+  font-size: 0.9rem;
+}
+
 .search-trigger {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   background: var(--bg-code);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   color: var(--text-muted);
   padding: 5px 10px;
   border-radius: 6px;
   cursor: pointer;
-  font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   transition: all 0.15s;
 }
 .search-trigger:hover {
-  border-color: var(--text-secondary);
+  border-color: var(--accent);
   color: var(--text-secondary);
 }
 .search-trigger kbd {
   font-family: var(--font-mono);
   font-size: 0.65rem;
-  background: rgba(110, 118, 129, 0.15);
+  background: rgba(214, 201, 184, 0.35);
   border: 1px solid var(--border);
   padding: 1px 5px;
   border-radius: 3px;
@@ -169,6 +284,18 @@ const metaKey = navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'
   transform: rotate(-45deg) translate(5px, -5px);
 }
 
+@media (max-width: 1020px) {
+  .nav-meta {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .brand-sub {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .mobile-toggle {
     display: flex;
@@ -179,17 +306,19 @@ const metaKey = navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'
   .search-trigger kbd {
     display: none;
   }
+  .theme-text {
+    display: none;
+  }
   .nav-links {
     position: fixed;
     top: 64px;
     left: 0;
     right: 0;
-    background: rgba(13, 17, 23, 0.97);
-    backdrop-filter: blur(16px);
+    background: var(--bg-card);
     flex-direction: column;
-    padding: 1.5rem;
-    gap: 1.25rem;
-    border-bottom: 1px solid var(--border);
+    padding: 1.25rem;
+    gap: 0.75rem;
+    border-bottom: 2px solid var(--border);
     transform: translateY(-120%);
     opacity: 0;
     transition: all 0.3s ease;

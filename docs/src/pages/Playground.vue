@@ -1,15 +1,38 @@
 <template>
   <div class="playground-page">
-    <div class="page-inner">
-      <div class="page-header">
-        <h1>
-          <span class="gradient-text">Playground</span>
-        </h1>
-        <p class="lead">
-          Try PAM commands in your browser — powered by SQLite (WASM).
-          <br />No server needed. Everything runs locally.
-        </p>
-      </div>
+    <MemoPage
+      title="Playground"
+      subtitle="Try PAM commands in your browser — powered by SQLite (WASM). No server needed. Everything runs locally."
+      to="Training Room"
+      from="Scranton Branch"
+      subject="Playground drills"
+      status="Hands-on"
+      stamp="TRAINING"
+      badge="Form TR-04"
+    >
+      <template #tags>
+        <span class="label-chip">SQLite WASM</span>
+        <span class="label-chip">Local Only</span>
+        <span class="label-chip">Safe Sandbox</span>
+      </template>
+      <template #meta>
+        <div class="form-row">
+          <div class="form-field">
+            <span class="form-label">Session</span> Local
+          </div>
+          <div class="form-field">
+            <span class="form-label">Engine</span> SQLite WASM
+          </div>
+          <div class="form-field">
+            <span class="form-label">Mode</span> Sandbox
+          </div>
+        </div>
+      </template>
+      <template #note>
+        Pre-loaded: <strong>run top_earners</strong> ·
+        <strong>run by_dept</strong> · <strong>run active_projects</strong> — or
+        type <strong>help</strong>
+      </template>
 
       <!-- Terminal-style frame -->
       <div class="terminal-frame">
@@ -18,7 +41,7 @@
           <span class="dot yellow"></span>
           <span class="dot green"></span>
           <span class="terminal-title"
-            >pam playground — interactive terminal</span
+            >pam (playground) ▸ scranton branch terminal</span
           >
         </div>
 
@@ -107,55 +130,102 @@
         </div>
       </div>
 
-      <!-- Quick commands -->
-      <div class="quick-commands">
-        <h3>Quick Commands</h3>
-        <div class="command-chips">
-          <button
-            v-for="cmd in quickCommands"
-            :key="cmd.cmd"
-            class="command-chip"
-            @click="runQuickCommand(cmd.cmd)"
+      <!-- Quick Reference Card -->
+      <div class="reference-card laminated-card">
+        <div class="ref-header">
+          <span class="ref-icon">📋</span>
+          <h3>Quick Reference</h3>
+          <span class="ref-badge">laminated for your convenience</span>
+        </div>
+        <div class="ref-categories">
+          <div
+            v-for="cat in commandCategories"
+            :key="cat.label"
+            class="ref-category"
           >
-            <code>{{ cmd.label }}</code>
-            <span class="chip-desc">{{ cmd.desc }}</span>
-          </button>
+            <div class="ref-cat-label">{{ cat.label }}</div>
+            <div class="ref-chips">
+              <button
+                v-for="cmd in cat.commands"
+                :key="cmd.cmd"
+                class="command-chip"
+                @click="runQuickCommand(cmd.cmd)"
+              >
+                <code>{{ cmd.label }}</code>
+                <span class="chip-desc">{{ cmd.desc }}</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Info cards -->
-      <div class="info-grid">
-        <div class="info-card">
-          <span class="info-icon">🖥️</span>
-          <h3>PAM Simulator</h3>
-          <p>
-            Simulates real PAM commands like <code>init</code>,
-            <code>add</code>, <code>run</code>, <code>tables</code>, and more.
+      <!-- Workflows -->
+      <div class="workflows-section">
+        <div class="workflows-header">
+          <span class="memo-stamp stamp-approved">WORKFLOWS</span>
+          <p class="workflows-sub">
+            Click any workflow to run it step-by-step in the terminal
           </p>
         </div>
-        <div class="info-card">
-          <span class="info-icon">📊</span>
-          <h3>Real SQLite</h3>
-          <p>
-            Backed by sql.js (SQLite WASM). Your queries execute on a real
-            database engine in the browser.
-          </p>
-        </div>
-        <div class="info-card">
-          <span class="info-icon">⚡</span>
-          <h3>Sample Data</h3>
-          <p>
-            Pre-loaded with a "playground" connection containing employees,
-            departments, and projects tables.
-          </p>
+        <div class="workflow-grid">
+          <div
+            v-for="wf in workflows"
+            :key="wf.num"
+            class="workflow-card"
+            @click="runWorkflow(wf)"
+          >
+            <div class="wf-header">
+              <span class="wf-num">{{ String(wf.num).padStart(2, '0') }}</span>
+              <span class="wf-title">{{ wf.title }}</span>
+            </div>
+            <p class="wf-desc">{{ wf.desc }}</p>
+            <div class="wf-cmds">
+              <code v-for="(cmd, i) in wf.preview" :key="i">{{ cmd }}</code>
+            </div>
+            <span class="wf-run">▸ Run Demo</span>
+          </div>
         </div>
       </div>
-    </div>
+
+      <!-- About the Data -->
+      <div class="about-section">
+        <h3 class="about-title">About the Sandbox Data</h3>
+        <div class="about-grid">
+          <div class="sticky-note about-note">
+            <strong>👥 employees (15 rows)</strong><br />
+            Pam, Michael, Dwight, Jim and the whole Scranton branch. Columns:
+            <code>id</code>, <code>first_name</code>, <code>last_name</code>,
+            <code>title</code>, <code>salary</code>, <code>department_id</code>,
+            <code>hire_date</code>.
+          </div>
+          <div class="sticky-note sticky-note-blue about-note">
+            <strong>🏢 departments (5 rows)</strong><br />
+            Engineering, Sales, Marketing, HR, Finance — each with a budget and
+            location.
+          </div>
+          <div class="sticky-note sticky-note-green about-note">
+            <strong>📁 projects (5 rows)</strong><br />
+            Active, completed, and planned projects with department ownership.
+          </div>
+          <div class="sticky-note sticky-note-pink about-note">
+            <strong>🔗 employee_projects</strong><br />
+            Junction table linking employees to projects with a role column.
+            Great for <code>explain</code> and JOIN demos.
+          </div>
+        </div>
+        <p class="about-hint annotation">
+          “Wikipedia is the best thing ever. Anyone in the world can write
+          anything they want about any subject — so you know you are getting the
+          best possible information.” — Michael Scott
+        </p>
+      </div>
+    </MemoPage>
   </div>
 </template>
 
 <script setup>
 import { ref, nextTick, onMounted } from 'vue'
+import MemoPage from '../components/MemoPage.vue'
 
 // ── Reactive state ──────────────────────────────────────────────────────────
 const outputHistory = ref([])
@@ -176,43 +246,110 @@ let queryIdCounter = 0
 
 const currentPrompt = ref('pam ▸ ')
 
-// ── Quick commands ──────────────────────────────────────────────────────────
-const quickCommands = [
-  { cmd: 'help', label: 'pam help', desc: 'Show all commands' },
-  { cmd: 'status', label: 'pam status', desc: 'Current connection' },
-  { cmd: 'ls', label: 'pam ls', desc: 'List connections' },
-  { cmd: 'tables', label: 'pam tables', desc: 'List tables' },
+// ── Command categories (for reference card) ────────────────────────────────────────────
+const commandCategories = [
   {
-    cmd: 'tables employees',
-    label: 'pam tables employees',
-    desc: 'Query a table'
+    label: '📡 Connections',
+    commands: [
+      { cmd: 'init mydb sqlite ""', label: 'init', desc: 'Create connection' },
+      { cmd: 'switch playground', label: 'switch', desc: 'Change active' },
+      { cmd: 'status', label: 'status', desc: 'Active connection' },
+      { cmd: 'ls', label: 'ls', desc: 'List connections' },
+      { cmd: 'disconnect', label: 'disconnect', desc: 'Drop connection' }
+    ]
   },
   {
-    cmd: 'tv employees',
-    label: 'pam tv employees',
-    desc: 'View table structure'
-  },
-  { cmd: 'list queries', label: 'pam list queries', desc: 'Saved queries' },
-  {
-    cmd: 'add top_earners "SELECT first_name, last_name, salary FROM employees WHERE salary > 60000 ORDER BY salary DESC"',
-    label: 'pam add top_earners ...',
-    desc: 'Save a query'
+    label: '🗂 Schema',
+    commands: [
+      { cmd: 'tables', label: 'tables', desc: 'List all tables' },
+      { cmd: 'tv employees', label: 'tv employees', desc: 'Table structure' },
+      { cmd: 'info tables', label: 'info tables', desc: 'Schema info' },
+      { cmd: 'explain employees', label: 'explain', desc: 'Relationships' }
+    ]
   },
   {
-    cmd: 'run top_earners',
-    label: 'pam run top_earners',
-    desc: 'Run saved query'
+    label: '💾 Saved Queries',
+    commands: [
+      { cmd: 'list queries', label: 'list queries', desc: 'See saved queries' },
+      {
+        cmd: 'add top5 "SELECT first_name, salary FROM employees ORDER BY salary DESC LIMIT 5"',
+        label: 'add',
+        desc: 'Save a query'
+      },
+      {
+        cmd: 'run top_earners',
+        label: 'run top_earners',
+        desc: 'Run pre-loaded'
+      },
+      { cmd: 'run by_dept', label: 'run by_dept', desc: 'Dept summary' }
+    ]
   },
-  { cmd: 'info tables', label: 'pam info tables', desc: 'Schema info' },
   {
-    cmd: 'explain employees',
-    label: 'pam explain employees',
-    desc: 'Relationships'
+    label: '🔍 Data',
+    commands: [
+      {
+        cmd: 'tables employees',
+        label: 'tables employees',
+        desc: 'Browse table'
+      },
+      {
+        cmd: 'query --table=employees "SELECT first_name, title, salary FROM employees WHERE salary > 60000 ORDER BY salary DESC"',
+        label: 'query --table',
+        desc: 'Filtered query'
+      },
+      {
+        cmd: 'run active_projects',
+        label: 'run active_projects',
+        desc: 'Active projects'
+      },
+      {
+        cmd: 'run recent_hires',
+        label: 'run recent_hires',
+        desc: 'Recent hires'
+      }
+    ]
+  }
+]
+
+// ── Workflows ──────────────────────────────────────────────────────────────────────────────
+const workflows = [
+  {
+    num: 1,
+    title: 'Explore the Schema',
+    desc: 'List tables, view structure, and understand relationships.',
+    preview: ['tables', 'tv employees', 'explain employees'],
+    commands: [
+      'tables',
+      'tv employees',
+      'tv departments',
+      'explain employees',
+      'explain projects'
+    ]
   },
   {
-    cmd: 'query --table=employees "SELECT first_name, title, salary FROM employees ORDER BY salary DESC LIMIT 5"',
-    label: 'pam query --table=...',
-    desc: 'Query with context'
+    num: 2,
+    title: 'Build a Query Library',
+    desc: 'Save reusable named queries and run them on demand.',
+    preview: ['add top5 "..."', 'list queries', 'run top5'],
+    commands: [
+      'add high_earners "SELECT first_name, last_name, title, salary FROM employees WHERE salary > 60000 ORDER BY salary DESC"',
+      'add dept_budgets "SELECT name, budget, location FROM departments ORDER BY budget DESC"',
+      'list queries',
+      'run high_earners',
+      'run dept_budgets'
+    ]
+  },
+  {
+    num: 3,
+    title: 'Cross-Table Analysis',
+    desc: 'Use the pre-loaded queries to explore joins and aggregations.',
+    preview: ['run by_dept', 'run active_projects', 'run recent_hires'],
+    commands: [
+      'run by_dept',
+      'run active_projects',
+      'run recent_hires',
+      'run top_earners'
+    ]
   }
 ]
 
@@ -403,7 +540,6 @@ function handleCommand(input) {
         cmdExplain(rest)
         break
       case 'disconnect':
-      case 'clear':
       case 'unset':
         cmdDisconnect()
         break
@@ -415,6 +551,12 @@ function handleCommand(input) {
         break
       case 'history':
         cmdHistory()
+        break
+      case 'clear':
+        outputHistory.value = []
+        break
+      case 'dm':
+        cmdDM()
         break
       case '-v':
       case '--version':
@@ -1104,7 +1246,22 @@ function cmdHistory() {
   )
 }
 
-// ── SQL execution ───────────────────────────────────────────────────────────
+function cmdDM() {
+  const quotes = [
+    '"I am running away from my responsibilities. And it feels good." — Michael Scott',
+    '"Would I rather be feared or loved? Easy. Both. I want people to be afraid of how much they love me." — Michael Scott',
+    '"Bears. Beets. Battlestar Galactica." — Dwight Schrute',
+    '"I am fast. To give you a reference point I am somewhere between a snake and a mongoose. And a panther." — Dwight Schrute',
+    '"I talk a lot, so I\'ve learned to tune myself out." — Kelly Kapoor',
+    '"I want people to fear how much they love me." — Michael Scott',
+    '"The worst thing about prison was the dementors." — Michael Scott',
+    '"Perfectenschlag." — Michael Scott'
+  ]
+  const q = quotes[Math.floor(Math.random() * quotes.length)]
+  pushInfo('📎 Dunder Mifflin Wisdom:\n\n  ' + q)
+}
+
+// ── SQL execution ───────────────────────────────────────────────────────────────────
 
 function executeAndDisplay(sql) {
   const t0 = performance.now()
@@ -1156,9 +1313,53 @@ function requireConnection() {
   }
 }
 
-// ── Input handling ──────────────────────────────────────────────────────────
+// ── Input handling ───────────────────────────────────────────────────────────────────
+
+const allCommands = [
+  'help',
+  'init',
+  'switch',
+  'use',
+  'status',
+  'test',
+  'add',
+  'save',
+  'remove',
+  'delete',
+  'run',
+  'query',
+  'list',
+  'ls',
+  'tables',
+  't',
+  'explore',
+  'table-view',
+  'tv',
+  'info',
+  'explain',
+  'disconnect',
+  'clear',
+  'unset',
+  'edit',
+  'completion',
+  'history',
+  'dm'
+]
 
 function handleKeydown(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault()
+    const input = currentInput.value
+    const parts = input.split(' ')
+    if (parts.length === 1 && parts[0]) {
+      const partial = parts[0].toLowerCase()
+      const match = allCommands.find(
+        c => c.startsWith(partial) && c !== partial
+      )
+      if (match) currentInput.value = match + ' '
+    }
+    return
+  }
   if (e.key === 'Enter') {
     e.preventDefault()
     const input = currentInput.value.trim()
@@ -1194,11 +1395,24 @@ function runQuickCommand(cmd) {
   if (inputRef.value) inputRef.value.focus()
 }
 
+async function runWorkflow(wf) {
+  if (inputRef.value) inputRef.value.focus()
+  pushInfo(`\n\u25b8 Running workflow: ${wf.title}`)
+  for (const cmd of wf.commands) {
+    await new Promise(resolve => setTimeout(resolve, 120))
+    handleCommand(cmd)
+  }
+}
+
 // ── Initialization ──────────────────────────────────────────────────────────
 
 onMounted(async () => {
   pushInfo(
-    'Welcome to the PAM Playground! 🗄️\nThis simulates PAM commands in your browser with a real SQLite database.\n\nType "help" to see available commands, or click a quick command below.\n'
+    'Welcome to the PAM Playground 🗄️\n' +
+      'Dunder Mifflin Paper Company \u2014 Scranton Branch\n' +
+      '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n' +
+      'Simulates real PAM commands with SQLite WASM.\n' +
+      'Data: employees \u00b7 departments \u00b7 projects \u00b7 employee_projects\n'
   )
 
   try {
@@ -1288,14 +1502,36 @@ onMounted(async () => {
 
     // Create default "playground" connection
     connections.value['playground'] = { type: 'sqlite', conn: ':memory:' }
-    savedQueries.value['playground'] = {}
+    queryIdCounter = 4
+    savedQueries.value['playground'] = {
+      top_earners: {
+        id: 1,
+        sql: 'SELECT first_name, last_name, title, salary FROM employees ORDER BY salary DESC LIMIT 5'
+      },
+      by_dept: {
+        id: 2,
+        sql: 'SELECT d.name AS department, COUNT(e.id) AS headcount, ROUND(AVG(e.salary), 0) AS avg_salary FROM departments d JOIN employees e ON e.department_id = d.id GROUP BY d.id ORDER BY avg_salary DESC'
+      },
+      active_projects: {
+        id: 3,
+        sql: "SELECT p.name AS project, p.status, d.name AS department, p.start_date FROM projects p JOIN departments d ON p.department_id = d.id WHERE p.status = 'active' ORDER BY p.start_date"
+      },
+      recent_hires: {
+        id: 4,
+        sql: 'SELECT first_name, last_name, title, hire_date FROM employees ORDER BY hire_date DESC LIMIT 6'
+      }
+    }
     activeConnection.value = 'playground'
     updatePrompt()
 
     pushSuccess(
-      '✓ SQLite WASM loaded. Connection "playground" created with sample data (4 tables).'
+      '\u2713 SQLite WASM loaded \u2014 connection "playground" ready (4 tables, 4 pre-saved queries).'
     )
-    pushInfo('Try: tables, tables employees, tv employees, help')
+    pushInfo(
+      'Pre-loaded queries: top_earners \u00b7 by_dept \u00b7 active_projects \u00b7 recent_hires\n' +
+        'Try: run top_earners   or   tables   or   help\n' +
+        'Tip: press Tab to autocomplete commands  |  Ctrl+L or "clear" to reset'
+    )
   } catch (e) {
     pushError('Failed to load SQLite: ' + e.message)
   }
@@ -1308,19 +1544,20 @@ onMounted(async () => {
 
 <style scoped>
 .playground-page {
-  padding-top: 64px;
+  padding-top: 80px;
 }
 .page-inner {
   max-width: var(--max-width);
   margin: 0 auto;
   padding: 3rem 1.5rem 4rem;
 }
+
 .page-header {
   text-align: center;
   margin-bottom: 2.5rem;
 }
 .page-header h1 {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 800;
   margin-bottom: 0.5rem;
 }
@@ -1332,24 +1569,25 @@ onMounted(async () => {
 }
 .lead {
   color: var(--text-secondary);
-  font-size: 1.05rem;
+  font-size: 1rem;
 }
 
 /* Terminal frame */
 .terminal-frame {
-  border: 1px solid var(--border);
+  border: 2px dashed var(--border);
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: var(--shadow);
   margin-bottom: 2.5rem;
+  background: var(--bg-card);
 }
 .terminal-bar {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 10px 14px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
+  background: var(--paper-accent);
+  border-bottom: 1px dashed var(--border);
 }
 .dot {
   width: 12px;
@@ -1369,11 +1607,13 @@ onMounted(async () => {
   flex: 1;
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .terminal-body {
-  background: var(--bg);
+  background: var(--paper-muted);
   padding: 1rem;
   max-height: 600px;
   overflow-y: auto;
@@ -1431,7 +1671,7 @@ onMounted(async () => {
   white-space: pre-wrap;
   line-height: 1.5;
   padding: 0.4rem 0.75rem;
-  background: rgba(248, 81, 73, 0.08);
+  background: rgba(197, 48, 48, 0.08);
   border-left: 3px solid var(--red);
   border-radius: 0 4px 4px 0;
   margin: 0.25rem 0;
@@ -1457,8 +1697,9 @@ onMounted(async () => {
 .output-table-wrap {
   margin: 0.25rem 0;
   overflow-x: auto;
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   border-radius: 6px;
+  background: var(--paper-muted);
 }
 .output-table {
   width: 100%;
@@ -1467,19 +1708,19 @@ onMounted(async () => {
   font-family: var(--font-mono);
 }
 .output-table th {
-  background: var(--bg-card);
+  background: var(--paper-accent);
   padding: 0.4rem 0.65rem;
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--accent);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px dashed var(--border);
   white-space: nowrap;
   position: sticky;
   top: 0;
 }
 .output-table td {
   padding: 0.3rem 0.65rem;
-  border-bottom: 1px solid rgba(48, 54, 61, 0.4);
+  border-bottom: 1px dashed rgba(214, 201, 184, 0.7);
   color: var(--text-secondary);
   white-space: nowrap;
   max-width: 280px;
@@ -1487,7 +1728,7 @@ onMounted(async () => {
   text-overflow: ellipsis;
 }
 .output-table tbody tr:hover {
-  background: rgba(88, 166, 255, 0.05);
+  background: var(--accent-soft);
 }
 .row-num {
   color: var(--text-muted);
@@ -1504,8 +1745,8 @@ onMounted(async () => {
   font-size: 0.75rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
-  border-top: 1px solid var(--border);
-  background: var(--bg-card);
+  border-top: 1px dashed var(--border);
+  background: var(--paper-accent);
 }
 
 /* Lists */
@@ -1550,14 +1791,61 @@ onMounted(async () => {
   opacity: 0.5;
 }
 
-/* Quick commands */
-.quick-commands {
+/* Reference card */
+.reference-card {
   margin-bottom: 2.5rem;
 }
-.quick-commands h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
+.ref-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px dashed var(--border);
+}
+.ref-icon {
+  font-size: 1.2rem;
+}
+.ref-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  flex: 1;
+}
+.ref-badge {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+.ref-categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+.ref-category {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ref-cat-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  padding-bottom: 0.35rem;
+  border-bottom: 1px dashed var(--border);
+}
+.ref-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 .command-chips {
   display: flex;
@@ -1571,21 +1859,22 @@ onMounted(async () => {
   gap: 0.2rem;
   padding: 0.5rem 0.9rem;
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   border-radius: 8px;
   cursor: pointer;
   transition:
     border-color 0.15s,
     transform 0.15s;
   text-align: left;
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
+  box-shadow: var(--shadow-soft);
 }
 .command-chip:hover {
   border-color: var(--accent);
   transform: translateY(-1px);
 }
 .command-chip code {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   background: none;
   padding: 0;
   color: var(--accent);
@@ -1603,13 +1892,14 @@ onMounted(async () => {
 }
 .info-card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   border-radius: var(--radius);
   padding: 1.5rem;
   transition: border-color 0.25s;
+  box-shadow: var(--shadow-soft);
 }
 .info-card:hover {
-  border-color: var(--border-accent);
+  border-color: var(--accent);
 }
 .info-icon {
   font-size: 1.5rem;
@@ -1636,5 +1926,118 @@ onMounted(async () => {
   .command-chip {
     width: 100%;
   }
+}
+
+/* Workflows */
+.workflows-section {
+  margin-bottom: 2.5rem;
+}
+.workflows-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.workflows-sub {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.workflow-card {
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.15s;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.workflow-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+.wf-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.wf-num {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-code);
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+.wf-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  font-family: var(--font-mono);
+}
+.wf-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+.wf-cmds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+.wf-cmds code {
+  font-size: 0.68rem;
+  padding: 1px 6px;
+}
+.wf-run {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--accent);
+  margin-top: auto;
+  padding-top: 0.25rem;
+}
+
+/* About section */
+.about-section {
+  margin-bottom: 2.5rem;
+}
+.about-title {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  margin-bottom: 1rem;
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+}
+.about-note {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  padding: 1rem 1rem 0.9rem;
+  margin-top: 0.5rem;
+}
+.about-note code {
+  font-size: 0.75rem;
+}
+.about-hint {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
 }
 </style>

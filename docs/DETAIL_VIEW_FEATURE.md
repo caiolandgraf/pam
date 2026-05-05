@@ -1,12 +1,38 @@
 # 🔍 Detail View Feature - Visualização e Edição Detalhada de Células
 
+_Guia do escritório de Scranton para inspecionar dados sem stress._
+
+<table>
+  <tr>
+    <td width="60%">
+      <strong>📎 MEMORANDO INTERNO</strong><br/>
+      <strong>Para:</strong> Equipe de Dados<br/>
+      <strong>De:</strong> Recepção (Pam)<br/>
+      <strong>Assunto:</strong> Detail View — visualização e edição de células<br/>
+      <strong>Status:</strong> ✅ Em uso no escritório
+    </td>
+    <td width="40%">
+      <strong>🗂 CARTÕES DE ÍNDICE</strong><br/>
+      Use o índice abaixo para navegar.
+    </td>
+  </tr>
+</table>
+
+<pre>
+┌──────────────────────────────┐
+│  SCRANTON • EM USO ✔         │
+└──────────────────────────────┘
+</pre>
+
 ## Visão Geral
 
 A funcionalidade de **Detail View** permite visualizar e editar o conteúdo completo de qualquer célula da tabela em uma interface dedicada, com formatação automática de JSON e validação integrada.
 
+_É como abrir a gaveta da Pam: tudo organizado e legível._
+
 ---
 
-## 📋 Índice
+## 📋 Índice (Cartões do Escritório)
 
 1. [Como Usar](#como-usar)
 2. [Visualização Detalhada](#visualização-detalhada)
@@ -235,6 +261,8 @@ Antes de salvar no banco:
 ---
 
 ## Casos de Uso
+
+_Clássicos do escritório para o dia a dia._
 
 ### 1. 📊 Inspecionar Dados JSON
 
@@ -580,3 +608,9 @@ A funcionalidade de **Detail View** transforma o PAM em uma ferramenta poderosa 
 **Versão:** 1.0
 **Última Atualização:** 2024
 **Autor:** PAM Development Team
+
+<pre>
+┌──────────────────────────────┐
+│         END OF MEMO          │
+└──────────────────────────────┘
+</pre>

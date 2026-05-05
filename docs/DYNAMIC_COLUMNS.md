@@ -1,8 +1,45 @@
 # Dynamic Column Width Implementation
 
+_Engineering notes from the Scranton branch._
+
+<table>
+  <tr>
+    <td width="60%">
+      <strong>📎 INTEROFFICE MEMO</strong><br/>
+      <strong>To:</strong> Engineering team<br/>
+      <strong>From:</strong> Scranton branch<br/>
+      <strong>Subject:</strong> Dynamic column width implementation
+    </td>
+    <td width="40%">
+      <strong>🗂 INDEX CARDS</strong>
+      <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#implementation-details">Implementation Details</a></li>
+        <li><a href="#performance-considerations">Performance Considerations</a></li>
+        <li><a href="#edge-cases-handled">Edge Cases</a></li>
+        <li><a href="#configuration">Configuration</a></li>
+        <li><a href="#testing">Testing</a></li>
+        <li><a href="#migration-notes">Migration Notes</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+        <li><a href="#credits">Credits</a></li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+<pre>
+┌──────────────────────────────┐
+│  SCRANTON • ENGINEERING ✔    │
+└──────────────────────────────┘
+</pre>
+
 ## Overview
 
 The table viewer now features **dynamic column widths** that automatically adapt to your terminal size and data content. This provides a much better user experience compared to fixed-width columns, as tables now utilize the full available screen space efficiently.
+
+_In Scranton terms: the table stretches to fit the room without wasting space._
 
 ## Features
 
@@ -241,3 +278,9 @@ None! This is a backward-compatible enhancement.
 ## Credits
 
 This feature was implemented to provide a modern, responsive TUI experience that adapts to user's terminal environment, maximizing readability and usability of the table viewer.
+
+<pre>
+┌──────────────────────────────┐
+│         END OF MEMO          │
+└──────────────────────────────┘
+</pre>

@@ -1,13 +1,36 @@
 <template>
   <div class="contributors-page">
-    <div class="page-inner">
-      <div class="page-header">
-        <h1>Contributors</h1>
-        <p class="lead">
-          Pam is open-source and built by the community.
-          <br />Thanks to everyone who has contributed! 💜
-        </p>
-      </div>
+    <MemoPage
+      title="Contributors"
+      subtitle="Pam is open-source and built by the community. Thanks to everyone who has contributed! 💜"
+      to="Scranton Branch"
+      from="Open-Source Team"
+      subject="Staff directory"
+      status="Active roster"
+      stamp="STAFF"
+      badge="Form DM-18B"
+    >
+      <template #tags>
+        <span class="label-chip">Roster</span>
+        <span class="label-chip">Community</span>
+        <span class="label-chip">Updated: Weekly</span>
+      </template>
+      <template #meta>
+        <div class="form-row">
+          <div class="form-field">
+            <span class="form-label">Roster ID</span> STAFF-22
+          </div>
+          <div class="form-field">
+            <span class="form-label">Office</span> Scranton
+          </div>
+          <div class="form-field">
+            <span class="form-label">Sync</span> Weekly
+          </div>
+        </div>
+      </template>
+      <template #note>
+        Thanks to everyone who keeps the drawers organized. 💜
+      </template>
 
       <!-- Maintainer -->
       <section class="section">
@@ -128,12 +151,13 @@
           </a>
         </div>
       </section>
-    </div>
+    </MemoPage>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import MemoPage from '../components/MemoPage.vue'
 
 const maintainer = {
   name: 'Caio Landgraf',
@@ -233,36 +257,37 @@ const acknowledgments = [
 
 <style scoped>
 .contributors-page {
-  padding-top: 64px;
+  padding-top: 80px;
 }
 .page-inner {
   max-width: var(--max-width);
   margin: 0 auto;
   padding: 3rem 1.5rem 4rem;
 }
+
 .page-header {
   text-align: center;
   margin-bottom: 3rem;
 }
 .page-header h1 {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 800;
   margin-bottom: 0.5rem;
 }
 .lead {
   color: var(--text-secondary);
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .section {
   margin-bottom: 3.5rem;
 }
 .section h2 {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 700;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px dashed var(--border);
 }
 .section-desc {
   color: var(--text-secondary);
@@ -275,15 +300,17 @@ const acknowledgments = [
   align-items: center;
   gap: 1.5rem;
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   border-radius: var(--radius);
   padding: 1.5rem;
+  box-shadow: var(--shadow-soft);
 }
 .avatar {
   width: 56px;
   height: 56px;
   border-radius: 50%;
   border: 2px solid var(--border);
+  box-shadow: var(--shadow-soft);
 }
 .avatar-lg {
   width: 80px;
@@ -317,12 +344,13 @@ const acknowledgments = [
   gap: 0.5rem;
   padding: 1.25rem;
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   border-radius: var(--radius);
   transition:
     border-color 0.2s,
     transform 0.2s;
   text-align: center;
+  box-shadow: var(--shadow-soft);
 }
 .contrib-card:hover {
   border-color: var(--accent);
@@ -347,9 +375,10 @@ const acknowledgments = [
 }
 .how-card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   border-radius: var(--radius);
   padding: 1.25rem;
+  box-shadow: var(--shadow-soft);
 }
 .how-icon {
   font-size: 1.5rem;
@@ -368,9 +397,10 @@ const acknowledgments = [
 
 .contribute-steps {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   border-radius: var(--radius);
   padding: 1.5rem;
+  box-shadow: var(--shadow-soft);
 }
 .contribute-steps h3 {
   font-size: 1rem;
@@ -393,12 +423,13 @@ const acknowledgments = [
 }
 .ack-card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   border-radius: var(--radius);
   padding: 1.25rem;
   transition:
     border-color 0.2s,
     transform 0.2s;
+  box-shadow: var(--shadow-soft);
 }
 .ack-card:hover {
   border-color: var(--accent);

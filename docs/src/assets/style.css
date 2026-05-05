@@ -1,29 +1,94 @@
 :root {
-  --bg: #0d1117;
-  --bg-card: #161b22;
-  --bg-card-hover: #1c2333;
-  --bg-code: #1c2333;
-  --border: #30363d;
-  --border-accent: #58a6ff;
-  --text: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted: #6e7681;
-  --accent: #58a6ff;
-  --accent-hover: #79c0ff;
-  --green: #3fb950;
-  --green-dim: #238636;
-  --purple: #bc8cff;
-  --orange: #f0883e;
-  --pink: #f778ba;
-  --yellow: #e3b341;
-  --red: #f85149;
-  --gradient-hero: linear-gradient(135deg, #58a6ff 0%, #bc8cff 50%, #f778ba 100%);
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --bg: #f7f1e6;
+  --bg-card: #fffaf3;
+  --bg-card-hover: #fdf1e0;
+  --bg-code: #f4ecdf;
+  --border: #d9cbb7;
+  --border-accent: #8aa0bf;
+  --text: #2b2420;
+  --text-secondary: #4f433a;
+  --text-muted: #7b6c61;
+  --accent: #2c6aa6;
+  --accent-hover: #24598f;
+  --green: #2f855a;
+  --green-dim: #276749;
+  --purple: #6b46c1;
+  --orange: #b7791f;
+  --pink: #b83280;
+  --yellow: #b38b2e;
+  --red: #b8322b;
+  --gradient-hero: linear-gradient(
+    135deg,
+    #2c6aa6 0%,
+    #b7791f 55%,
+    #2f855a 100%
+  );
+  --font-sans: 'Georgia', 'Times New Roman', serif;
+  --font-mono: 'Courier Prime', 'Courier New', Courier, monospace;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 12px 28px rgba(43, 37, 32, 0.18);
+  --shadow-soft: 0 6px 18px rgba(43, 37, 32, 0.12);
   --max-width: 1100px;
+  --paper-line: rgba(43, 37, 32, 0.04);
+  --paper-accent: #f7efe1;
+  --paper-muted: #fffdf6;
+  --paper-hover: #fdf3e3;
+  --note-bg: #fff2a6;
+  --note-border: #e2d48b;
+  --note-text: #4b3b2f;
+  --stamp: #b8322b;
+  --stamp-bg: rgba(184, 50, 43, 0.08);
+  --code-ink: #6b3b2a;
+  --overlay: rgba(60, 50, 40, 0.25);
+  --accent-soft: rgba(44, 106, 166, 0.12);
+}
+
+:root[data-theme='dark'] {
+  --bg: #14110d;
+  --bg-card: #1c1712;
+  --bg-card-hover: #241d16;
+  --bg-code: #1e1813;
+  --border: #3a3126;
+  --border-accent: #d6b06b;
+  --text: #f6efe3;
+  --text-secondary: #d7c6b0;
+  --text-muted: #a8937d;
+  --accent: #e0b45f;
+  --accent-hover: #f0c36b;
+  --green: #7bcfa6;
+  --green-dim: #4a9f76;
+  --purple: #b893ff;
+  --orange: #d6a24f;
+  --pink: #d87db6;
+  --yellow: #e3c165;
+  --red: #f48c7f;
+  --gradient-hero: linear-gradient(
+    135deg,
+    #e0b45f 0%,
+    #c9756b 55%,
+    #6aa67a 100%
+  );
+  --font-sans: 'Georgia', 'Times New Roman', serif;
+  --font-mono: 'Courier Prime', 'Courier New', Courier, monospace;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
+  --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.4);
+  --max-width: 1100px;
+  --paper-line: rgba(255, 236, 205, 0.06);
+  --paper-accent: #2a241c;
+  --paper-muted: #201a14;
+  --paper-hover: #2d241c;
+  --note-bg: #3a2f1f;
+  --note-border: #5a4a31;
+  --note-text: #f4deb3;
+  --stamp: #f28b7d;
+  --stamp-bg: rgba(242, 139, 125, 0.12);
+  --code-ink: #f3c28b;
+  --overlay: rgba(10, 8, 6, 0.65);
+  --accent-soft: rgba(224, 180, 95, 0.18);
+  color-scheme: dark;
 }
 
 * {
@@ -42,6 +107,16 @@ body {
   color: var(--text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  background-image: repeating-linear-gradient(
+    0deg,
+    var(--paper-line) 0px,
+    var(--paper-line) 1px,
+    transparent 1px,
+    transparent 28px
+  );
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 a {
@@ -59,12 +134,13 @@ code {
   padding: 2px 7px;
   border-radius: 4px;
   font-size: 0.875em;
-  color: var(--pink);
+  color: var(--code-ink);
+  border: 1px solid var(--border);
 }
 
 pre {
   background: var(--bg-code);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   border-radius: var(--radius-sm);
   padding: 1rem 1.25rem;
   overflow-x: auto;
@@ -72,6 +148,7 @@ pre {
   font-size: 0.875rem;
   line-height: 1.7;
   color: var(--text);
+  box-shadow: var(--shadow-soft);
 }
 pre code {
   background: none;
@@ -82,4 +159,276 @@ pre code {
 ::selection {
   background: var(--accent);
   color: var(--bg);
+}
+
+/* --- Office memo utilities --- */
+.memo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 6px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-soft);
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+.memo-header::before {
+  content: '📎';
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  font-size: 1.1rem;
+}
+.memo-kv {
+  display: grid;
+  gap: 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.memo-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-right: 0.35rem;
+}
+.memo-stamp {
+  border: 2px solid var(--stamp);
+  color: var(--stamp);
+  font-family: var(--font-mono);
+  padding: 0.4rem 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  transform: rotate(-6deg);
+  opacity: 0.85;
+  background: var(--stamp-bg);
+}
+.sticky-note {
+  background: var(--note-bg);
+  border: 1px solid var(--note-border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  box-shadow: var(--shadow-soft);
+  font-family: var(--font-mono);
+  color: var(--note-text);
+}
+.sticky-note strong {
+  font-weight: 700;
+}
+.paper-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+.index-card {
+  background: var(--paper-muted);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-soft);
+}
+
+.label-chip {
+  background: var(--bg-code);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.form-field {
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.form-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+}
+
+.stamp-approved {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(47, 133, 90, 0.08);
+}
+
+.stamp-urgent {
+  border-color: var(--red);
+  color: var(--red);
+  background: rgba(184, 50, 43, 0.12);
+}
+
+/* Subtle divider like a memo tear-off */
+.memo-divider {
+  border: none;
+  border-top: 1px dashed var(--border);
+  margin: 2rem 0;
+}
+
+/* ── Extended Office utilities ───────────────────────────────────────────── */
+
+/* Hand-written red annotation */
+.annotation {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--stamp);
+  font-style: italic;
+  border-left: 2px solid var(--stamp);
+  padding: 0.2rem 0 0.2rem 0.65rem;
+  margin: 0.4rem 0;
+  opacity: 0.88;
+}
+
+/* Laminated reference card */
+.laminated-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.25rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55),
+    var(--shadow-soft);
+}
+.laminated-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 80%);
+  opacity: 0.35;
+}
+
+/* Single hole punch */
+.hole-punch {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.13);
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* Row of 3 hole punches */
+.hole-punch-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 0.65rem;
+}
+
+/* Red ruled-paper left margin */
+.red-margin {
+  border-left: 2px solid rgba(184, 50, 43, 0.18);
+  padding-left: 1rem;
+}
+
+/* Dunder Mifflin letterhead strip */
+.dm-letterhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.65rem;
+  opacity: 0.65;
+}
+
+/* Memo page footer (form ref + page number) */
+.memo-page-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  border-top: 1px dashed var(--border);
+  padding-top: 0.65rem;
+  margin-top: 2.5rem;
+  opacity: 0.55;
+}
+
+/* Sticky note with tape effect */
+.sticky-note {
+  position: relative;
+}
+.sticky-note::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 9px;
+  background: rgba(214, 201, 184, 0.55);
+  border-radius: 2px;
+  z-index: 1;
+}
+
+/* Sticky note colour variants */
+.sticky-note-blue {
+  background: #e6f2fb;
+  border-color: #b0cfe8;
+  color: #1a3d58;
+}
+.sticky-note-green {
+  background: #e8f5ee;
+  border-color: #aad6be;
+  color: #1a3d28;
+}
+.sticky-note-pink {
+  background: #fbe8f4;
+  border-color: #e8b0d4;
+  color: #4a1a38;
+}
+
+:root[data-theme='dark'] .sticky-note-blue {
+  background: #1a2f3f;
+  border-color: #2a4a5f;
+  color: #a0c8e8;
+}
+:root[data-theme='dark'] .sticky-note-green {
+  background: #1a2f24;
+  border-color: #2a4a38;
+  color: #90c8a0;
+}
+:root[data-theme='dark'] .sticky-note-pink {
+  background: #2f1a28;
+  border-color: #4a2a3c;
+  color: #e8a0c8;
 }

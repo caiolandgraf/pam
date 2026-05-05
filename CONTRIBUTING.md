@@ -1,8 +1,12 @@
 # Contributing to Pam
 
+_The Scranton branch handbook for contributing._
+
 We welcome contributions! Here's how to get started:
 
 ## Development Setup
+
+_Set up your desk before stepping into the bullpen._
 
 You need Go 1.21+ and the database client libraries for the databases you want to test against.
 
@@ -41,6 +45,8 @@ sudo apt install sqlite3
 
 ### Testing with Real Databases
 
+_Warehouse-friendly testing with real inventory._
+
 To test Pam with actual database connections, use the
 **[dbeesly](https://github.com/eduardofuncao/dbeesly)** project - a collection
 of pre-configured database setups with sample data.
@@ -70,6 +76,8 @@ start the db server), which run docker-compose under the hood if needed
 4. Commit: `git commit -m "Add my feature"`
 5. Push: `git push origin my-feature`
 6. Open a Pull Request
+
+_No staplers in Jell‑O — keep commits clean and focused._
 
 ### Development Workflow
 

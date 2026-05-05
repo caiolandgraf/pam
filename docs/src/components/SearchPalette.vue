@@ -4,8 +4,16 @@
       <div v-if="open" class="search-overlay" @click.self="close">
         <div class="search-modal">
           <div class="search-header">
-            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <svg
+              class="search-icon"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
             </svg>
@@ -57,11 +65,17 @@
                 <span class="result-icon">📖</span>
                 <span class="result-title">Documentation</span>
               </button>
-              <button class="search-result" @click="goTo({ route: '/playground' })">
+              <button
+                class="search-result"
+                @click="goTo({ route: '/playground' })"
+              >
                 <span class="result-icon">🎮</span>
                 <span class="result-title">Playground</span>
               </button>
-              <button class="search-result" @click="goTo({ route: '/contributors' })">
+              <button
+                class="search-result"
+                @click="goTo({ route: '/contributors' })"
+              >
                 <span class="result-icon">👥</span>
                 <span class="result-title">Contributors</span>
               </button>
@@ -93,70 +107,455 @@ const router = useRouter()
 // Search index — all searchable content
 const searchIndex = [
   // Pages
-  { id: 'p-home', title: 'Home', section: 'Pages', type: 'page', icon: '🏠', route: '/', keywords: 'home landing start' },
-  { id: 'p-docs', title: 'Documentation', section: 'Pages', type: 'page', icon: '📖', route: '/docs', keywords: 'docs documentation help guide' },
-  { id: 'p-play', title: 'Playground', section: 'Pages', type: 'page', icon: '🎮', route: '/playground', keywords: 'playground demo try sql sqlite interactive' },
-  { id: 'p-contrib', title: 'Contributors', section: 'Pages', type: 'page', icon: '👥', route: '/contributors', keywords: 'contributors team community' },
+  {
+    id: 'p-home',
+    title: 'Home',
+    section: 'Pages',
+    type: 'page',
+    icon: '🏠',
+    route: '/',
+    keywords: 'home landing start'
+  },
+  {
+    id: 'p-docs',
+    title: 'Documentation',
+    section: 'Pages',
+    type: 'page',
+    icon: '📖',
+    route: '/docs',
+    keywords: 'docs documentation help guide'
+  },
+  {
+    id: 'p-play',
+    title: 'Playground',
+    section: 'Pages',
+    type: 'page',
+    icon: '🎮',
+    route: '/playground',
+    keywords: 'playground demo try sql sqlite interactive'
+  },
+  {
+    id: 'p-contrib',
+    title: 'Contributors',
+    section: 'Pages',
+    type: 'page',
+    icon: '👥',
+    route: '/contributors',
+    keywords: 'contributors team community'
+  },
 
   // Installation
-  { id: 'd-install', title: 'Installation', section: 'Getting Started', type: 'docs', icon: '📦', route: '/docs#installation', keywords: 'install setup download binary go nix' },
-  { id: 'd-go-install', title: 'Go Install', section: 'Installation', type: 'docs', icon: '📦', route: '/docs#go-install', keywords: 'go install gobin' },
-  { id: 'd-build', title: 'Build Manually', section: 'Installation', type: 'docs', icon: '🔨', route: '/docs#build-manually', keywords: 'build compile clone manual' },
-  { id: 'd-nix', title: 'Nix / NixOS', section: 'Installation', type: 'docs', icon: '❄️', route: '/docs#nix', keywords: 'nix nixos flake' },
-  { id: 'd-releases', title: 'Binary Releases', section: 'Installation', type: 'docs', icon: '📋', route: '/docs#releases', keywords: 'releases download binary' },
+  {
+    id: 'd-install',
+    title: 'Installation',
+    section: 'Getting Started',
+    type: 'docs',
+    icon: '📦',
+    route: '/docs#installation',
+    keywords: 'install setup download binary go nix'
+  },
+  {
+    id: 'd-go-install',
+    title: 'Go Install',
+    section: 'Installation',
+    type: 'docs',
+    icon: '📦',
+    route: '/docs#go-install',
+    keywords: 'go install gobin'
+  },
+  {
+    id: 'd-build',
+    title: 'Build Manually',
+    section: 'Installation',
+    type: 'docs',
+    icon: '🔨',
+    route: '/docs#build-manually',
+    keywords: 'build compile clone manual'
+  },
+  {
+    id: 'd-nix',
+    title: 'Nix / NixOS',
+    section: 'Installation',
+    type: 'docs',
+    icon: '❄️',
+    route: '/docs#nix',
+    keywords: 'nix nixos flake'
+  },
+  {
+    id: 'd-releases',
+    title: 'Binary Releases',
+    section: 'Installation',
+    type: 'docs',
+    icon: '📋',
+    route: '/docs#releases',
+    keywords: 'releases download binary'
+  },
 
   // Connections
-  { id: 'd-conn', title: 'Connections', section: 'Getting Started', type: 'docs', icon: '🔌', route: '/docs#connections', keywords: 'connection database connect' },
-  { id: 'd-init', title: 'pam init', section: 'Connections', type: 'command', icon: '⚡', route: '/docs#init', keywords: 'init create connection new database' },
-  { id: 'd-switch', title: 'pam switch', section: 'Connections', type: 'command', icon: '🔄', route: '/docs#switch', keywords: 'switch use connection change' },
-  { id: 'd-status', title: 'pam status', section: 'Connections', type: 'command', icon: '📊', route: '/docs#status', keywords: 'status test ping connection active' },
-  { id: 'd-disconnect', title: 'pam disconnect', section: 'Connections', type: 'command', icon: '🔌', route: '/docs#disconnect', keywords: 'disconnect close clear unset' },
+  {
+    id: 'd-conn',
+    title: 'Connections',
+    section: 'Getting Started',
+    type: 'docs',
+    icon: '🔌',
+    route: '/docs#connections',
+    keywords: 'connection database connect'
+  },
+  {
+    id: 'd-init',
+    title: 'pam init',
+    section: 'Connections',
+    type: 'command',
+    icon: '⚡',
+    route: '/docs#init',
+    keywords: 'init create connection new database'
+  },
+  {
+    id: 'd-switch',
+    title: 'pam switch',
+    section: 'Connections',
+    type: 'command',
+    icon: '🔄',
+    route: '/docs#switch',
+    keywords: 'switch use connection change'
+  },
+  {
+    id: 'd-status',
+    title: 'pam status',
+    section: 'Connections',
+    type: 'command',
+    icon: '📊',
+    route: '/docs#status',
+    keywords: 'status test ping connection active'
+  },
+  {
+    id: 'd-disconnect',
+    title: 'pam disconnect',
+    section: 'Connections',
+    type: 'command',
+    icon: '🔌',
+    route: '/docs#disconnect',
+    keywords: 'disconnect close clear unset'
+  },
 
   // Databases
-  { id: 'd-db', title: 'Database Support', section: 'Getting Started', type: 'docs', icon: '🗄️', route: '/docs#databases', keywords: 'database support postgres mysql sqlite oracle sqlserver clickhouse firebird' },
-  { id: 'd-postgres', title: 'PostgreSQL', section: 'Databases', type: 'docs', icon: '🐘', route: '/docs#db-postgresql', keywords: 'postgres postgresql pg' },
-  { id: 'd-mysql', title: 'MySQL / MariaDB', section: 'Databases', type: 'docs', icon: '🐬', route: '/docs#db-mysqlmariadb', keywords: 'mysql mariadb' },
-  { id: 'd-sqlite', title: 'SQLite', section: 'Databases', type: 'docs', icon: '📁', route: '/docs#db-sqlite', keywords: 'sqlite file local' },
-  { id: 'd-oracle', title: 'Oracle', section: 'Databases', type: 'docs', icon: '🏛️', route: '/docs#db-oracle', keywords: 'oracle instant client' },
-  { id: 'd-sqlserver', title: 'SQL Server', section: 'Databases', type: 'docs', icon: '🪟', route: '/docs#db-sqlserver', keywords: 'sql server mssql microsoft' },
-  { id: 'd-clickhouse', title: 'ClickHouse', section: 'Databases', type: 'docs', icon: '🏠', route: '/docs#db-clickhouse', keywords: 'clickhouse analytics' },
-  { id: 'd-firebird', title: 'Firebird', section: 'Databases', type: 'docs', icon: '🔥', route: '/docs#db-firebird', keywords: 'firebird' },
+  {
+    id: 'd-db',
+    title: 'Database Support',
+    section: 'Getting Started',
+    type: 'docs',
+    icon: '🗄️',
+    route: '/docs#databases',
+    keywords:
+      'database support postgres mysql sqlite oracle sqlserver clickhouse firebird'
+  },
+  {
+    id: 'd-postgres',
+    title: 'PostgreSQL',
+    section: 'Databases',
+    type: 'docs',
+    icon: '🐘',
+    route: '/docs#db-postgresql',
+    keywords: 'postgres postgresql pg'
+  },
+  {
+    id: 'd-mysql',
+    title: 'MySQL / MariaDB',
+    section: 'Databases',
+    type: 'docs',
+    icon: '🐬',
+    route: '/docs#db-mysqlmariadb',
+    keywords: 'mysql mariadb'
+  },
+  {
+    id: 'd-sqlite',
+    title: 'SQLite',
+    section: 'Databases',
+    type: 'docs',
+    icon: '📁',
+    route: '/docs#db-sqlite',
+    keywords: 'sqlite file local'
+  },
+  {
+    id: 'd-oracle',
+    title: 'Oracle',
+    section: 'Databases',
+    type: 'docs',
+    icon: '🏛️',
+    route: '/docs#db-oracle',
+    keywords: 'oracle instant client'
+  },
+  {
+    id: 'd-sqlserver',
+    title: 'SQL Server',
+    section: 'Databases',
+    type: 'docs',
+    icon: '🪟',
+    route: '/docs#db-sqlserver',
+    keywords: 'sql server mssql microsoft'
+  },
+  {
+    id: 'd-clickhouse',
+    title: 'ClickHouse',
+    section: 'Databases',
+    type: 'docs',
+    icon: '🏠',
+    route: '/docs#db-clickhouse',
+    keywords: 'clickhouse analytics'
+  },
+  {
+    id: 'd-firebird',
+    title: 'Firebird',
+    section: 'Databases',
+    type: 'docs',
+    icon: '🔥',
+    route: '/docs#db-firebird',
+    keywords: 'firebird'
+  },
 
   // Query Management
-  { id: 'd-queries', title: 'Query Management', section: 'Usage', type: 'docs', icon: '📂', route: '/docs#queries', keywords: 'query queries manage sql' },
-  { id: 'd-add', title: 'pam add', section: 'Queries', type: 'command', icon: '➕', route: '/docs#add-query', keywords: 'add save query new create' },
-  { id: 'd-run', title: 'pam run', section: 'Queries', type: 'command', icon: '▶️', route: '/docs#run-query', keywords: 'run execute query sql select' },
-  { id: 'd-query-table', title: 'pam query --table', section: 'Queries', type: 'command', icon: '🎯', route: '/docs#query-table', keywords: 'query table select from where' },
-  { id: 'd-list-q', title: 'pam list queries', section: 'Queries', type: 'command', icon: '📋', route: '/docs#list-queries', keywords: 'list queries search' },
-  { id: 'd-remove', title: 'pam remove', section: 'Queries', type: 'command', icon: '🗑️', route: '/docs#remove-query', keywords: 'remove delete query' },
+  {
+    id: 'd-queries',
+    title: 'Query Management',
+    section: 'Usage',
+    type: 'docs',
+    icon: '📂',
+    route: '/docs#queries',
+    keywords: 'query queries manage sql'
+  },
+  {
+    id: 'd-add',
+    title: 'pam add',
+    section: 'Queries',
+    type: 'command',
+    icon: '➕',
+    route: '/docs#add-query',
+    keywords: 'add save query new create'
+  },
+  {
+    id: 'd-run',
+    title: 'pam run',
+    section: 'Queries',
+    type: 'command',
+    icon: '▶️',
+    route: '/docs#run-query',
+    keywords: 'run execute query sql select'
+  },
+  {
+    id: 'd-query-table',
+    title: 'pam query --table',
+    section: 'Queries',
+    type: 'command',
+    icon: '🎯',
+    route: '/docs#query-table',
+    keywords: 'query table select from where'
+  },
+  {
+    id: 'd-list-q',
+    title: 'pam list queries',
+    section: 'Queries',
+    type: 'command',
+    icon: '📋',
+    route: '/docs#list-queries',
+    keywords: 'list queries search'
+  },
+  {
+    id: 'd-remove',
+    title: 'pam remove',
+    section: 'Queries',
+    type: 'command',
+    icon: '🗑️',
+    route: '/docs#remove-query',
+    keywords: 'remove delete query'
+  },
 
   // Tables & Exploration
-  { id: 'd-tables', title: 'Database Exploration', section: 'Usage', type: 'docs', icon: '🔍', route: '/docs#tables', keywords: 'tables explore schema' },
-  { id: 'd-tables-list', title: 'pam tables', section: 'Exploration', type: 'command', icon: '📊', route: '/docs#tables-list', keywords: 'tables list schema browse' },
-  { id: 'd-tv', title: 'pam table-view', section: 'Exploration', type: 'command', icon: '🏗️', route: '/docs#table-view', keywords: 'table-view tv columns structure alter schema' },
-  { id: 'd-explore', title: 'pam explore', section: 'Exploration', type: 'command', icon: '🗺️', route: '/docs#explore', keywords: 'explore tables views browse' },
-  { id: 'd-explain', title: 'pam explain', section: 'Exploration', type: 'command', icon: '🔗', route: '/docs#explain', keywords: 'explain relationships foreign key fk' },
-  { id: 'd-info', title: 'pam info', section: 'Exploration', type: 'command', icon: 'ℹ️', route: '/docs#info', keywords: 'info tables views schema' },
+  {
+    id: 'd-tables',
+    title: 'Database Exploration',
+    section: 'Usage',
+    type: 'docs',
+    icon: '🔍',
+    route: '/docs#tables',
+    keywords: 'tables explore schema'
+  },
+  {
+    id: 'd-tables-list',
+    title: 'pam tables',
+    section: 'Exploration',
+    type: 'command',
+    icon: '📊',
+    route: '/docs#tables-list',
+    keywords: 'tables list schema browse'
+  },
+  {
+    id: 'd-tv',
+    title: 'pam table-view',
+    section: 'Exploration',
+    type: 'command',
+    icon: '🏗️',
+    route: '/docs#table-view',
+    keywords: 'table-view tv columns structure alter schema'
+  },
+  {
+    id: 'd-explore',
+    title: 'pam explore',
+    section: 'Exploration',
+    type: 'command',
+    icon: '🗺️',
+    route: '/docs#explore',
+    keywords: 'explore tables views browse'
+  },
+  {
+    id: 'd-explain',
+    title: 'pam explain',
+    section: 'Exploration',
+    type: 'command',
+    icon: '🔗',
+    route: '/docs#explain',
+    keywords: 'explain relationships foreign key fk'
+  },
+  {
+    id: 'd-info',
+    title: 'pam info',
+    section: 'Exploration',
+    type: 'command',
+    icon: 'ℹ️',
+    route: '/docs#info',
+    keywords: 'info tables views schema'
+  },
 
   // Config
-  { id: 'd-config', title: 'Configuration', section: 'Configuration', type: 'docs', icon: '⚙️', route: '/docs#config', keywords: 'config configuration yaml settings' },
-  { id: 'd-rowlimit', title: 'Row Limit', section: 'Config', type: 'docs', icon: '🔢', route: '/docs#row-limit', keywords: 'row limit default_row_limit' },
-  { id: 'd-colwidth', title: 'Column Width', section: 'Config', type: 'docs', icon: '↔️', route: '/docs#column-width', keywords: 'column width dynamic responsive' },
-  { id: 'd-colors', title: 'Color Schemes', section: 'Config', type: 'docs', icon: '🎨', route: '/docs#color-schemes', keywords: 'color scheme theme dracula gruvbox nord monokai catppuccin tokyo' },
-  { id: 'd-editor', title: 'Editor Integration', section: 'Config', type: 'docs', icon: '✏️', route: '/docs#editor', keywords: 'editor vim nano vscode EDITOR' },
-  { id: 'd-completion', title: 'Shell Completion', section: 'Config', type: 'docs', icon: '🐚', route: '/docs#completion', keywords: 'completion autocomplete bash zsh fish shell tab' },
+  {
+    id: 'd-config',
+    title: 'Configuration',
+    section: 'Configuration',
+    type: 'docs',
+    icon: '⚙️',
+    route: '/docs#config',
+    keywords: 'config configuration yaml settings'
+  },
+  {
+    id: 'd-rowlimit',
+    title: 'Row Limit',
+    section: 'Config',
+    type: 'docs',
+    icon: '🔢',
+    route: '/docs#row-limit',
+    keywords: 'row limit default_row_limit'
+  },
+  {
+    id: 'd-colwidth',
+    title: 'Column Width',
+    section: 'Config',
+    type: 'docs',
+    icon: '↔️',
+    route: '/docs#column-width',
+    keywords: 'column width dynamic responsive'
+  },
+  {
+    id: 'd-colors',
+    title: 'Color Schemes',
+    section: 'Config',
+    type: 'docs',
+    icon: '🎨',
+    route: '/docs#color-schemes',
+    keywords: 'color scheme theme dracula gruvbox nord monokai catppuccin tokyo'
+  },
+  {
+    id: 'd-editor',
+    title: 'Editor Integration',
+    section: 'Config',
+    type: 'docs',
+    icon: '✏️',
+    route: '/docs#editor',
+    keywords: 'editor vim nano vscode EDITOR'
+  },
+  {
+    id: 'd-completion',
+    title: 'Shell Completion',
+    section: 'Config',
+    type: 'docs',
+    icon: '🐚',
+    route: '/docs#completion',
+    keywords: 'completion autocomplete bash zsh fish shell tab'
+  },
 
   // Reference
-  { id: 'd-commands', title: 'Commands Reference', section: 'Reference', type: 'docs', icon: '📚', route: '/docs#commands', keywords: 'commands reference all list' },
-  { id: 'd-tui', title: 'TUI Keys', section: 'Reference', type: 'docs', icon: '⌨️', route: '/docs#tui', keywords: 'tui keys keyboard navigation vim' },
+  {
+    id: 'd-commands',
+    title: 'Commands Reference',
+    section: 'Reference',
+    type: 'docs',
+    icon: '📚',
+    route: '/docs#commands',
+    keywords: 'commands reference all list'
+  },
+  {
+    id: 'd-tui',
+    title: 'TUI Keys',
+    section: 'Reference',
+    type: 'docs',
+    icon: '⌨️',
+    route: '/docs#tui',
+    keywords: 'tui keys keyboard navigation vim'
+  },
 
   // TUI specific keys
-  { id: 'k-copy', title: 'Copy cell (y)', section: 'TUI Keys', type: 'key', icon: '📋', route: '/docs#tui', keywords: 'copy yank clipboard cell' },
-  { id: 'k-visual', title: 'Visual mode (v)', section: 'TUI Keys', type: 'key', icon: '🔲', route: '/docs#tui', keywords: 'visual mode select multiple cells' },
-  { id: 'k-export', title: 'Export (x)', section: 'TUI Keys', type: 'key', icon: '📤', route: '/docs#tui', keywords: 'export csv json sql markdown html' },
-  { id: 'k-update', title: 'Update cell (u)', section: 'TUI Keys', type: 'key', icon: '✏️', route: '/docs#tui', keywords: 'update edit cell value' },
-  { id: 'k-delete', title: 'Delete row (D)', section: 'TUI Keys', type: 'key', icon: '🗑️', route: '/docs#tui', keywords: 'delete row remove' },
-  { id: 'k-sort', title: 'Sort column (f)', section: 'TUI Keys', type: 'key', icon: '🔽', route: '/docs#tui', keywords: 'sort column order asc desc' },
+  {
+    id: 'k-copy',
+    title: 'Copy cell (y)',
+    section: 'TUI Keys',
+    type: 'key',
+    icon: '📋',
+    route: '/docs#tui',
+    keywords: 'copy yank clipboard cell'
+  },
+  {
+    id: 'k-visual',
+    title: 'Visual mode (v)',
+    section: 'TUI Keys',
+    type: 'key',
+    icon: '🔲',
+    route: '/docs#tui',
+    keywords: 'visual mode select multiple cells'
+  },
+  {
+    id: 'k-export',
+    title: 'Export (x)',
+    section: 'TUI Keys',
+    type: 'key',
+    icon: '📤',
+    route: '/docs#tui',
+    keywords: 'export csv json sql markdown html'
+  },
+  {
+    id: 'k-update',
+    title: 'Update cell (u)',
+    section: 'TUI Keys',
+    type: 'key',
+    icon: '✏️',
+    route: '/docs#tui',
+    keywords: 'update edit cell value'
+  },
+  {
+    id: 'k-delete',
+    title: 'Delete row (D)',
+    section: 'TUI Keys',
+    type: 'key',
+    icon: '🗑️',
+    route: '/docs#tui',
+    keywords: 'delete row remove'
+  },
+  {
+    id: 'k-sort',
+    title: 'Sort column (f)',
+    section: 'TUI Keys',
+    type: 'key',
+    icon: '🔽',
+    route: '/docs#tui',
+    keywords: 'sort column order asc desc'
+  }
 ]
 
 const results = computed(() => {
@@ -166,7 +565,8 @@ const results = computed(() => {
 
   return searchIndex
     .map(item => {
-      const haystack = `${item.title} ${item.section} ${item.keywords}`.toLowerCase()
+      const haystack =
+        `${item.title} ${item.section} ${item.keywords}`.toLowerCase()
       let score = 0
       for (const term of terms) {
         if (haystack.includes(term)) {
@@ -191,13 +591,18 @@ function highlight(text) {
   const terms = query.value.trim().split(/\s+/)
   let result = text
   for (const term of terms) {
-    const re = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    const re = new RegExp(
+      `(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
+      'gi'
+    )
     result = result.replace(re, '<mark>$1</mark>')
   }
   return result
 }
 
-watch(query, () => { selectedIndex.value = 0 })
+watch(query, () => {
+  selectedIndex.value = 0
+})
 
 function moveDown() {
   if (selectedIndex.value < results.value.length - 1) {
@@ -261,8 +666,8 @@ defineExpose({ toggle })
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background: var(--overlay);
+  backdrop-filter: blur(2px);
   display: flex;
   justify-content: center;
   padding-top: min(20vh, 140px);
@@ -272,17 +677,31 @@ defineExpose({ toggle })
   max-width: 600px;
   max-height: 480px;
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: modal-in 0.15s ease;
+  position: relative;
+}
+.search-modal::before {
+  content: '📎';
+  position: absolute;
+  top: -10px;
+  left: 16px;
+  font-size: 1.1rem;
 }
 @keyframes modal-in {
-  from { transform: scale(0.98) translateY(-8px); opacity: 0; }
-  to { transform: scale(1) translateY(0); opacity: 1; }
+  from {
+    transform: scale(0.98) translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Header */
@@ -291,7 +710,8 @@ defineExpose({ toggle })
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px dashed var(--border);
+  background: var(--paper-accent);
 }
 .search-icon {
   color: var(--text-muted);
@@ -303,7 +723,7 @@ defineExpose({ toggle })
   border: none;
   outline: none;
   font-size: 1rem;
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
   color: var(--text);
 }
 .search-input::placeholder {
@@ -359,10 +779,10 @@ defineExpose({ toggle })
 }
 .search-result:hover,
 .search-result.active {
-  background: rgba(88, 166, 255, 0.1);
+  background: var(--accent-soft);
 }
 .search-result.active {
-  outline: 1px solid var(--border-accent);
+  outline: 1px dashed var(--border-accent);
 }
 .result-icon {
   font-size: 1.1rem;
@@ -381,8 +801,8 @@ defineExpose({ toggle })
   font-weight: 500;
 }
 .result-title :deep(mark) {
-  background: rgba(88, 166, 255, 0.3);
-  color: var(--accent-hover);
+  background: var(--note-bg);
+  color: var(--note-text);
   border-radius: 2px;
   padding: 0 2px;
 }
@@ -399,6 +819,7 @@ defineExpose({ toggle })
   padding: 2px 8px;
   border-radius: 4px;
   flex-shrink: 0;
+  border: 1px dashed var(--border);
 }
 
 /* Hints */
@@ -423,9 +844,10 @@ defineExpose({ toggle })
   display: flex;
   gap: 1.5rem;
   padding: 0.5rem 1rem;
-  border-top: 1px solid var(--border);
+  border-top: 1px dashed var(--border);
   font-size: 0.75rem;
   color: var(--text-muted);
+  background: var(--paper-accent);
 }
 .search-footer kbd {
   font-family: var(--font-mono);
@@ -439,10 +861,16 @@ defineExpose({ toggle })
 }
 
 /* Transitions */
-.overlay-enter-active { transition: opacity 0.15s ease; }
-.overlay-leave-active { transition: opacity 0.1s ease; }
+.overlay-enter-active {
+  transition: opacity 0.15s ease;
+}
+.overlay-leave-active {
+  transition: opacity 0.1s ease;
+}
 .overlay-enter-from,
-.overlay-leave-to { opacity: 0; }
+.overlay-leave-to {
+  opacity: 0;
+}
 
 @media (max-width: 640px) {
   .search-modal {

@@ -20,12 +20,46 @@
 
 **A minimal CLI tool for managing and executing SQL queries across multiple databases. Written in Go, made beautiful with BubbleTea**
 
+_Straight out of Scranton: organize your SQL like Pam's legendary drawer._
+
 [Quick Start](#--------quick-start) • [Configuration](#--------configuration) • [Database Support](#--------database-support) • [Dbeesly](#-dbeesly) • [Features](#--------features) • [Commands](#--------all-commands) • [TUI Navigation](#--------tui-table-navigation) • [Roadmap](#--------roadmap) • [Contributing](#contributing)
 
-> This project is currently in beta, please report unexpected behavior through the issues tab
+> 🟨 **Sticky Note:** This project is currently in beta, please report unexpected behavior through the issues tab
 
 </div>
 
+<table>
+  <tr>
+    <td width="60%">
+      <strong>📎 INTEROFFICE MEMO</strong><br/>
+      <strong>To:</strong> Everyone running queries<br/>
+      <strong>From:</strong> Pam's Database Drawer<br/>
+      <strong>Subject:</strong> Keep SQL organized and easy to find<br/>
+      <strong>Status:</strong> 🟡 Beta — report odd behavior in Issues
+    </td>
+    <td width="40%">
+      <strong>🗂 OFFICE DIRECTORY</strong>
+      <ul>
+        <li><a href="#--------quick-start">Quick Start</a></li>
+        <li><a href="#--------configuration">Configuration</a></li>
+        <li><a href="#--------database-support">Database Support</a></li>
+        <li><a href="#-dbeesly">Dbeesly</a></li>
+        <li><a href="#--------features">Features</a></li>
+        <li><a href="#--------all-commands">Commands</a></li>
+        <li><a href="#--------tui-table-navigation">TUI Navigation</a></li>
+        <li><a href="#--------roadmap">Roadmap</a></li>
+        <li><a href="#contributing">Contributing</a></li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+<pre>
+┌──────────────────────────────┐
+│  DUNDER MIFFLIN • SCRANTON   │
+│   FILED ✔   AUTHORIZED ✔     │
+└──────────────────────────────┘
+</pre>
 
 ---
 
@@ -34,10 +68,11 @@
     Demo
 </h2>
 
+*A quick tour from the Scranton branch.*
 
 ![pam-demo](https://github.com/user-attachments/assets/b62bec1d-2255-4d02-9b7f-1c99afbeb664)
 
-### Highlights
+### Highlights (Office Favorites)
 
 - **Query Library** - Save and organize your most-used queries
 - **Runs in the CLI** - Execute queries with minimal overhead
@@ -47,12 +82,24 @@
 - **Export your data** - Export your data as CSV, JSON, SQL, Markdown or HTML tables
 - **SQL Dump Import/Export** - Full SQL dumps (schema + data) and import from file or stdin
 
+### Scranton Glossary
+
+| The Office | In PAM |
+| --- | --- |
+| Pam's drawer | Saved query library |
+| Reception desk | `pam init` and connection setup |
+| Conference Room B | TUI table viewer |
+| The annex | `~/.config/pam/config.yaml` |
+| Warehouse | Import/export workflows |
+
 ---
 
 <h2>
     <img width="auto" height="24" alt="image" style="vertical-align:middle;" src="https://github.com/user-attachments/assets/30765e98-13b3-4c18-81e7-faf224b60e0b" />
     Quick Start
 </h2>
+
+*Set up your desk at reception in under 2 minutes.*
 
 ### Installation
 Go to [the releases page](https://github.com/caiolandgraf/pam/releases) and find the correct version for your system. Download it and make sure the file is executable and moved to a directory in your $PATH.
@@ -208,11 +255,13 @@ f          # Toggle sort on current column
            # In regular queries: none → ↑ ASC → ↓ DESC → none
 
 # Edit data directly
-u          # Update current cell (opens your $EDITOR)
-D          # Delete current row
+e          # Edit selected cell value (inline editor)
+u          # Update selected cell value (inline editor)
+m          # Mark/unmark row
+D          # Delete marked/selected rows
 
 # Modify and re-run
-e          # Edit the query and re-run it
+E          # Edit the query and re-run it
 
 # Exit
 q          # Quit back to terminal
@@ -226,6 +275,8 @@ q          # Quit back to terminal
 </h2>
 
 Pam stores its configuration at `~/.config/pam/config.yaml`.
+
+_Consider this the labeled map of Pam's drawer—everything in its place._
 
 ### Row Limit `default_row_limit: 1000`
 All queries are automatically limited to prevent fetching massive result sets. Configure via `default_row_limit` in config or use explicit `LIMIT` in your SQL queries.
@@ -263,6 +314,8 @@ Each scheme uses a 7-color palette: Primary (titles, headers), Success (success 
 ### Interactive Setup (recommended)
 
 Run `pam init` with no arguments to launch the interactive TUI. It will guide you through each field individually and assemble the connection string automatically:
+
+_Think of each connection as a different Dunder Mifflin branch._
 
 ```
   Connection name  › mydb
@@ -343,6 +396,8 @@ pam init firebird-docker firebird user:masterkey@localhost:3050//var/lib/firebir
 ## 🐝 Dbeesly
 
 To run containerized test database servers for all supported databases, use the sister project [dbeesly](https://github.com/eduardofuncao/dbeesly)
+
+_Your warehouse training ground for database setups._
 
 <img width="879" height="571" alt="image" src="https://github.com/user-attachments/assets/c0a131eb-ea95-4523-86ac-cd00a561a5e0" />
 
@@ -703,6 +758,8 @@ Press `y` to copy the selection as plain text, or `x` to export the selected dat
 
 > This project is currently in beta, please report unexpected behavior through the issues tab
 
+_Release names follow the Scranton crew._
+
 ### v0.1.0 Ryan 📎
 - [x] Multi-database support (PostgreSQL, MySQL, SQLite, Oracle, SQL Server, ClickHouse)
 - [x] Query library with save/edit/remove functionality
@@ -736,6 +793,8 @@ Press `y` to copy the selection as plain text, or `x` to export the selected dat
 
 We welcome contributions! Get started with detailed instructions from [CONTRIBUTING.md](CONTRIBUTING.md)
 
+_We keep it like a Dunder Mifflin memo: concise, kind, and well-labeled._
+
 Thanks a lot to all the contributors:
 
 <a href="https://github.com/DeprecatedLuar"><img src="https://github.com/DeprecatedLuar.png" width="40" /></a>
@@ -763,6 +822,12 @@ Built with:
 MIT License - see [LICENSE](LICENSE) file for details
 
 ---
+
+<pre>
+┌──────────────────────────────┐
+│         END OF MEMO          │
+└──────────────────────────────┘
+</pre>
 
 <div align="center">
 

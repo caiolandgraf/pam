@@ -1,289 +1,321 @@
 <template>
   <div class="docs">
-    <div class="docs-layout">
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <nav>
-          <div class="sidebar-group" v-for="g in toc" :key="g.title">
-            <h4>{{ g.title }}</h4>
-            <a
-              v-for="item in g.items"
-              :key="item.id"
-              :href="'#' + item.id"
-              :class="{ active: activeId === item.id }"
-              @click.prevent="scrollTo(item.id)"
-            >
-              {{ item.label }}
-            </a>
+    <MemoPage
+      title="Documentation"
+      subtitle="Everything you need to know about Pam's Database Drawer."
+      to="Everyone using PAM"
+      from="Scranton Branch"
+      subject="Docs & procedures"
+      status="Active"
+      stamp="DOCS"
+      badge="Form DM-17A"
+    >
+      <template #tags>
+        <span class="label-chip">Revision 3</span>
+        <span class="label-chip">Index Cards</span>
+        <span class="label-chip">Filed: Reception</span>
+      </template>
+      <template #meta>
+        <div class="form-row">
+          <div class="form-field">
+            <span class="form-label">Doc ID</span> DOC-001
           </div>
-        </nav>
-      </aside>
-
-      <!-- Content -->
-      <div class="docs-content">
-        <h1>Documentation</h1>
-        <p class="lead">
-          Everything you need to know about Pam's Database Drawer.
-        </p>
-
-        <!-- Installation -->
-        <section id="installation">
-          <h2>Installation</h2>
-
-          <h3 id="go-install">Go Install</h3>
-          <CodeBlock title="bash">{{ snippets.goInstall }}</CodeBlock>
-
-          <h3 id="build-manually">Build Manually</h3>
-          <CodeBlock title="bash">{{ snippets.buildManually }}</CodeBlock>
-
-          <h3 id="nix">Nix / NixOS</h3>
-          <CodeBlock title="bash">{{ snippets.nix }}</CodeBlock>
-
-          <h3 id="releases">Binary Releases</h3>
-          <p>
-            Download pre-built binaries from the
-            <a
-              href="https://github.com/caiolandgraf/pam/releases"
-              target="_blank"
-              >releases page</a
-            >. Available for Linux (amd64, arm64), macOS (amd64, arm64) and
-            Windows.
-          </p>
-        </section>
-
-        <!-- Connections -->
-        <section id="connections">
-          <h2>Connections</h2>
-
-          <h3 id="init">Creating a connection</h3>
-          <p>
-            Use <code>pam init</code> to create and validate a new database
-            connection. Run it with no arguments to launch the interactive TUI,
-            which asks for each field individually and assembles the connection
-            string live as you type. The database type is auto-inferred from the
-            connection string when using CLI flags or positional arguments.
-          </p>
-          <CodeBlock title="bash">{{ snippets.init }}</CodeBlock>
-          <CodeBlock title="Interactive TUI">{{ snippets.initTUI }}</CodeBlock>
-
-          <h3 id="switch">Switching connections</h3>
-          <CodeBlock title="bash">{{ snippets.switchConn }}</CodeBlock>
-
-          <h3 id="status">Connection status</h3>
-          <CodeBlock title="bash">{{ snippets.status }}</CodeBlock>
-
-          <h3 id="list-connections">Listing connections</h3>
-          <CodeBlock title="bash">{{ snippets.listConnections }}</CodeBlock>
-
-          <h3 id="disconnect">Disconnecting</h3>
-          <CodeBlock title="bash">{{ snippets.disconnect }}</CodeBlock>
-
-          <h3 id="remove-conn">Removing a connection</h3>
-          <p>
-            Use <code>pam remove --conn &lt;name&gt;</code> to permanently
-            delete a saved connection. If it is the currently active connection,
-            it will be cleared automatically.
-          </p>
-          <CodeBlock title="bash">{{ snippets.removeConn }}</CodeBlock>
-        </section>
-
-        <!-- Database Support -->
-        <section id="databases">
-          <h2>Database Support</h2>
-          <div class="db-examples">
-            <div
-              v-for="db in dbExamples"
-              :key="db.name"
-              :id="'db-' + db.name.toLowerCase().replace(/[^a-z]/g, '')"
-            >
-              <h3>{{ db.name }}</h3>
-              <CodeBlock title="bash">{{ db.code }}</CodeBlock>
+          <div class="form-field">
+            <span class="form-label">Retention</span> 7 years
+          </div>
+          <div class="form-field">
+            <span class="form-label">Owner</span> Pam
+          </div>
+        </div>
+      </template>
+      <template #note>
+        Tip: Press <strong>Ctrl/⌘ + K</strong> to search
+      </template>
+      <div class="docs-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <nav>
+            <div class="sidebar-group" v-for="g in toc" :key="g.title">
+              <h4>{{ g.title }}</h4>
+              <a
+                v-for="item in g.items"
+                :key="item.id"
+                :href="'#' + item.id"
+                :class="{ active: activeId === item.id }"
+                @click.prevent="scrollTo(item.id)"
+              >
+                {{ item.label }}
+              </a>
             </div>
-          </div>
-        </section>
+          </nav>
+        </aside>
 
-        <!-- Query Management -->
-        <section id="queries">
-          <h2>Query Management</h2>
+        <!-- Content -->
+        <div class="docs-content">
+          <!-- Installation -->
+          <section id="installation">
+            <h2>Installation</h2>
 
-          <h3 id="add-query">Adding queries</h3>
-          <CodeBlock title="bash">{{ snippets.addQuery }}</CodeBlock>
+            <h3 id="go-install">Go Install</h3>
+            <CodeBlock title="bash">{{ snippets.goInstall }}</CodeBlock>
 
-          <h3 id="run-query">Running queries</h3>
-          <CodeBlock title="bash">{{ snippets.runQuery }}</CodeBlock>
+            <h3 id="build-manually">Build Manually</h3>
+            <CodeBlock title="bash">{{ snippets.buildManually }}</CodeBlock>
 
-          <h3 id="query-table">Query a table</h3>
-          <CodeBlock title="bash">{{ snippets.queryTable }}</CodeBlock>
+            <h3 id="nix">Nix / NixOS</h3>
+            <CodeBlock title="bash">{{ snippets.nix }}</CodeBlock>
 
-          <h3 id="list-queries">Listing queries</h3>
-          <CodeBlock title="bash">{{ snippets.listQueries }}</CodeBlock>
+            <h3 id="releases">Binary Releases</h3>
+            <p>
+              Download pre-built binaries from the
+              <a
+                href="https://github.com/caiolandgraf/pam/releases"
+                target="_blank"
+                >releases page</a
+              >. Available for Linux (amd64, arm64), macOS (amd64, arm64) and
+              Windows.
+            </p>
+          </section>
 
-          <h3 id="remove-query">Removing queries</h3>
-          <CodeBlock title="bash">{{ snippets.removeQuery }}</CodeBlock>
-        </section>
+          <!-- Connections -->
+          <section id="connections">
+            <h2>Connections</h2>
 
-        <!-- Tables -->
-        <section id="tables">
-          <h2>Database Exploration</h2>
+            <h3 id="init">Creating a connection</h3>
+            <p>
+              Use <code>pam init</code> to create and validate a new database
+              connection. Run it with no arguments to launch the interactive
+              TUI, which asks for each field individually and assembles the
+              connection string live as you type. The database type is
+              auto-inferred from the connection string when using CLI flags or
+              positional arguments.
+            </p>
+            <CodeBlock title="bash">{{ snippets.init }}</CodeBlock>
+            <CodeBlock title="Interactive TUI">{{
+              snippets.initTUI
+            }}</CodeBlock>
 
-          <h3 id="tables-list">Tables</h3>
-          <CodeBlock title="bash">{{ snippets.tablesList }}</CodeBlock>
+            <h3 id="switch">Switching connections</h3>
+            <CodeBlock title="bash">{{ snippets.switchConn }}</CodeBlock>
 
-          <h3 id="table-view">Table View</h3>
-          <p>
-            View and edit the structure (columns, types, constraints) of a
-            table.
-          </p>
-          <CodeBlock title="bash">{{ snippets.tableView }}</CodeBlock>
+            <h3 id="status">Connection status</h3>
+            <CodeBlock title="bash">{{ snippets.status }}</CodeBlock>
 
-          <h3 id="explore">Explore</h3>
-          <CodeBlock title="bash">{{ snippets.explore }}</CodeBlock>
+            <h3 id="list-connections">Listing connections</h3>
+            <CodeBlock title="bash">{{ snippets.listConnections }}</CodeBlock>
 
-          <h3 id="explain">Explain</h3>
-          <p>Visualize foreign key relationships between tables.</p>
-          <CodeBlock title="bash">{{ snippets.explain }}</CodeBlock>
+            <h3 id="disconnect">Disconnecting</h3>
+            <CodeBlock title="bash">{{ snippets.disconnect }}</CodeBlock>
 
-          <h3 id="info">Info</h3>
-          <CodeBlock title="bash">{{ snippets.info }}</CodeBlock>
-        </section>
+            <h3 id="remove-conn">Removing a connection</h3>
+            <p>
+              Use <code>pam remove --conn &lt;name&gt;</code> to permanently
+              delete a saved connection. If it is the currently active
+              connection, it will be cleared automatically.
+            </p>
+            <CodeBlock title="bash">{{ snippets.removeConn }}</CodeBlock>
+          </section>
 
-        <!-- Import & Export -->
-        <section id="export-import">
-          <h2>Import &amp; Export</h2>
+          <!-- Database Support -->
+          <section id="databases">
+            <h2>Database Support</h2>
+            <div class="db-examples">
+              <div
+                v-for="db in dbExamples"
+                :key="db.name"
+                :id="'db-' + db.name.toLowerCase().replace(/[^a-z]/g, '')"
+              >
+                <h3>{{ db.name }}</h3>
+                <CodeBlock title="bash">{{ db.code }}</CodeBlock>
+              </div>
+            </div>
+          </section>
 
-          <h3 id="export">Export</h3>
-          <p>
-            Export one or all tables as a SQL dump — generates
-            <code>CREATE TABLE</code> and <code>INSERT</code> statements. SQL is
-            written to <strong>stdout</strong> by default; use
-            <code>--output</code> to write to a file. Status messages always go
-            to <strong>stderr</strong>, so redirects like
-            <code>pam export &gt; dump.sql</code> work cleanly.
-          </p>
-          <CodeBlock title="bash">{{ snippets.export }}</CodeBlock>
+          <!-- Query Management -->
+          <section id="queries">
+            <h2>Query Management</h2>
 
-          <h3 id="import">Import</h3>
-          <p>
-            Execute a SQL dump against the active connection. Reads from a file
-            or <strong>stdin</strong>. Statements are split on <code>;</code>,
-            correctly handling single-quoted strings, <code>--</code> line
-            comments and <code>/* */</code> block comments. By default the
-            import stops on the first error; use
-            <code>--continue-on-error</code> to collect all failures and report
-            them at the end.
-          </p>
-          <CodeBlock title="bash">{{ snippets.import }}</CodeBlock>
-        </section>
+            <h3 id="add-query">Adding queries</h3>
+            <CodeBlock title="bash">{{ snippets.addQuery }}</CodeBlock>
 
-        <!-- Configuration -->
-        <section id="config">
-          <h2>Configuration</h2>
-          <p>
-            Pam stores configuration at <code>~/.config/pam/config.yaml</code>.
-          </p>
+            <h3 id="run-query">Running queries</h3>
+            <CodeBlock title="bash">{{ snippets.runQuery }}</CodeBlock>
 
-          <h3 id="row-limit">Row Limit</h3>
-          <p>
-            All queries are limited by default. Set
-            <code>default_row_limit</code> in config (default: 1000).
-          </p>
+            <h3 id="query-table">Query a table</h3>
+            <CodeBlock title="bash">{{ snippets.queryTable }}</CodeBlock>
 
-          <h3 id="column-width">Column Width</h3>
-          <p>
-            Columns are dynamic and responsive — they adapt to content, terminal
-            width, and header size. The fallback
-            <code>default_column_width</code> (default: 15) is used for edge
-            cases.
-          </p>
+            <h3 id="list-queries">Listing queries</h3>
+            <CodeBlock title="bash">{{ snippets.listQueries }}</CodeBlock>
 
-          <h3 id="color-schemes">Color Schemes</h3>
-          <p>
-            Set <code>color_scheme</code> in your config. Available schemes:
-          </p>
-          <div class="scheme-chips">
-            <span class="scheme-chip" v-for="s in colorSchemes" :key="s">{{
-              s
-            }}</span>
-          </div>
+            <h3 id="remove-query">Removing queries</h3>
+            <CodeBlock title="bash">{{ snippets.removeQuery }}</CodeBlock>
+          </section>
 
-          <h3 id="editor">Editor</h3>
-          <p>
-            Pam uses your <code>$EDITOR</code> environment variable for all
-            editing operations (defaults to <code>vim</code>).
-          </p>
-          <CodeBlock title="bash">{{ snippets.editor }}</CodeBlock>
+          <!-- Tables -->
+          <section id="tables">
+            <h2>Database Exploration</h2>
 
-          <h3 id="edit-config">Editing config</h3>
-          <CodeBlock title="bash">{{ snippets.editConfig }}</CodeBlock>
-        </section>
+            <h3 id="tables-list">Tables</h3>
+            <CodeBlock title="bash">{{ snippets.tablesList }}</CodeBlock>
 
-        <!-- Shell Completion -->
-        <section id="completion">
-          <h2>Shell Completion</h2>
-          <p>
-            Pam supports tab-completion for bash, zsh and fish. Table names are
-            fetched <strong>dynamically</strong> from the active database.
-          </p>
-          <CodeBlock title="bash">{{ snippets.completion }}</CodeBlock>
-        </section>
+            <h3 id="table-view">Table View</h3>
+            <p>
+              View and edit the structure (columns, types, constraints) of a
+              table.
+            </p>
+            <CodeBlock title="bash">{{ snippets.tableView }}</CodeBlock>
 
-        <!-- Commands Reference -->
-        <section id="commands">
-          <h2>Commands Reference</h2>
-          <div class="commands-table-wrap">
-            <table class="commands-table">
-              <thead>
-                <tr>
-                  <th>Command</th>
-                  <th>Alias</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="c in commands" :key="c.cmd">
-                  <td>
-                    <code>{{ c.cmd }}</code>
-                  </td>
-                  <td>
-                    <code v-if="c.alias">{{ c.alias }}</code>
-                  </td>
-                  <td>{{ c.desc }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+            <h3 id="explore">Explore</h3>
+            <CodeBlock title="bash">{{ snippets.explore }}</CodeBlock>
 
-        <!-- TUI Navigation -->
-        <section id="tui">
-          <h2>TUI Table Navigation</h2>
-          <div class="commands-table-wrap">
-            <table class="commands-table">
-              <thead>
-                <tr>
-                  <th>Key</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="k in tuiKeys" :key="k.key">
-                  <td>
-                    <kbd>{{ k.key }}</kbd>
-                  </td>
-                  <td>{{ k.action }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+            <h3 id="explain">Explain</h3>
+            <p>Visualize foreign key relationships between tables.</p>
+            <CodeBlock title="bash">{{ snippets.explain }}</CodeBlock>
+
+            <h3 id="info">Info</h3>
+            <CodeBlock title="bash">{{ snippets.info }}</CodeBlock>
+          </section>
+
+          <!-- Import & Export -->
+          <section id="export-import">
+            <h2>Import &amp; Export</h2>
+
+            <h3 id="export">Export</h3>
+            <p>
+              Export one or all tables as a SQL dump — generates
+              <code>CREATE TABLE</code> and <code>INSERT</code> statements. SQL
+              is written to <strong>stdout</strong> by default; use
+              <code>--output</code> to write to a file. Status messages always
+              go to <strong>stderr</strong>, so redirects like
+              <code>pam export &gt; dump.sql</code> work cleanly.
+            </p>
+            <CodeBlock title="bash">{{ snippets.export }}</CodeBlock>
+
+            <h3 id="import">Import</h3>
+            <p>
+              Execute a SQL dump against the active connection. Reads from a
+              file or <strong>stdin</strong>. Statements are split on
+              <code>;</code>, correctly handling single-quoted strings,
+              <code>--</code> line comments and <code>/* */</code> block
+              comments. By default the import stops on the first error; use
+              <code>--continue-on-error</code> to collect all failures and
+              report them at the end.
+            </p>
+            <CodeBlock title="bash">{{ snippets.import }}</CodeBlock>
+          </section>
+
+          <!-- Configuration -->
+          <section id="config">
+            <h2>Configuration</h2>
+            <p>
+              Pam stores configuration at
+              <code>~/.config/pam/config.yaml</code>.
+            </p>
+
+            <h3 id="row-limit">Row Limit</h3>
+            <p>
+              All queries are limited by default. Set
+              <code>default_row_limit</code> in config (default: 1000).
+            </p>
+
+            <h3 id="column-width">Column Width</h3>
+            <p>
+              Columns are dynamic and responsive — they adapt to content,
+              terminal width, and header size. The fallback
+              <code>default_column_width</code> (default: 15) is used for edge
+              cases.
+            </p>
+
+            <h3 id="color-schemes">Color Schemes</h3>
+            <p>
+              Set <code>color_scheme</code> in your config. Available schemes:
+            </p>
+            <div class="scheme-chips">
+              <span class="scheme-chip" v-for="s in colorSchemes" :key="s">{{
+                s
+              }}</span>
+            </div>
+
+            <h3 id="editor">Editor</h3>
+            <p>
+              Pam uses your <code>$EDITOR</code> environment variable for all
+              editing operations (defaults to <code>vim</code>).
+            </p>
+            <CodeBlock title="bash">{{ snippets.editor }}</CodeBlock>
+
+            <h3 id="edit-config">Editing config</h3>
+            <CodeBlock title="bash">{{ snippets.editConfig }}</CodeBlock>
+          </section>
+
+          <!-- Shell Completion -->
+          <section id="completion">
+            <h2>Shell Completion</h2>
+            <p>
+              Pam supports tab-completion for bash, zsh and fish. Table names
+              are fetched <strong>dynamically</strong> from the active database.
+            </p>
+            <CodeBlock title="bash">{{ snippets.completion }}</CodeBlock>
+          </section>
+
+          <!-- Commands Reference -->
+          <section id="commands">
+            <h2>Commands Reference</h2>
+            <div class="commands-table-wrap">
+              <table class="commands-table">
+                <thead>
+                  <tr>
+                    <th>Command</th>
+                    <th>Alias</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="c in commands" :key="c.cmd">
+                    <td>
+                      <code>{{ c.cmd }}</code>
+                    </td>
+                    <td>
+                      <code v-if="c.alias">{{ c.alias }}</code>
+                    </td>
+                    <td>{{ c.desc }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- TUI Navigation -->
+          <section id="tui">
+            <h2>TUI Table Navigation</h2>
+            <div class="commands-table-wrap">
+              <table class="commands-table">
+                <thead>
+                  <tr>
+                    <th>Key</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="k in tuiKeys" :key="k.key">
+                    <td>
+                      <kbd>{{ k.key }}</kbd>
+                    </td>
+                    <td>{{ k.action }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
       </div>
-    </div>
+    </MemoPage>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import CodeBlock from '../components/CodeBlock.vue'
+import MemoPage from '../components/MemoPage.vue'
 
 const activeId = ref('')
 
@@ -691,9 +723,11 @@ const tuiKeys = [
   { key: 'v', action: 'Enter visual selection mode' },
   { key: 'x', action: 'Export selected data' },
   { key: 'f', action: 'Toggle sort on column' },
-  { key: 'u', action: 'Update current cell' },
-  { key: 'D', action: 'Delete current row' },
-  { key: 'e', action: 'Edit and re-run query' },
+  { key: 'm', action: 'Mark/unmark row' },
+  { key: 'u', action: 'Update selected cell value' },
+  { key: 'D', action: 'Delete marked/selected rows' },
+  { key: 'e', action: 'Edit selected cell value' },
+  { key: 'E', action: 'Edit and re-run query' },
   { key: 's', action: 'Save current query' },
   { key: 'Enter', action: 'Detail view (JSON formatted)' },
   { key: 'q / Esc', action: 'Quit' }
@@ -702,80 +736,93 @@ const tuiKeys = [
 
 <style scoped>
 .docs {
-  padding-top: 64px;
+  padding-top: 80px;
 }
 .docs-layout {
   display: flex;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
   gap: 2rem;
 }
 
 /* ---------- SIDEBAR ---------- */
 .sidebar {
   position: sticky;
-  top: 80px;
-  width: 220px;
+  top: 90px;
+  width: 230px;
   flex-shrink: 0;
-  height: calc(100vh - 80px);
+  height: calc(100vh - 90px);
   overflow-y: auto;
-  padding: 2rem 0 2rem 1.5rem;
+  padding: 1.5rem;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
 }
 .sidebar-group {
   margin-bottom: 1.5rem;
 }
 .sidebar-group h4 {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.2em;
   color: var(--text-muted);
   margin-bottom: 0.5rem;
+  font-family: var(--font-mono);
 }
 .sidebar-group a {
   display: block;
-  padding: 4px 0 4px 12px;
-  font-size: 0.85rem;
+  padding: 6px 8px;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  border-left: 2px solid transparent;
+  border: 1px dashed transparent;
+  border-radius: 6px;
   transition: all 0.15s;
+  font-family: var(--font-mono);
 }
 .sidebar-group a:hover {
   color: var(--text);
+  border-color: var(--border);
+  background: var(--paper-hover);
 }
 .sidebar-group a.active {
   color: var(--accent);
-  border-left-color: var(--accent);
+  border-color: var(--accent);
+  background: var(--paper-accent);
 }
 
 /* ---------- CONTENT ---------- */
 .docs-content {
   flex: 1;
   min-width: 0;
-  padding: 2rem 1.5rem 4rem;
+  padding: 2rem 2rem 4rem;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
 }
 .docs-content h1 {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 800;
   margin-bottom: 0.5rem;
 }
 .lead {
   color: var(--text-secondary);
-  font-size: 1.1rem;
-  margin-bottom: 3rem;
+  font-size: 1rem;
+  margin-bottom: 2rem;
 }
 .docs-content section {
   margin-bottom: 3.5rem;
 }
 .docs-content h2 {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 700;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px dashed var(--border);
 }
 .docs-content h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   margin: 1.5rem 0 0.5rem;
 }
 .docs-content p {
@@ -792,10 +839,10 @@ const tuiKeys = [
 }
 .scheme-chip {
   background: var(--bg-code);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   padding: 3px 12px;
-  border-radius: 100px;
-  font-size: 0.8rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
   font-family: var(--font-mono);
   color: var(--text-secondary);
 }
@@ -811,28 +858,29 @@ const tuiKeys = [
 }
 .commands-table th {
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
   padding: 0.6rem 1rem;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
+  background: var(--paper-accent);
+  border-bottom: 2px dashed var(--border);
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.12em;
+  font-family: var(--font-mono);
 }
 .commands-table td {
   padding: 0.5rem 1rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px dashed var(--border);
   color: var(--text-secondary);
 }
 .commands-table tbody tr:hover {
-  background: var(--bg-card);
+  background: var(--paper-hover);
 }
 .commands-table kbd {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   background: var(--bg-code);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   padding: 2px 8px;
   border-radius: 4px;
   color: var(--text);

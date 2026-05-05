@@ -1,6 +1,41 @@
 # Dynamic Columns Demo Guide
 
+_Conference Room B demo notes from the Scranton branch._
+
+<table>
+  <tr>
+    <td width="60%">
+      <strong>📎 INTEROFFICE MEMO</strong><br/>
+      <strong>To:</strong> Demo crew<br/>
+      <strong>From:</strong> Scranton branch<br/>
+      <strong>Subject:</strong> Dynamic column width demo<br/>
+      <strong>Location:</strong> Conference Room B
+    </td>
+    <td width="40%">
+      <strong>🗂 INDEX CARDS</strong>
+      <ul>
+        <li><a href="#quick-demo">Quick Demo</a></li>
+        <li><a href="#live-demo-steps">Live Demo Steps</a></li>
+        <li><a href="#example-scenarios">Example Scenarios</a></li>
+        <li><a href="#visual-comparison">Visual Comparison</a></li>
+        <li><a href="#tips--tricks">Tips & Tricks</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+        <li><a href="#feedback">Feedback</a></li>
+        <li><a href="#next-steps">Next Steps</a></li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+<pre>
+┌──────────────────────────────┐
+│  SCRANTON • DEMO READY ✔     │
+└──────────────────────────────┘
+</pre>
+
 ## Quick Demo
+
+_Quick, friendly, and manager-approved._
 
 This guide demonstrates the new dynamic column width feature in PAM's table viewer.
 
@@ -159,6 +194,8 @@ When content exceeds column width:
 
 ## Tips & Tricks
 
+_Think of a 120–150 column terminal like the big conference room screen._
+
 ### Maximize Readability
 1. Resize terminal to ~120-150 columns for best experience
 2. Use `f` to sort by important columns
@@ -203,6 +240,8 @@ When content exceeds column width:
 
 This feature is designed to provide the best possible viewing experience across different terminal sizes and data types. If you encounter any issues or have suggestions for improvement, please open an issue on GitHub!
 
+_Consider it the Dunder Mifflin suggestion box._
+
 ## Next Steps
 
 Try these features next:
@@ -213,3 +252,9 @@ Try these features next:
 - Press `f` to sort by column
 
 Happy querying! 🎉
+
+<pre>
+┌──────────────────────────────┐
+│         END OF MEMO          │
+└──────────────────────────────┘
+</pre>

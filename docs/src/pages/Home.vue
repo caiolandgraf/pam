@@ -3,7 +3,17 @@
     <!-- Hero -->
     <section class="hero">
       <div class="hero-inner">
-        <div class="hero-badge">open-source CLI tool</div>
+        <div class="memo-header hero-memo">
+          <div class="memo-kv">
+            <div><span class="memo-label">To:</span> Scranton Branch</div>
+            <div><span class="memo-label">From:</span> Reception (Pam)</div>
+            <div>
+              <span class="memo-label">Subject:</span> Keep SQL organized
+            </div>
+          </div>
+          <div class="memo-stamp">FILED</div>
+        </div>
+        <div class="hero-badge">interoffice memo • open-source CLI</div>
         <h1 class="hero-title">
           <span class="gradient-text">Pam's</span> Database Drawer
         </h1>
@@ -18,6 +28,11 @@
           <em>"Pam, the receptionist, has been doing a fantastic job."</em>
           — Michael Scott
         </p>
+        <div class="hero-labels">
+          <span class="label-chip">Form DM-01</span>
+          <span class="label-chip">Status: Approved</span>
+          <span class="label-chip">Filed: Reception</span>
+        </div>
         <div class="hero-actions">
           <router-link to="/playground" class="btn btn-primary">
             Try the Playground
@@ -26,7 +41,8 @@
             Read the Docs
           </router-link>
         </div>
-        <div class="hero-install">
+        <div class="hero-install sticky-note">
+          <strong>Quick Install</strong>
           <code>go install github.com/caiolandgraf/pam/cmd/pam@latest</code>
         </div>
       </div>
@@ -55,7 +71,7 @@
     <!-- Features -->
     <section class="features section">
       <div class="section-inner">
-        <h2 class="section-title">Highlights</h2>
+        <h2 class="section-title">Office Highlights</h2>
         <div class="features-grid">
           <div class="feature-card" v-for="f in features" :key="f.title">
             <span class="feature-icon">{{ f.icon }}</span>
@@ -69,7 +85,7 @@
     <!-- DB Support -->
     <section class="databases section">
       <div class="section-inner">
-        <h2 class="section-title">Database Support</h2>
+        <h2 class="section-title">Branch Support</h2>
         <p class="section-sub">
           Connect to all major databases with a single tool
         </p>
@@ -82,7 +98,7 @@
     <!-- Quick Start -->
     <section class="quickstart section">
       <div class="section-inner">
-        <h2 class="section-title">Quick Start</h2>
+        <h2 class="section-title">Quick Start Checklist</h2>
         <div class="steps">
           <div class="step" v-for="(s, i) in steps" :key="i">
             <div class="step-number">{{ i + 1 }}</div>
@@ -98,7 +114,7 @@
     <!-- TUI Keys -->
     <section class="tui section">
       <div class="section-inner">
-        <h2 class="section-title">TUI Navigation</h2>
+        <h2 class="section-title">Conference Room Controls</h2>
         <p class="section-sub">
           Vim-style keybindings for blazing-fast navigation
         </p>
@@ -119,7 +135,7 @@
     <!-- CTA -->
     <section class="cta section">
       <div class="section-inner cta-inner">
-        <h2>Ready to organize your queries?</h2>
+        <h2>Ready to organize your queries, Scranton-style?</h2>
         <p>Get started in seconds — one command to install, one to connect.</p>
         <div class="hero-actions">
           <a
@@ -238,27 +254,32 @@ const keyGroups = [
   padding: 10rem 1.5rem 4rem;
   text-align: center;
 }
+.hero-memo {
+  margin-bottom: 1.5rem;
+}
 .hero-inner {
   max-width: 720px;
   margin: 0 auto;
 }
 .hero-badge {
   display: inline-block;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.2em;
   font-weight: 600;
-  color: var(--accent);
-  border: 1px solid var(--border-accent);
+  color: var(--text-secondary);
+  border: 1px dashed var(--border);
   padding: 4px 14px;
-  border-radius: 100px;
+  border-radius: 6px;
   margin-bottom: 1.5rem;
+  font-family: var(--font-mono);
+  background: var(--bg-card);
 }
 .hero-title {
-  font-size: clamp(2.4rem, 6vw, 3.8rem);
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
   font-weight: 800;
   line-height: 1.1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   margin-bottom: 1.25rem;
 }
 .gradient-text {
@@ -268,15 +289,16 @@ const keyGroups = [
   background-clip: text;
 }
 .hero-sub {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   color: var(--text-secondary);
   max-width: 560px;
   margin: 0 auto 1rem;
 }
 .hero-quote {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   margin-bottom: 2rem;
+  font-family: var(--font-mono);
 }
 .hero-actions {
   display: flex;
@@ -285,20 +307,31 @@ const keyGroups = [
   flex-wrap: wrap;
   margin-bottom: 1.5rem;
 }
+.hero-labels {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   padding: 0.7rem 1.6rem;
   border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: 700;
+  font-size: 0.9rem;
   transition: all 0.2s;
-  border: 1px solid transparent;
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  background: var(--bg-card);
 }
 .btn-primary {
   background: var(--accent);
   color: var(--bg);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-soft);
 }
 .btn-primary:hover {
   background: var(--accent-hover);
@@ -307,18 +340,25 @@ const keyGroups = [
 .btn-secondary {
   border-color: var(--border);
   color: var(--text);
+  background: var(--bg-card);
 }
 .btn-secondary:hover {
-  border-color: var(--text-secondary);
+  border-color: var(--accent);
   color: var(--text);
+}
+.hero-install {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
 }
 .hero-install code {
   font-size: 0.85rem;
-  padding: 0.5rem 1rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  padding: 0.35rem 0.75rem;
+  background: var(--paper-muted);
+  border: 1px dashed var(--border);
   border-radius: var(--radius-sm);
-  color: var(--text-secondary);
+  color: var(--text);
 }
 
 /* ---------- SECTIONS ---------- */
@@ -330,10 +370,13 @@ const keyGroups = [
   margin: 0 auto;
 }
 .section-title {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 700;
   text-align: center;
-  margin-bottom: 0.5rem;
+  margin: 0 auto 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px dashed var(--border);
+  display: table;
 }
 .section-sub {
   text-align: center;
@@ -343,18 +386,19 @@ const keyGroups = [
 
 /* ---------- DEMO ---------- */
 .demo-frame {
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: var(--shadow);
+  background: var(--bg-card);
 }
 .demo-dots {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 10px 14px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
+  background: var(--paper-accent);
+  border-bottom: 1px dashed var(--border);
 }
 .dot {
   width: 12px;
@@ -374,7 +418,10 @@ const keyGroups = [
   flex: 1;
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .demo-img {
   width: 100%;
@@ -390,15 +437,16 @@ const keyGroups = [
 }
 .feature-card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   border-radius: var(--radius);
   padding: 1.5rem;
   transition:
     border-color 0.25s,
     transform 0.25s;
+  box-shadow: var(--shadow-soft);
 }
 .feature-card:hover {
-  border-color: var(--border-accent);
+  border-color: var(--accent);
   transform: translateY(-2px);
 }
 .feature-icon {
@@ -425,12 +473,13 @@ const keyGroups = [
 }
 .db-chip {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   padding: 0.55rem 1.3rem;
-  border-radius: 100px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
   transition: border-color 0.2s;
+  font-family: var(--font-mono);
 }
 .db-chip:hover {
   border-color: var(--accent);
@@ -453,15 +502,17 @@ const keyGroups = [
   flex-shrink: 0;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 0.9rem;
-  background: var(--accent);
-  color: var(--bg);
+  background: var(--paper-muted);
+  color: var(--text);
   margin-top: 2px;
+  border: 1px dashed var(--border);
+  font-family: var(--font-mono);
 }
 .step-content {
   flex: 1;
@@ -482,16 +533,18 @@ const keyGroups = [
 }
 .key-group {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   border-radius: var(--radius);
   padding: 1.25rem;
+  box-shadow: var(--shadow-soft);
 }
 .key-group h4 {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--accent);
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
   margin-bottom: 0.75rem;
+  font-family: var(--font-mono);
 }
 .key-group ul {
   list-style: none;
@@ -506,9 +559,9 @@ const keyGroups = [
 }
 kbd {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   background: var(--bg-code);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border);
   padding: 2px 8px;
   border-radius: 4px;
   color: var(--text);
@@ -522,8 +575,9 @@ kbd {
   text-align: center;
   padding: 3rem;
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 2px dashed var(--border);
   border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
 }
 .cta-inner h2 {
   font-size: 1.6rem;
