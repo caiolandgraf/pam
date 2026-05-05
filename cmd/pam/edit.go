@@ -17,7 +17,8 @@ func (a *App) handleEdit() {
 	if len(os.Args) >= 3 {
 		querySelector := os.Args[2]
 		if querySelector == "config" {
-			printError("Config editing moved to 'pam config' command")
+			// Correção: Usar "%s" para formatar a string
+			printError("%s", "Config editing moved to 'pam config' command")
 			return
 		}
 		a.editSingleQuery(querySelector)
@@ -28,7 +29,9 @@ func (a *App) handleEdit() {
 
 func (a *App) editSingleQuery(selector string) {
 	if a.config.CurrentConnection == "" {
-		log.Fatal("No active connection. Use 'pam switch <connection>' or 'pam init' first")
+		log.Fatal(
+			"No active connection. Use 'pam switch <connection>' or 'pam init' first",
+		)
 	}
 
 	conn, ok := a.config.Connections[a.config.CurrentConnection]
@@ -39,7 +42,11 @@ func (a *App) editSingleQuery(selector string) {
 	// Find the query
 	query, exists := db.FindQueryWithSelector(conn.Queries, selector)
 	if !exists {
-		log.Fatalf("Query '%s' not found in connection '%s'", selector, a.config.CurrentConnection)
+		log.Fatalf(
+			"Query '%s' not found in connection '%s'",
+			selector,
+			a.config.CurrentConnection,
+		)
 	}
 
 	// Create temp file with the query SQL
@@ -99,7 +106,11 @@ func (a *App) editSingleQuery(selector string) {
 	}
 
 	if newName != query.Name {
-		fmt.Printf("✓ Renamed and updated query '%s' → '%s'\n", query.Name, newName)
+		fmt.Printf(
+			"✓ Renamed and updated query '%s' → '%s'\n",
+			query.Name,
+			newName,
+		)
 	} else {
 		fmt.Printf("✓ Updated query '%s'\n", query.Name)
 	}
@@ -117,7 +128,9 @@ func (a *App) editQueries() {
 
 func (a *App) editQueriesWithEditor(editorCmd string) {
 	if a.config.CurrentConnection == "" {
-		log.Fatal("No active connection. Use 'pam switch <connection>' or 'pam init' first")
+		log.Fatal(
+			"No active connection. Use 'pam switch <connection>' or 'pam init' first",
+		)
 	}
 
 	conn, ok := a.config.Connections[a.config.CurrentConnection]
@@ -126,8 +139,10 @@ func (a *App) editQueriesWithEditor(editorCmd string) {
 	}
 
 	var content strings.Builder
-	content.WriteString(fmt.Sprintf("-- Editing queries for connection: %s (%s)\n",
-		a.config.CurrentConnection, conn.DBType))
+	content.WriteString(
+		fmt.Sprintf("-- Editing queries for connection: %s (%s)\n",
+			a.config.CurrentConnection, conn.DBType),
+	)
 	content.WriteString("-- Format: -- runname\n")
 	content.WriteString("--         SQL run here\n")
 	content.WriteString("-- Save and close to update\n\n")
@@ -171,13 +186,17 @@ func (a *App) editQueriesWithEditor(editorCmd string) {
 		log.Fatalf("Failed to save config: %v", err)
 	}
 
-	fmt.Printf("✓ Updated queries for connection: %s\n", a.config.CurrentConnection)
+	fmt.Printf(
+		"✓ Updated queries for connection: %s\n",
+		a.config.CurrentConnection,
+	)
 }
 
 // parseSingleQueryFile parses a file containing a single query
 // Expected format:
-//   -- queryname
-//   SQL query here
+//
+//	-- queryname
+//	SQL query here
 func parseSingleQueryFile(content string) (string, string, error) {
 	lines := strings.Split(strings.TrimSpace(content), "\n")
 	if len(lines) == 0 {
@@ -220,7 +239,9 @@ func parseSingleQueryFile(content string) (string, string, error) {
 	}
 
 	if queryName == "" {
-		return "", "", fmt.Errorf("query name not found (expected '-- queryname' on first line)")
+		return "", "", fmt.Errorf(
+			"query name not found (expected '-- queryname' on first line)",
+		)
 	}
 
 	if len(sqlLines) == 0 {
@@ -233,7 +254,13 @@ func parseSingleQueryFile(content string) (string, string, error) {
 
 func (a *App) confirmQueryRename(oldName, newName string) bool {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf(styles.Error.Render(fmt.Sprintf("Rename query '%s' → '%s'? [y/N]: ", oldName, newName)))
+	// Correção: Usar "%s" para formatar a string
+	fmt.Printf(
+		"%s",
+		styles.Error.Render(
+			fmt.Sprintf("Rename query '%s' → '%s'? [y/N]: ", oldName, newName),
+		),
+	)
 
 	response, err := reader.ReadString('\n')
 	if err != nil {
@@ -255,7 +282,11 @@ func parseSQLQueriesFile(content string) (map[string]db.Query, error) {
 
 	save := func() {
 		if name != "" && sql.Len() > 0 {
-			queries[name] = db.Query{Name: name, SQL: strings.TrimSpace(sql.String()), Id: id}
+			queries[name] = db.Query{
+				Name: name,
+				SQL:  strings.TrimSpace(sql.String()),
+				Id:   id,
+			}
 			id++
 			sql.Reset()
 		}
@@ -269,8 +300,10 @@ func parseSQLQueriesFile(content string) (map[string]db.Query, error) {
 			comment = strings.TrimSpace(comment)
 
 			// Skip help comments
-			if strings.HasPrefix(comment, "Editing") || strings.HasPrefix(comment, "Format") ||
-				strings.HasPrefix(comment, "SQL") || strings.HasPrefix(comment, "Save") {
+			if strings.HasPrefix(comment, "Editing") ||
+				strings.HasPrefix(comment, "Format") ||
+				strings.HasPrefix(comment, "SQL") ||
+				strings.HasPrefix(comment, "Save") {
 				continue
 			}
 

@@ -19,7 +19,7 @@ func TestFindCursorPosition_UpdateValue(t *testing.T) {
 SET name = 'John Doe'
 WHERE id = 1;`,
 			wantLine:    2,
-			wantCol:     13,
+			wantCol:     13, // 'J' em 'John Doe'
 			description: "Should position cursor inside the value quotes in SET clause",
 		},
 		{
@@ -28,7 +28,7 @@ WHERE id = 1;`,
 SET   salary   =   '50000'
 WHERE employee_id = 123;`,
 			wantLine:    2,
-			wantCol:     20,
+			wantCol:     21, // '5' em '50000'
 			description: "Should handle multiple spaces around SET clause",
 		},
 		{
@@ -37,7 +37,7 @@ WHERE employee_id = 123;`,
 Set price = '99.99'
 where product_id = 'P001';`,
 			wantLine:    2,
-			wantCol:     13,
+			wantCol:     14, // '9' em '99.99'
 			description: "Should work with lowercase SQL keywords",
 		},
 		{
@@ -47,6 +47,15 @@ WHERE id = 1;`,
 			wantLine:    3,
 			wantCol:     1,
 			description: "Should fallback to default position when no SET clause",
+		},
+		{
+			name: "UPDATE with numeric value (no quotes)",
+			content: `UPDATE users
+SET age = 30
+WHERE id = 1;`,
+			wantLine:    2,
+			wantCol:     11, // '3' em '30'
+			description: "Should position cursor at start of numeric value",
 		},
 	}
 
@@ -86,7 +95,7 @@ func TestFindCursorPosition_WhereClause(t *testing.T) {
 			content: `DELETE FROM users
 WHERE id = '123';`,
 			wantLine:    2,
-			wantCol:     12,
+			wantCol:     13, // '1' em '123'
 			description: "Should position cursor inside WHERE clause value",
 		},
 		{
@@ -94,7 +103,7 @@ WHERE id = '123';`,
 			content: `DELETE FROM employees
 WHERE   employee_id   =   '456';`,
 			wantLine:    2,
-			wantCol:     27,
+			wantCol:     28, // '4' em '456'
 			description: "Should handle extra spaces in WHERE clause",
 		},
 		{
@@ -103,7 +112,7 @@ WHERE   employee_id   =   '456';`,
 SET status = 'active'
 WHERE user_id = '789';`,
 			wantLine:    3,
-			wantCol:     17,
+			wantCol:     18, // '7' em '789'
 			description: "Should find WHERE clause even in UPDATE statements",
 		},
 		{
@@ -111,7 +120,7 @@ WHERE user_id = '789';`,
 			content: `DELETE FROM users
 WHERE id = 123;`,
 			wantLine:    2,
-			wantCol:     7,
+			wantCol:     7, // posição após "WHERE "
 			description: "Should position after WHERE when no quotes found",
 		},
 		{
@@ -165,8 +174,6 @@ WHERE id = 1;`,
 			content: `UPDATE users
 SET name = 'test'
 WHERE id = 1;
-
-
 `,
 			wantLine:    3,
 			description: "Should skip trailing empty lines",
@@ -180,10 +187,15 @@ WHERE id = 1;
 		{
 			name: "only whitespace at end",
 			content: `SELECT * FROM table;
-
-	`,
+    `,
 			wantLine:    1,
 			description: "Should skip whitespace-only lines",
+		},
+		{
+			name:        "empty content",
+			content:     "",
+			wantLine:    1,
+			description: "Should return 1,1 for empty content",
 		},
 	}
 
@@ -198,7 +210,6 @@ WHERE id = 1;
 					tt.description,
 				)
 			}
-			// Column should be at end of the line
 			if col < 1 {
 				t.Errorf(
 					"findCursorPosition() col = %v, should be >= 1 (%s)",
@@ -226,7 +237,6 @@ WHERE id = 1;`
 		t.Errorf("Expected vim command, got %s", cmd.Path)
 	}
 
-	// Check that we have the cursor positioning argument
 	found := false
 	for _, arg := range cmd.Args {
 		if strings.Contains(arg, "+call cursor(") {
@@ -253,7 +263,6 @@ func TestBuildEditorCommand_Neovim(t *testing.T) {
 		t.Errorf("Expected nvim command, got %s", cmd.Path)
 	}
 
-	// Check that we have the cursor positioning argument
 	found := false
 	for _, arg := range cmd.Args {
 		if strings.Contains(arg, "+call cursor(") {
@@ -280,7 +289,6 @@ func TestBuildEditorCommand_Nano(t *testing.T) {
 		t.Errorf("Expected nano command, got %s", cmd.Path)
 	}
 
-	// Nano uses +LINE,COLUMN format
 	found := false
 	for _, arg := range cmd.Args {
 		if strings.HasPrefix(arg, "+") && strings.Contains(arg, ",") {
@@ -310,7 +318,6 @@ func TestBuildEditorCommand_Emacs(t *testing.T) {
 		t.Errorf("Expected emacs command, got %s", cmd.Path)
 	}
 
-	// Emacs uses +LINE:COLUMN format
 	found := false
 	for _, arg := range cmd.Args {
 		if strings.HasPrefix(arg, "+") && strings.Contains(arg, ":") {
@@ -327,20 +334,19 @@ func TestBuildEditorCommand_Emacs(t *testing.T) {
 }
 
 func TestBuildEditorCommand_VSCode(t *testing.T) {
-	content := `SELECT * FROM users WHERE id = 1;`
+	content := `UPDATE users SET name = 'test';`
 
 	cmd := buildEditorCommand(
 		"code",
 		"/tmp/test.sql",
 		content,
-		CursorAtEndOfFile,
+		CursorAtUpdateValue,
 	)
 
 	if cmd.Path != "code" && !strings.HasSuffix(cmd.Path, "/code") {
 		t.Errorf("Expected code command, got %s", cmd.Path)
 	}
 
-	// VS Code uses --goto file:line:column --wait
 	hasGoto := false
 	hasWait := false
 	for _, arg := range cmd.Args {
@@ -369,7 +375,6 @@ func TestBuildEditorCommand_VSCodeAlias(t *testing.T) {
 		CursorAtUpdateValue,
 	)
 
-	// Should work the same as "code"
 	hasGoto := false
 	hasWait := false
 	for _, arg := range cmd.Args {
@@ -403,8 +408,7 @@ func TestBuildEditorCommand_UnknownEditor(t *testing.T) {
 		t.Errorf("Expected unknown-editor command, got %s", cmd.Path)
 	}
 
-	// Should just open the file without cursor positioning
-	if len(cmd.Args) != 2 { // command name + file path
+	if len(cmd.Args) != 2 {
 		t.Errorf(
 			"Expected simple command with just file path, got: %v",
 			cmd.Args,
@@ -413,7 +417,6 @@ func TestBuildEditorCommand_UnknownEditor(t *testing.T) {
 }
 
 func TestCursorPositionHint_Constants(t *testing.T) {
-	// Verify that the constants are properly defined and distinct
 	if CursorAtUpdateValue == CursorAtWhereClause {
 		t.Error(
 			"CursorAtUpdateValue should be different from CursorAtWhereClause",
@@ -442,7 +445,7 @@ func TestFindCursorPosition_EdgeCases(t *testing.T) {
 			name:    "empty content",
 			content: "",
 			hint:    CursorAtUpdateValue,
-			wantErr: false, // Should handle gracefully with fallback
+			wantErr: false,
 		},
 		{
 			name:    "only whitespace",
@@ -461,8 +464,6 @@ func TestFindCursorPosition_EdgeCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			line, _ := findCursorPosition(tt.content, tt.hint)
-
-			// Should always return valid positions
 			if line < 1 {
 				t.Errorf("Line should be >= 1, got %d", line)
 			}
@@ -471,7 +472,6 @@ func TestFindCursorPosition_EdgeCases(t *testing.T) {
 }
 
 func TestFindCursorPosition_MultipleMatches(t *testing.T) {
-	// When there are multiple matches, should find the first one
 	content := `UPDATE users
 SET name = 'first'
 WHERE id = '123'
@@ -479,7 +479,6 @@ AND status = 'active';`
 
 	line, _ := findCursorPosition(content, CursorAtUpdateValue)
 
-	// Should find the first SET clause
 	if line != 2 {
 		t.Errorf("Expected to find first SET at line 2, got line %d", line)
 	}
@@ -512,7 +511,6 @@ func TestFindCursorPosition_CaseInsensitive(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			line, col := findCursorPosition(tt.content, tt.hint)
 
-			// All should find the SET clause regardless of case
 			if line != 2 {
 				t.Errorf("%s: expected line 2, got %d", tt.name, line)
 			}

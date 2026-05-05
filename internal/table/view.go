@@ -117,18 +117,17 @@ func (m Model) renderHeader() string {
 		if m.uiVisibility.KeyIcons && m.primaryKeyCol != "" &&
 			j < len(m.columns) &&
 			m.columns[j] == m.primaryKeyCol {
-			pkIcon = "⚿ "
+			pkIcon = "🔑"
 		}
 
 		fkIcon := ""
 		if m.uiVisibility.KeyIcons && j < len(m.columnFKs) &&
 			m.columnFKs[j] != "" {
-			fkIcon = "⚭ "
+			fkIcon = "🔗"
 		}
 
 		sortIcon := ""
-		if m.sortColumn != "" && j < len(m.columns) &&
-			m.columns[j] == m.sortColumn {
+		if m.columns[j] == m.sortColumn {
 			if m.sortDirection == "ASC" {
 				sortIcon = " ↑"
 			} else if m.sortDirection == "DESC" {
@@ -236,10 +235,15 @@ func (m Model) renderFooter() string {
 			displayValue = displayValue[:maxPreviewWidth-3] + "..."
 		}
 
+		// Correção para fmt.Sprintf: Renderizar as strings de estilo separadamente
+		renderedColumnType := styles.Faint.Render(columnType)
+		renderedFkRef := styles.Faint.Render(fkRef)
+		renderedDisplayValue := styles.TableCell.Render(displayValue)
+
 		cellPreview = fmt.Sprintf("%s%s %s\n",
-			styles.Faint.Render(columnType),
-			styles.Faint.Render(fkRef),
-			styles.TableCell.Render(displayValue))
+			renderedColumnType,
+			renderedFkRef,
+			renderedDisplayValue)
 	}
 
 	// Build stats info (conditional)
@@ -334,7 +338,9 @@ func (m Model) renderFooter() string {
 				hjkl,
 			)
 		} else if m.visualMode {
-			keymapsInfo = fmt.Sprintf("  %s  %s  %s  %s  %s  %s  %s",
+			// CORREÇÃO: Adicionados 3 %s para corresponder aos 10 argumentos
+			keymapsInfo = fmt.Sprintf(
+				"  %s  %s  %s  %s  %s  %s  %s  %s  %s  %s",
 				yank,
 				exportKey,
 				sel,
@@ -347,22 +353,38 @@ func (m Model) renderFooter() string {
 				markedInfo,
 			)
 		} else {
+			// Correção para fmt.Sprintf: Renderizar as strings de estilo separadamente
+			renderedUpdateInfo := updateInfo
+			renderedDelInfo := delInfo
+			renderedYank := yank
+			renderedSel := sel
+			renderedMark := mark
+			renderedSort := sort
+			renderedEdit := edit
+			renderedSave := save
+			renderedExportKey := exportKey
+			renderedSearchKey := searchKey
+			renderedColSearchKey := colSearchKey
+			renderedQuit := quit
+			renderedHjkl := hjkl
+			renderedMarkedInfo := markedInfo
+
 			keymapsInfo = fmt.Sprintf(
-				"  %s  %s  %s  %s  %s  %s  %s  %s  %s  %s  %s",
-				updateInfo,
-				delInfo,
-				yank,
-				sel,
-				mark,
-				sort,
-				edit,
-				save,
-				exportKey,
-				searchKey,
-				colSearchKey,
-				quit,
-				hjkl,
-				markedInfo,
+				"  %s  %s  %s  %s  %s  %s  %s  %s  %s  %s  %s  %s  %s  %s",
+				renderedUpdateInfo,
+				renderedDelInfo,
+				renderedYank,
+				renderedSel,
+				renderedMark,
+				renderedSort,
+				renderedEdit,
+				renderedSave,
+				renderedExportKey,
+				renderedSearchKey,
+				renderedColSearchKey,
+				renderedQuit,
+				renderedHjkl,
+				renderedMarkedInfo,
 			)
 		}
 	}
